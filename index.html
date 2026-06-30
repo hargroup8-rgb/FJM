@@ -22,6 +22,9 @@
 /* PREMIUM LOGIN BACKGROUND & GLASSMORPHISM EFFECT           */
 /* ========================================================= */
 
+
+
+
 #auth-container {
     display: flex;
     justify-content: center;
@@ -47,7 +50,27 @@
 }
         
 
+/* Demand table specific */
+.demand-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 10px;
+}
 
+.demand-table th {
+    background-color: #0f172a !important;
+    padding: 15px;
+    text-align: left;
+    color: #14b8a6; /* Teal accent color for headers */
+    border-bottom: 2px solid #1e293b;
+}
+
+.demand-table td {
+    padding: 15px;
+    border-bottom: 1px solid #334155;
+    color: #e2e8f0;
+}
 /* ========================================================= */
 /* FLOATING CARD SYSTEM (FOR WORKSPACE CONTAINERS)           */
 /* ========================================================= */
@@ -1022,6 +1045,19 @@ body,
                 <div class="tabs">
                     <button class="tab-link active" onclick="openModule(event, 'Dashboard')">📊 Dashboard</button>
 
+
+<!-- Demand Dropdown -->
+<div class="nav-item-dropdown" id="demand-nav-item">
+    <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('demand-nav-item')">
+        📝 Demand Module <span class="arrow">▼</span>
+    </button>
+    <div class="sub-tabs">
+        <button class="tab-link sub-tab" onclick="openModule(event, 'DemandForm')">Demand</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'DemandRecord')">Demand Record</button>
+    </div>
+</div>
+
+
                     <!-- PRODUCTS/REPORTS DROPDOWN START -->
                     <div class="nav-item-dropdown" id="product-nav-item">
                         <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('product-nav-item')">
@@ -1101,9 +1137,77 @@ body,
 
             <!-- Center Panel: Module Content (Products, Manage, Reports, etc.) -->
             <div class="center-panel">
+    
+    <div id="DemandForm" class="module-content">
+    <h2 class="panel-title">📝 Add New Demand</h2>
+    <div class="manage-form">
+       <div class="form-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center;">
+    <!-- Row 1 -->
+    <label>Customer:</label>
+    <input type="text" id="d-customer" class="form-control">
+    
+    <label>Mobile No:</label>
+    <input type="tel" id="d-mobile" class="form-control">
+    
+    <label>P. Balance:</label>
+    <input type="number" id="d-pbalance" class="form-control">
+    
+    <!-- Row 2 -->
+    <label>Demand:</label>
+    <input type="number" id="d-demand" class="form-control">
+    
+    <label>Bill:</label>
+    <input type="number" id="d-bill" class="form-control">
+    
+    <label>Cash R.P:</label>
+    <input type="number" id="d-cashrp" class="form-control">
+    
+</div>
+        <button class="btn btn-success" onclick="saveDemandRecord()" style="margin-top:20px;">Save Demand</button>
+    </div>
+</div>
+    
+<div id="DemandRecord" class="module-content">
+    <h2 class="panel-title">📋 Demand Record</h2>
+    
+
+    
+    <!-- Search aur Filter Controls -->
+    <div class="manage-form">
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto;">
+            <input type="text" id="demand-search" class="form-control" placeholder="Search by customer name..." oninput="renderDemandRecord()">
+            <input type="date" id="demand-filter-date" class="form-control" onchange="renderDemandRecord()">
+            <button class="btn btn-secondary" onclick="resetDemandFilters()">Reset</button>
+        </div>
+        <div class="report-buttons" style="margin-top:10px;">
+            <button class="btn btn-info" onclick="generateDemandPDF('daily')">Download Daily</button>
+            <button class="btn btn-info" onclick="generateDemandPDF('weekly')">Download Weekly</button>
+            <button class="btn btn-info" onclick="generateDemandPDF('monthly')">Download Monthly</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="cart-table">
+           <!-- Table Header ko 6 columns par set karein -->
+<thead>
+    <tr>
+        <th>Date</th>
+        <th>Customer</th>
+        <th>P. Balance</th>
+        <th>Demand</th>
+        <th>Bill</th>
+        <th>Cash R.P</th>
+    </tr>
+</thead>
+            <tbody id="demand-record-body"></tbody>
+        </table>
+    </div>
+</div>
+
                 <!-- START NEW MODULE: CASH BOOK HISTORY -->
 <div id="CashBookHistory" class="module-content">
     <h2 class="panel-title">📅 Cash Book History</h2>
+    
     
     <!-- Search and Date Filter controls -->
     <div class="manage-form">
@@ -1335,25 +1439,28 @@ body,
                     <h2 class="panel-title">📦 Manage Products</h2>
                     <div class="manage-form">
                         <h3 id="manage-product-form-title">Add New Product</h3>
-                        <div class="form-grid">
-                            <label for="new-product-name">Product Name:</label>
-                            <input type="text" id="new-product-name" class="form-control" placeholder="Enter product name">
-                            
-                            <label for="new-product-price">Selling Price:</label>
-                            <input type="number" id="new-product-price" class="form-control" placeholder="Enter selling price">
-                            
-                            <label for="new-product-cost-price">Cost Price:</label>
-                            <input type="number" id="new-product-cost-price" class="form-control" placeholder="Enter cost price">
-                            
-                            <label for="new-product-low-stock">Low Stock Alert:</label>
-                            <input type="number" id="new-product-low-stock" class="form-control" placeholder="e.g., 5">
-                            
-                            <label for="new-product-image">Product Image:</label>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <input type="file" id="new-product-image" class="form-control" accept="image/*">
-                                <img id="new-product-preview" src="" alt="Preview" style="width: 50px; height: 50px; display: none; border-radius: 4px; border: 1px solid var(--border-color);">
-                            </div>
-                        </div>
+                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center;">
+    <label>Customer:</label>
+    <input type="text" id="d-customer" class="form-control">
+    
+    <label>Mobile:</label>
+    <input type="tel" id="d-mobile" class="form-control">
+    
+    <label>P. Balance:</label>
+    <input type="number" id="d-pbalance" class="form-control">
+    
+    <label>Demand:</label>
+    <input type="number" id="d-demand" class="form-control">
+    
+    <label>Bill:</label>
+    <input type="number" id="d-bill" class="form-control">
+    
+    <label>Cash R.P:</label>
+    <input type="number" id="d-cashrp" class="form-control">
+    
+    <label>Balance:</label>
+    <input type="number" id="d-balance" class="form-control">
+</div>
                         <div class="manage-buttons">
                             <button id="btn-add-managed-product" class="btn btn-success">Add Product</button>
                             <button id="btn-save-managed-product" class="btn btn-primary" style="display: none;">Save Changes</button>
@@ -2609,67 +2716,62 @@ body,
 
 <script>
 
-    // Opens the pop-up modal right on the current screen
-function editPurchaserPaymentFromHistory(txnId, purchaserId) {
-    // 1. Gather payment details compiled from purchase logs
-    const allPayments = [];
-    purchaseLog.forEach(log => {
-        if (log.payments) {
-            log.payments.forEach(p => {
-                if (p.txnId === txnId) {
-                    const existing = allPayments.find(x => x.txnId === p.txnId);
-                    if (existing) {
-                        existing.amount += p.amount; 
-                    } else {
-                        allPayments.push({
-                            txnId: p.txnId,
-                            purchaserId: log.purchaserId,
-                            amount: p.amount,
-                            date: p.date,
-                            method: p.method,
-                            accountDetails: p.accountDetails,
-                            notes: p.notes
-                        });
-                    }
-                }
-            });
-        }
-    });
 
-    const payment = allPayments[0];
-    if (!payment) {
-        alert("Payment details not found in system records.");
+
+
+function clearDemandForm() {
+    document.getElementById('d-customer').value = '';
+    document.getElementById('d-mobile').value = '';
+    document.getElementById('d-pbalance').value = '';
+    document.getElementById('d-demand').value = '';
+    document.getElementById('d-bill').value = '';
+    document.getElementById('d-cashrp').value = '';
+    document.getElementById('d-balance').value = '';
+}
+
+async function saveDemandRecord() {
+    const customer = document.getElementById('d-customer').value.trim();
+    const cashRP = parseFloat(document.getElementById('d-cashrp').value) || 0;
+    
+    if (!customer) {
+        alert("Customer name likhna zaroori hai!");
         return;
     }
 
-    const purchaser = purchasers.find(p => p.id === purchaserId);
+    const record = {
+        id: 'dem' + Date.now(),
+        customer: customer,
+        mobile: document.getElementById('d-mobile').value,
+        pBalance: document.getElementById('d-pbalance').value,
+        demand: document.getElementById('d-demand').value,
+        bill: document.getElementById('d-bill').value,
+        cashRP: cashRP,
+        balance: document.getElementById('d-balance').value,
+        date: new Date().toISOString()
+    };
     
-    // 2. Populate input fields
-    document.getElementById('edit-pur-txn-id').value = txnId;
-    document.getElementById('edit-pur-purchaser-id').value = purchaserId;
-    document.getElementById('edit-pur-name-display').textContent = purchaser ? `${purchaser.name} (${purchaser.phone})` : 'N/A';
-    document.getElementById('edit-pur-amount').value = payment.amount;
+    // Array mein add karein
+    demandRecords.push(record);
     
-    if (payment.date) {
-        document.getElementById('edit-pur-date').value = payment.date.split('T')[0];
-    } else {
-        document.getElementById('edit-pur-date').value = getLocalDateString(new Date());
+    // Firebase Cloud par save karein
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+        
+        // Cash Book mein entry add karein
+        if (cashRP > 0) {
+            addTransactionToCashBook(`Demand Cash R.P: ${customer}`, 'in', cashRP, record.date, 'cb_dem_' + record.id);
+        }
+        
+        alert("Demand record aur Cash Book kamyabi se update ho gaye!");
+    } catch (e) {
+        alert("Cloud Error: " + e.message);
     }
-
-    // Populate payment methods dropdown
-    const methodSelect = document.getElementById('edit-pur-method');
-    methodSelect.innerHTML = getPaymentMethodsHTML();
-    methodSelect.value = payment.method || 'Cash';
-
-    // Toggle extra details containers if a bank account is selected
-    document.getElementById('edit-pur-account-details').value = payment.accountDetails || '';
-    const detailsContainer = document.getElementById('edit-pur-details-container');
-    handlePaymentMethodChange(methodSelect, detailsContainer);
-
-    document.getElementById('edit-pur-notes').value = payment.notes || '';
-
-    // 3. Open the Modal Window
-    document.getElementById('edit-purchaser-payment-modal').style.display = 'flex';
+    
+    clearDemandForm();
+    renderDemandRecord();
 }
 
 // Closes the pop-up modal
@@ -3361,6 +3463,7 @@ function showLoginForm() {
 
 
 function refreshAll() {
+    renderDemandRecord();
     renderDashboard();
     renderProductGrid();
     renderPartialPaymentTable();
@@ -7634,6 +7737,11 @@ function generateInventoryCostingPDF() {
     ]);
   });
 
+
+
+
+
+  
   doc.autoTable({
     startY: yPos,
     head: [['Product Name', 'Old Price (First)', 'New Price (Last)', 'Average Cost', 'Current Stock']],
@@ -8707,6 +8815,24 @@ async function initializeApp() {
 
     document.getElementById('user-session-info').innerHTML = `Welcome, <strong>${loggedInUser.name}</strong>! <button class="btn btn-danger btn-sm" onclick="handleLogout()">Logout</button>`;
 
+
+// initializeApp() function ke andar:
+    
+    // Demand records load karein
+    const userId = loggedInUser.id || loggedInUser.uid;
+    try {
+        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
+        if (doc.exists) {
+            demandRecords = JSON.parse(doc.data().payload);
+            renderDemandRecord(); 
+        }
+    } catch (e) {
+        console.error("Demand data load nahi hua:", e);
+    }
+
+    await dbFetchCategories();
+
+
     // 4. Default categories and payment UI setup
     await dbFetchCategories();
     populatePaymentMethods();
@@ -9751,10 +9877,161 @@ function deleteCashBookTransaction(id) {
     renderDashboard();
 }
 
+// Demand save karne ka function
+async function saveDemandRecord() {
+    const customer = document.getElementById('d-customer').value;
+    // ... baki sab fields get karein ...
+    const record = {
+        id: 'dem' + Date.now(),
+        customer: customer,
+        mobile: document.getElementById('d-mobile').value,
+        pBalance: document.getElementById('d-pbalance').value,
+        demand: document.getElementById('d-demand').value,
+        bill: document.getElementById('d-bill').value,
+        cashRP: document.getElementById('d-cashrp').value,
+        date: new Date().toISOString()
+    };
+    
+    // 1. Array mein add karein
+    demandRecords.push(record);
+    
+    // 2. Firebase Cloud par save karein (Permanent)
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+        alert("Data cloud par save ho gaya!");
+    } catch (e) {
+        alert("Cloud par save nahi hua: " + e.message);
+    }
+    
+    // 3. Form clear karein
+    clearDemandForm();
+    
+    // 4. List update karein
+    renderDemandRecord();
+}
+
+// Demand Record table dikhane ka function
+function renderDemandRecord() {
+    const tbody = document.getElementById('demand-record-body');
+    const searchTerm = document.getElementById('demand-search').value.toLowerCase();
+    const filterDate = document.getElementById('demand-filter-date').value;
+    
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    
+    let totalD = 0;
+    let totalC = 0;
+    
+    demandRecords.filter(r => {
+        const matchesName = r.customer.toLowerCase().includes(searchTerm);
+        const matchesDate = !filterDate || r.date.startsWith(filterDate);
+        return matchesName && matchesDate;
+    }).sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        totalD += parseFloat(rec.demand) || 0;
+        totalC += parseFloat(rec.cashRP) || 0;
+
+        tbody.innerHTML += `<tr>
+            <td>${new Date(rec.date).toLocaleDateString()}</td>
+            <td>${rec.customer}</td>
+            <td>${rec.pBalance}</td>
+            <td>${rec.demand}</td>
+            <td>${rec.bill}</td>
+            <td>${rec.cashRP}</td>
+        </tr>`;
+    });
+    // Summary Cards update karein
+    const demandSum = document.getElementById('total-demand-summary');
+    const cashSum = document.getElementById('total-cash-summary');
+    if(demandSum) demandSum.textContent = `Rs. ${totalD.toFixed(2)}`;
+    if(cashSum) cashSum.textContent = `Rs. ${totalC.toFixed(2)}`;
+}
+
+
+// Data Rendering (Search aur Date filter ke sath)
+function renderDemandRecord() {
+    const tbody = document.getElementById('demand-record-body');
+    const searchTerm = document.getElementById('demand-search').value.toLowerCase();
+    const filterDate = document.getElementById('demand-filter-date').value;
+    
+    tbody.innerHTML = '';
+    
+    demandRecords.filter(r => {
+        const matchesName = r.customer.toLowerCase().includes(searchTerm);
+        const matchesDate = !filterDate || r.date.startsWith(filterDate);
+        return matchesName && matchesDate;
+    }).sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        tbody.innerHTML += `<tr>
+            <td>${new Date(rec.date).toLocaleDateString()}</td>
+            <td>${rec.customer}</td>
+            <td>${rec.pBalance}</td>
+            <td>${rec.demand}</td>
+            <td>${rec.bill}</td>
+            <td>${rec.cashRP}</td>
+            <td>${rec.balance}</td>
+        </tr>`;
+    });
+}
+
+// PDF Download Logic
+function generateDemandPDF(type) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // 1. Company Header
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM Social Media", 105, 15, { align: 'center' });
+    
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'normal');
+    doc.text("Demand Record Report", 105, 22, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.text(`Report Type: ${type.toUpperCase()} | Date: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // 2. Data Preparation
+    let filteredData = demandRecords; 
+    const tableData = filteredData.map(r => [
+        new Date(r.date).toLocaleDateString(), 
+        r.customer, 
+        r.mobile || 'N/A', 
+        r.pBalance, 
+        r.demand, 
+        r.bill, 
+        r.cashRP
+    ]);
+    
+    // 3. Professional Table Styling
+    doc.autoTable({
+        startY: 35,
+        head: [['Date', 'Customer', 'Mobile', 'P. Balance', 'Demand', 'Bill', 'Cash RP']],
+        body: tableData,
+        theme: 'grid', // 'grid' ya 'striped' professional lagta hai
+        headStyles: { fillColor: [42, 105, 185], textColor: 255, fontSize: 10 },
+        bodyStyles: { fontSize: 9 },
+        margin: { top: 10 }
+    });
+    
+    doc.save(`Demand_Report_${type}_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+function resetDemandFilters() {
+    document.getElementById('demand-search').value = '';
+    document.getElementById('demand-filter-date').value = '';
+    renderDemandRecord();
+}
+
+
 
 
 
 </script>
+
+
+
 
 <!-- EDIT CASH TRANSACTION MODAL -->
 <div id="edit-cash-modal" class="modal-backdrop">
