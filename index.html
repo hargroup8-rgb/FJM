@@ -1054,6 +1054,8 @@ body,
     <div class="sub-tabs">
         <button class="tab-link sub-tab" onclick="openModule(event, 'DemandForm')">Demand</button>
         <button class="tab-link sub-tab" onclick="openModule(event, 'DemandRecord')">Demand Record</button>
+            <button class="tab-link sub-tab" onclick="openModule(event, 'DemandWorkers')">Demand Workers</button>
+
     </div>
 </div>
 
@@ -1071,13 +1073,7 @@ body,
                     </div>
                     <!-- PRODUCTS/REPORTS DROPDOWN END -->
                     <button class="tab-link" onclick="openModule(event, 'PartialPayments')">💰 POS</button>                    
-                    <button class="tab-link" onclick="openModule(event, 'SellReturn')">↩️ Sell Return</button> <!-- NEW SELL RETURN BUTTON -->
-
-                    <button class="tab-link" onclick="openModule(event, 'AllReports')">📈 All Reports</button>
-                    
-                    <!-- NEW PROFIT & LOSS BUTTON -->
-                    <button class="tab-link" onclick="openModule(event, 'ProfitLossStatement')">📋 Profit & Loss</button>
-                    
+                                        
                     <!-- PURCHASE MODULE START -->
                     <div class="nav-item-dropdown" id="purchase-nav-item">
                         <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('purchase-nav-item')">
@@ -1127,8 +1123,6 @@ body,
         <button class="tab-link sub-tab" onclick="openModule(event, 'CashBookHistory')">Cash Book History</button>
     </div>
 </div>
-                    <!-- NEW BANK & CASH MODULE BUTTON -->
-                    <button class="tab-link" onclick="openModule(event, 'BankAndCash')">🏦 Bank & Cash</button>
 
                     <button class="tab-link" onclick="openModule(event, 'Settings')">⚙️ Settings</button>
                     <button class="tab-link admin-only" onclick="openModule(event, 'AdminDashboard')">👑 Admin Dashboard</button>
@@ -1138,35 +1132,120 @@ body,
             <!-- Center Panel: Module Content (Products, Manage, Reports, etc.) -->
             <div class="center-panel">
     
-    <div id="DemandForm" class="module-content">
+   <div id="DemandForm" class="module-content">
     <h2 class="panel-title">📝 Add New Demand</h2>
     <div class="manage-form">
-       <div class="form-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center;">
-    <!-- Row 1 -->
-    <label>Customer:</label>
-    <input type="text" id="d-customer" class="form-control">
+        <!-- Input fields -->
+   <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px;">
+    <label>Customer Name:</label>
+    <input type="text" id="d-customer" class="form-control" placeholder="Naam likhein">
     
-    <label>Mobile No:</label>
-    <input type="tel" id="d-mobile" class="form-control">
+    <label>Customer Phone:</label>
+    <input type="tel" id="d-phone" class="form-control" placeholder="Phone Number (Optional)">
     
-    <label>P. Balance:</label>
-    <input type="number" id="d-pbalance" class="form-control">
+    <!-- NAYA FIELD: Assign Worker Dropdown -->
+    <label>Assign Worker:</label>
+    <select id="d-worker" class="form-control">
+        <option value="">-- Select Available Worker --</option>
+    </select>
     
-    <!-- Row 2 -->
     <label>Demand:</label>
-    <input type="number" id="d-demand" class="form-control">
+    <input type="number" id="d-demand" class="form-control" oninput="runDemandMath()">
+    
+    <label>Price:</label>
+    <input type="number" id="d-price" class="form-control" oninput="runDemandMath()">
     
     <label>Bill:</label>
-    <input type="number" id="d-bill" class="form-control">
+    <input type="number" id="d-bill" class="form-control" readonly style="background:#0f172a;">
     
-    <label>Cash R.P:</label>
-    <input type="number" id="d-cashrp" class="form-control">
-    
-</div>
-        <button class="btn btn-success" onclick="saveDemandRecord()" style="margin-top:20px;">Save Demand</button>
+    <label>Recovery Amount:</label>
+    <input type="number" id="d-recovery" class="form-control" placeholder="Raqam likhein" oninput="runDemandMath()">
+
+    <label>Payment Mode:</label>
+    <div class="payment-mode-toggle" style="margin-bottom: 0;">
+        <button class="btn btn-primary" id="d-mode-cash-btn" onclick="toggleDemandRecoveryMode('cash')">Cash</button>
+        <button class="btn btn-secondary" id="d-mode-online-btn" onclick="toggleDemandRecoveryMode('online')">Online</button>
+        <button class="btn btn-secondary" id="d-mode-unpaid-btn" onclick="toggleDemandRecoveryMode('unpaid')">Unpaid</button>
     </div>
-</div>
+    <input type="hidden" id="d-recovery-mode" value="cash">
     
+    <label>Old Balance:</label>
+    <input type="number" id="d-old-balance" class="form-control" oninput="runDemandMath()">
+    
+    <label>Balance:</label>
+    <input type="number" id="d-balance" class="form-control" readonly style="background:#0f172a; color:#f8fafc;">
+    
+    <label style="color: #14b8a6;">Net Balance:</label>
+    <input type="number" id="d-net-balance" class="form-control" readonly style="background:#0f172a; border-color:#14b8a6;">
+</div>
+
+<button class="btn btn-success" onclick="submitNewDemand()" style="margin-top:20px; width: 100%;">Save Demand & Print PDF</button>
+
+        <hr style="margin: 30px 0; border-color: #334155;">
+
+        <!-- FILTER, SEARCH & PDF OPTIONS (Professional ERP Layout) -->
+        <div id="demand-tracking-section" style="margin-top: 30px;">
+            <h3 class="section-title">📊 Demand Tracking & Status</h3>
+            
+            <!-- Professional Search & Actions Card -->
+            <div class="manage-form" style="margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
+                <div style="display: grid; grid-template-columns: 2.2fr 1fr; gap: 15px; align-items: end; margin-bottom: 15px;">
+                    <!-- Naya Search Bar with Search Button & Statement PDF Option -->
+                    <div>
+                        <label for="demand-tracking-search" style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; color: var(--text-color);">Search Customer (Name ya Phone Number):</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="demand-tracking-search" class="form-control" placeholder="Type name ya mobile number..." style="flex-grow: 1;">
+                            <button class="btn btn-primary" onclick="renderDemandList()" style="padding: 10px 20px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                                🔍 Search
+                            </button>
+                            <!-- Dynamic PDF Button (Sirf Search par hi show hoga) -->
+                            <button id="btn-download-search-pdf" class="btn btn-info" onclick="downloadSearchResultPDF()" style="padding: 10px 15px; display: none; align-items: center; gap: 5px; white-space: nowrap;">
+                                📄 Download Statement PDF
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Bulk Reports Downloads -->
+                    <div>
+                        <label style="font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; color: var(--text-color);">Bulk Reports:</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-info" onclick="generateFilteredDemandPDF('paid')" style="flex: 1; font-size: 0.85rem; padding: 10px 5px !important;">Paid PDF</button>
+                            <button class="btn btn-warning" onclick="generateFilteredDemandPDF('unpaid')" style="flex: 1; font-size: 0.85rem; padding: 10px 5px !important;">Unpaid PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horizontal Filter Toggle Bar -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border-top: 1px solid #334155; padding-top: 15px;">
+                    <span style="font-size: 0.9rem; color: #94a3b8;">Filter by payment status:</span>
+                    <div class="report-buttons" style="margin: 0; display: flex; gap: 8px;">
+                        <button id="demand-filter-all-btn" class="btn btn-outline active" onclick="renderDemandList('all')">All Items</button>
+                        <button id="demand-filter-paid-btn" class="btn btn-primary" onclick="renderDemandList('paid')">✅ Paid Items</button>
+                        <button id="demand-filter-unpaid-btn" class="btn btn-danger" onclick="renderDemandList('unpaid')">❌ Unpaid Items</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Entries Table -->
+            <div class="table-container">
+                <table class="cart-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer Name</th>
+                            <th>Phone</th>
+                            <th>Net Bill</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="current-demand-list-body">
+                        <!-- Entries JavaScript ke zariye load hongi -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>    
 <div id="DemandRecord" class="module-content">
     <h2 class="panel-title">📋 Demand Record</h2>
     
@@ -1187,22 +1266,140 @@ body,
     </div>
 
     <div class="table-container">
+    <table class="cart-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Assigned Worker</th> <!-- Naya assigned worker column -->
+                <th>Demand</th>
+                <th>Price</th>
+                <th>Recovery</th>
+                <th>Bill</th>
+                <th>Old Bal</th>
+                <th>Balance</th>
+                <th>Net Bal</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="demand-record-body"></tbody>
+    </table>
+</div>
+</div>
+
+
+
+
+
+<!-- START NEW MODULE: DEMAND WORKERS -->
+<div id="DemandWorkers" class="module-content">
+    <h2 class="panel-title">👷 Manage Demand Workers</h2>
+
+    
+    
+    <!-- Form to Add Worker -->
+    <div class="manage-form">
+        <h3>Add New Worker</h3>
+        <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr; gap: 15px; align-items: center;">
+            <label for="worker-name">Worker Name:</label>
+            <input type="text" id="worker-name" class="form-control" placeholder="Full Name">
+            
+            <label for="worker-phone">Mobile Number:</label>
+            <input type="tel" id="worker-phone" class="form-control" placeholder="Mobile number">
+            
+            <label for="worker-address">Address:</label>
+            <input type="text" id="worker-address" class="form-control" placeholder="Address">
+            
+            <label for="worker-status">Availability Status:</label>
+            <select id="worker-status" class="form-control">
+                <option value="Available">Available</option>
+                <option value="Busy">Busy</option>
+            </select>
+
+            
+
+<!-- END WORKER PERFORMANCE STATS CONTAINER -->
+
+        </div>
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button class="btn btn-success" onclick="saveDemandWorker()">Save Worker</button>
+            <button class="btn btn-secondary" onclick="clearWorkerForm()">Clear Form</button>
+        </div>
+    </div>
+
+
+<!-- START WORKER PERFORMANCE STATS CONTAINER -->
+<div id="worker-stats-container" class="manage-form" style="display: none; margin-top: 30px; border-top: 3px solid var(--accent-color);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <h3>Worker Performance: <span id="ws-worker-name" style="color: var(--accent-color);"></span></h3>
+        <button class="btn btn-info" id="btn-download-worker-pdf">Download PDF Report</button>
+    </div>
+    
+    <!-- Stats Cards Grid -->
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div class="dashboard-card">
+            <p class="card-title">Total Clients</p>
+            <h2 id="ws-total-clients" class="card-value info">0</h2>
+        </div>
+        <div class="dashboard-card">
+            <p class="card-title">Paid Clients</p>
+            <h2 id="ws-paid-clients" class="card-value sales">0</h2>
+        </div>
+        <div class="dashboard-card">
+            <p class="card-title">Unpaid Clients</p>
+            <h2 id="ws-unpaid-clients" class="card-value expenses">0</h2>
+        </div>
+        <div class="dashboard-card">
+            <p class="card-title">Outstanding Balance</p>
+            <h2 id="ws-outstanding-balance" class="card-value warning">Rs. 0.00</h2>
+        </div>
+    </div>
+
+    <!-- Worker Clients Table -->
+    <div class="table-container">
+        <h4>Assigned Clients & Demands List</h4>
         <table class="cart-table">
-           <!-- Table Header ko 6 columns par set karein -->
-<thead>
-    <tr>
-        <th>Date</th>
-        <th>Customer</th>
-        <th>P. Balance</th>
-        <th>Demand</th>
-        <th>Bill</th>
-        <th>Cash R.P</th>
-    </tr>
-</thead>
-            <tbody id="demand-record-body"></tbody>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Phone</th>
+                    <th>Demand Qty</th>
+                    <th>Total Bill</th>
+                    <th>Net Balance</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="worker-clients-tbody">
+                <!-- Data Javascript se load hoga -->
+            </tbody>
         </table>
     </div>
 </div>
+<!-- END WORKER PERFORMANCE STATS CONTAINER -->
+
+    <!-- Existing Workers List -->
+    <div class="table-container">
+        <h3>Demand Workers List</h3>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Mobile</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="demand-workers-table-body">
+                <!-- Loaded dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- END NEW MODULE: DEMAND WORKERS -->
+
 
                 <!-- START NEW MODULE: CASH BOOK HISTORY -->
 <div id="CashBookHistory" class="module-content">
@@ -1436,58 +1633,55 @@ body,
                 <!-- END NEW PRODUCT STOCK REPORT MODULE -->
 
                 <div id="ManageProducts" class="module-content">
-                    <h2 class="panel-title">📦 Manage Products</h2>
-                    <div class="manage-form">
-                        <h3 id="manage-product-form-title">Add New Product</h3>
-                        <div class="form-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; align-items: center;">
-    <label>Customer:</label>
-    <input type="text" id="d-customer" class="form-control">
+    <h2 class="panel-title">📦 Manage Products</h2>
+    <div class="manage-form">
+        <h3 id="manage-product-form-title">Add New Product</h3>
+        <div class="form-grid">
+            <label for="new-product-name">Product Name:</label>
+            <input type="text" id="new-product-name" class="form-control" placeholder="Enter product name">
+            
+            <label for="new-product-price">Selling Price:</label>
+            <input type="number" id="new-product-price" class="form-control" placeholder="Enter selling price">
+            
+            <label for="new-product-cost-price">Cost Price:</label>
+            <input type="number" id="new-product-cost-price" class="form-control" placeholder="Enter cost price">
+            
+            <label for="new-product-low-stock">Low Stock Alert:</label>
+            <input type="number" id="new-product-low-stock" class="form-control" placeholder="E.g., 5">
+            
+            <label for="new-product-image">Product Image:</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="file" id="new-product-image" class="form-control" accept="image/*" onchange="handleNewProductImageUpload(event)">
+                <img id="new-product-preview" src="" style="width: 50px; height: 50px; display: none; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color);">
+            </div>
+        </div>
+        <div class="manage-buttons">
+            <button id="btn-add-managed-product" class="btn btn-success">Add Product</button>
+            <button id="btn-save-managed-product" class="btn btn-primary" style="display: none;">Save Changes</button>
+            <button id="btn-cancel-edit-managed-product" class="btn btn-secondary" style="display: none;">Cancel Edit</button>
+        </div>
+    </div>
     
-    <label>Mobile:</label>
-    <input type="tel" id="d-mobile" class="form-control">
-    
-    <label>P. Balance:</label>
-    <input type="number" id="d-pbalance" class="form-control">
-    
-    <label>Demand:</label>
-    <input type="number" id="d-demand" class="form-control">
-    
-    <label>Bill:</label>
-    <input type="number" id="d-bill" class="form-control">
-    
-    <label>Cash R.P:</label>
-    <input type="number" id="d-cashrp" class="form-control">
-    
-    <label>Balance:</label>
-    <input type="number" id="d-balance" class="form-control">
+    <div class="table-container">
+        <h3>Existing Products</h3>
+        <input type="text" id="manage-product-search" class="form-control" placeholder="Search products..." style="margin-bottom: 10px;">
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>Current Stock</th>
+                    <th>Selling Price</th>
+                    <th>Cost Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="manage-products-list-body"></tbody>
+        </table>
+    </div>
 </div>
-                        <div class="manage-buttons">
-                            <button id="btn-add-managed-product" class="btn btn-success">Add Product</button>
-                            <button id="btn-save-managed-product" class="btn btn-primary" style="display: none;">Save Changes</button>
-                            <button id="btn-cancel-edit-managed-product" class="btn btn-secondary" style="display: none;">Cancel Edit</button>
-                        </div>
-                    </div>
                     
-                    <div class="table-container">
-                        <h3>Existing Products</h3>
-                        <input type="text" id="manage-product-search" class="form-control" placeholder="Search products..." style="margin-bottom: 10px;">
-                        <table class="cart-table">
-                            <thead>
-                                <tr>
-                                    <th>Image</th>
-                                    <th>Product Name</th>
-                                    <th>Current Stock</th>
-                                    <th>Selling Price</th>
-                                    <th>Cost Price</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="manage-products-list-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- END NEW MANAGE PRODUCTS MODULE -->
-
+       
 
                 <!-- NEW: Partial Payments Module -->
 <div id="PartialPayments" class="module-content">
@@ -1608,7 +1802,7 @@ body,
                 <!-- END NEW MODULE -->
                 
                 <!-- START NEW SELL RETURN MODULE -->
-                <div id="SellReturn" class="module-content">
+<div id="SellReturn" class="module-content" style="display:none !important;">
                     <h2 class="panel-title">↩️ Process a Sell Return</h2>
                 
                     <!-- NAYA UPDATE: Today's Summary Cards -->
@@ -1786,7 +1980,7 @@ body,
 
                 
                 <!-- ALL REPORTS MODULE START -->
-                <div id="AllReports" class="module-content">
+<div id="AllReports" class="module-content" style="display:none !important;">
                     <h2 class="panel-title">📈 All Reports & Financial Summary</h2>
 
                     <!-- Summary Cards -->
@@ -1870,7 +2064,7 @@ body,
                 <!-- ALL REPORTS MODULE END -->
 
                 <!-- PROFIT & LOSS STATEMENT MODULE START -->
-                <div id="ProfitLossStatement" class="module-content">
+<div id="ProfitLossStatement" class="module-content" style="display:none !important;">
                     <h2 class="panel-title">📋 Profit & Loss Statement</h2>
 
                     <!-- Filter Controls -->
@@ -2459,7 +2653,7 @@ body,
 
                 <!-- BANK & CASH MODULE START -->
 <!-- BANK & CASH MODULE START -->
-<div id="BankAndCash" class="module-content">
+<div id="BankAndCash" class="module-content" style="display:none !important;">
     <h2 class="panel-title">🏦 Bank & Cash Overview</h2>
     
     <!-- DATE FILTER SECTION -->
@@ -2716,63 +2910,930 @@ body,
 
 <script>
 
-
+let editingDemandId = null;
 
 
 function clearDemandForm() {
     document.getElementById('d-customer').value = '';
-    document.getElementById('d-mobile').value = '';
-    document.getElementById('d-pbalance').value = '';
     document.getElementById('d-demand').value = '';
-    document.getElementById('d-bill').value = '';
-    document.getElementById('d-cashrp').value = '';
+    document.getElementById('d-price').value = '';
+    document.getElementById('d-recovery').value = '';
+    document.getElementById('d-online-rec').value = '';
+    document.getElementById('d-old-balance').value = '';
     document.getElementById('d-balance').value = '';
+    document.getElementById('d-bill').value = '';
+    document.getElementById('d-net-balance').value = '';
 }
 
-async function saveDemandRecord() {
-    const customer = document.getElementById('d-customer').value.trim();
-    const cashRP = parseFloat(document.getElementById('d-cashrp').value) || 0;
-    
-    if (!customer) {
-        alert("Customer name likhna zaroori hai!");
+
+
+
+// 1. Date ko automatically aaj ki date par set karne ka function
+function setTodayDate() {
+    const dateInput = document.getElementById('d-date');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+}
+
+// 2. Net Balance calculation logic
+function calculateDemandBalance() {
+    // Inputs uthayein
+    const price = parseFloat(document.getElementById('d-price').value) || 0;
+const recoveryAmount = parseFloat(document.getElementById('d-recovery').value) || 0;
+const recoveryMode = document.getElementById('d-recovery-mode').value;
+let cashRec = 0; let onlineRec = 0;
+    const oldBalance = parseFloat(document.getElementById('d-old-balance').value) || 0;
+    const balance = parseFloat(document.getElementById('d-balance').value) || 0;
+
+if (recoveryMode === 'online') {
+    onlineRec = recoveryAmount; // Agar online select hai toh online mein daalo
+} else {
+    cashRec = recoveryAmount; // Warna cash mein daalo
+}
+
+
+    // Formula: (Price + Old Balance + Balance) - (Recovery + Online Recovery)
+    const netBalance = (price + oldBalance + balance) - (recovery + onlineRec);
+
+    // Result update karein
+    document.getElementById('d-net-balance').value = netBalance.toFixed(2);
+}
+
+// 3. Jab module open ho to date set ho jaye
+// openModule function ke andar jahan 'DemandForm' load ho raha hai, wahan ye line add karein:
+// setTodayDate();
+
+
+// --- NEW DEMAND SYSTEM LOGIC ---
+// ==========================================
+// DEMAND SYSTEM & WORKERS SYSTEM FUNCTIONS
+// ==========================================
+
+let demandWorkers = [];
+
+// Workers ko Cloud se fetch karne ka function
+async function dbFetchDemandWorkers() {
+    demandWorkers = await dbFetchData('demand_workers') || [];
+}
+
+// Dropdown menu mein available workers shamil karne ka function
+function populateDemandWorkersDropdown() {
+    const select = document.getElementById('d-worker');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Select Available Worker --</option>';
+    demandWorkers.forEach(w => {
+        const option = document.createElement('option');
+        option.value = w.id;
+        // Available ya Busy status ke sath show karega
+        option.textContent = `${w.name} (${w.phone}) - [${w.status}]`;
+        select.appendChild(option);
+    });
+}
+
+// Naya Worker save karne ka function
+async function saveDemandWorker() {
+    const name = document.getElementById('worker-name').value.trim();
+    const phone = document.getElementById('worker-phone').value.trim();
+    const address = document.getElementById('worker-address').value.trim();
+    const status = document.getElementById('worker-status').value;
+
+    if (!name || !phone) {
+        alert("Worker Name aur Phone likhna lazmi hai!");
         return;
     }
 
-    const record = {
-        id: 'dem' + Date.now(),
-        customer: customer,
-        mobile: document.getElementById('d-mobile').value,
-        pBalance: document.getElementById('d-pbalance').value,
-        demand: document.getElementById('d-demand').value,
-        bill: document.getElementById('d-bill').value,
-        cashRP: cashRP,
-        balance: document.getElementById('d-balance').value,
-        date: new Date().toISOString()
+    const newWorker = {
+        id: 'wrk' + Date.now(),
+        name: name,
+        phone: phone,
+        address: address || 'N/A',
+        status: status
     };
+
+    demandWorkers.push(newWorker);
     
-    // Array mein add karein
-    demandRecords.push(record);
-    
-    // Firebase Cloud par save karein
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
+            payload: JSON.stringify(demandWorkers)
+        });
+        alert("Worker kamyabi se save ho gaya!");
+        clearWorkerForm();
+        renderDemandWorkersTable();
+    } catch (e) {
+        alert("Worker save karne mein error: " + e.message);
+    }
+}
+
+function clearWorkerForm() {
+    document.getElementById('worker-name').value = '';
+    document.getElementById('worker-phone').value = '';
+    document.getElementById('worker-address').value = '';
+    document.getElementById('worker-status').value = 'Available';
+}
+
+// Workers ki table render karne ka updated function
+function renderDemandWorkersTable() {
+    const tbody = document.getElementById('demand-workers-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    demandWorkers.forEach(w => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${w.name}</td>
+            <td>${w.phone}</td>
+            <td>${w.address}</td>
+            <td style="font-weight:bold; color: ${w.status === 'Available' ? 'var(--success-color)' : 'var(--warning-color)'};">${w.status}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="showWorkerStats('${w.id}')" style="margin-right: 5px;">View Stats</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteDemandWorker('${w.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+// Worker ko delete karna
+async function deleteDemandWorker(id) {
+    if (!confirm("Kya aap waqai is worker ko delete karna chahte hain?")) return;
+    demandWorkers = demandWorkers.filter(w => w.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
+            payload: JSON.stringify(demandWorkers)
+        });
+        renderDemandWorkersTable();
+        alert("Worker delete ho gaya!");
+    } catch(e) {
+        alert("Error deleting worker: " + e.message);
+    }
+}
+
+// Toggle Button (Cash, Online, Unpaid)
+function toggleDemandRecoveryMode(mode) {
+    document.getElementById('d-recovery-mode').value = mode;
+    const cashBtn = document.getElementById('d-mode-cash-btn');
+    const onlineBtn = document.getElementById('d-mode-online-btn');
+    const unpaidBtn = document.getElementById('d-mode-unpaid-btn');
+    const recoveryInput = document.getElementById('d-recovery');
+    
+    cashBtn.className = 'btn btn-secondary';
+    onlineBtn.className = 'btn btn-secondary';
+    unpaidBtn.className = 'btn btn-secondary';
+    
+    if (mode === 'cash') {
+        cashBtn.className = 'btn btn-primary';
+        recoveryInput.disabled = false;
+    } else if (mode === 'online') {
+        onlineBtn.className = 'btn btn-primary';
+        recoveryInput.disabled = false;
+    } else if (mode === 'unpaid') {
+        unpaidBtn.className = 'btn btn-danger';
+        recoveryInput.value = '';
+        recoveryInput.disabled = true;
+        runDemandMath();
+    }
+}
+
+// Auto Calculation
+function runDemandMath() {
+    const demand = parseFloat(document.getElementById('d-demand').value) || 0;
+    const price = parseFloat(document.getElementById('d-price').value) || 0;
+    const recoveryAmount = parseFloat(document.getElementById('d-recovery').value) || 0;
+    const oldBalance = parseFloat(document.getElementById('d-old-balance').value) || 0;
+
+    const bill = demand * price;
+    const currentEntryBalance = bill - recoveryAmount;
+    const netTotal = oldBalance + currentEntryBalance;
+
+    document.getElementById('d-bill').value = bill.toFixed(2);
+    document.getElementById('d-balance').value = currentEntryBalance.toFixed(2);
+    document.getElementById('d-net-balance').value = netTotal.toFixed(2);
+}
+
+async function submitNewDemand() {
+    const customer = document.getElementById('d-customer').value.trim();
+    const phone = document.getElementById('d-phone').value.trim();
+    if (!customer) { alert("Customer Name likhna lazmi hai!"); return; }
+
+    const workerId = document.getElementById('d-worker').value;
+    let assignedWorker = null;
+    if (workerId) {
+        assignedWorker = demandWorkers.find(w => w.id === workerId);
+    }
+
+    const recoveryAmount = parseFloat(document.getElementById('d-recovery').value) || 0;
+    const recoveryMode = document.getElementById('d-recovery-mode').value;
+    
+    let cashRec = 0; let onlineRec = 0;
+    if (recoveryMode === 'online') {
+        onlineRec = recoveryAmount;
+    } else if (recoveryMode === 'cash') {
+        cashRec = recoveryAmount;
+    }
+
+    const netBalanceVal = parseFloat(document.getElementById('d-net-balance').value) || 0;
+
+    const recordData = {
+        customer: customer,
+        phone: phone,
+        worker: assignedWorker ? {
+            name: assignedWorker.name,
+            phone: assignedWorker.phone,
+            address: assignedWorker.address
+        } : null, 
+        demand: parseFloat(document.getElementById('d-demand').value) || 0,
+        price: parseFloat(document.getElementById('d-price').value) || 0,
+        bill: parseFloat(document.getElementById('d-bill').value) || 0,
+        recovery: cashRec,
+        onlineRec: onlineRec,
+        oldBalance: parseFloat(document.getElementById('d-old-balance').value) || 0,
+        balance: parseFloat(document.getElementById('d-balance').value) || 0,
+        netBalance: netBalanceVal,
+        status: netBalanceVal <= 0.01 ? 'paid' : 'unpaid' 
+    };
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        if (!Array.isArray(demandRecords)) demandRecords = [];
+
+        let record;
+        if (editingDemandId) {
+            // Agar pehle se mojud record edit ho raha hai
+            const index = demandRecords.findIndex(r => r.id === editingDemandId);
+            if (index !== -1) {
+                demandRecords[index] = { ...demandRecords[index], ...recordData };
+                record = demandRecords[index];
+            } else {
+                throw new Error("Editing record key not found!");
+            }
+            editingDemandId = null;
+            
+            // Button ko wapas default state par set karein
+            const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
+            if (saveBtn) {
+                saveBtn.textContent = "Save Demand & Print PDF";
+                saveBtn.className = "btn btn-success";
+            }
+        } else {
+            // Agar naya record create ho raha hai
+            record = {
+                id: 'dem' + Date.now(),
+                date: new Date().toISOString(),
+                ...recordData
+            };
+            demandRecords.push(record);
+        }
+        
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
         
-        // Cash Book mein entry add karein
-        if (cashRP > 0) {
-            addTransactionToCashBook(`Demand Cash R.P: ${customer}`, 'in', cashRP, record.date, 'cb_dem_' + record.id);
-        }
+        generateSingleDemandPDF(record); // PDF Print
+        alert("Demand Record save ho gaya!");
+        resetDemandInputs(); 
         
-        alert("Demand record aur Cash Book kamyabi se update ho gaye!");
+        if (typeof renderDemandRecord === "function") renderDemandRecord(); 
+        if (typeof renderDemandList === "function") renderDemandList('all');
     } catch (e) {
-        alert("Cloud Error: " + e.message);
+        alert("Recording fail ho gayi: " + e.message);
     }
-    
-    clearDemandForm();
-    renderDemandRecord();
 }
+
+function resetDemandInputs() {
+    editingDemandId = null;
+    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
+    if (saveBtn) {
+        saveBtn.textContent = "Save Demand & Print PDF";
+        saveBtn.className = "btn btn-success";
+    }
+    if(document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if(document.getElementById('d-phone')) document.getElementById('d-phone').value = '';
+    if(document.getElementById('d-worker')) document.getElementById('d-worker').value = '';
+    if(document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if(document.getElementById('d-price')) document.getElementById('d-price').value = '';
+    if(document.getElementById('d-recovery')) document.getElementById('d-recovery').value = '';
+    if(document.getElementById('d-recovery-mode')) toggleDemandRecoveryMode('cash');
+    if(document.getElementById('d-old-balance')) document.getElementById('d-old-balance').value = '';
+    if(document.getElementById('d-balance')) document.getElementById('d-balance').value = '';
+    if(document.getElementById('d-bill')) document.getElementById('d-bill').value = '';
+    if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
+}
+
+function clearDemandForm() {
+    editingDemandId = null;
+    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
+    if (saveBtn) {
+        saveBtn.textContent = "Save Demand & Print PDF";
+        saveBtn.className = "btn btn-success";
+    }
+    if(document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if(document.getElementById('d-phone')) document.getElementById('d-phone').value = '';
+    if(document.getElementById('d-worker')) document.getElementById('d-worker').value = '';
+    if(document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if(document.getElementById('d-price')) document.getElementById('d-price').value = '';
+    if(document.getElementById('d-recovery')) document.getElementById('d-recovery').value = '';
+    if(document.getElementById('d-recovery-mode')) toggleDemandRecoveryMode('cash');
+    if(document.getElementById('d-old-balance')) document.getElementById('d-old-balance').value = '';
+    if(document.getElementById('d-balance')) document.getElementById('d-balance').value = '';
+    if(document.getElementById('d-bill')) document.getElementById('d-bill').value = '';
+    if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
+}
+
+// PDF Generator (With assigned Worker Details)
+// PDF Generator (With assigned Worker Details)
+function generateSingleDemandPDF(record) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let yPos = 20;
+
+    doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 15;
+
+    doc.setFontSize(18); doc.text("Demand Receipt", 105, yPos, { align: 'center' }); yPos += 10;
+
+    // Customer Details
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Details:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Name: ${record.customer || 'N/A'}`, 14, yPos);
+    doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 120, yPos); yPos += 5;
+    doc.text(`Mobile No: ${record.phone || "N/A"}`, 14, yPos);
+    doc.text(`Receipt ID: ${record.id || 'N/A'}`, 120, yPos); yPos += 12;
+
+    // Assigned Worker Details
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text("Assigned Demand Worker:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    if (record.worker) {
+        doc.text(`Name: ${record.worker.name || 'N/A'}`, 14, yPos);
+        doc.text(`Mobile: ${record.worker.phone || 'N/A'}`, 80, yPos);
+        doc.text(`Address: ${record.worker.address || 'N/A'}`, 140, yPos);
+    } else {
+        doc.text("No worker assigned to this demand.", 14, yPos);
+    }
+    yPos += 12;
+
+    // Transaction Details
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text("Transaction Details:", 14, yPos); yPos += 6;
+
+    const tableData = [
+        ['Demand Quantity', record.demand || 0],
+        ['Unit Price', `${CURRENCY_SYMBOL} ${(record.price || 0).toFixed(2)}`],
+        ['Current Bill', `${CURRENCY_SYMBOL} ${(record.bill || 0).toFixed(2)}`],
+        ['Recovery (Cash)', `${CURRENCY_SYMBOL} ${(record.recovery || 0).toFixed(2)}`],
+        ['Recovery (Online)', `${CURRENCY_SYMBOL} ${(record.onlineRec || 0).toFixed(2)}`],
+        ['Previous (Old) Balance', `${CURRENCY_SYMBOL} ${(record.oldBalance || 0).toFixed(2)}`],
+        ['Net Balance Due', `${CURRENCY_SYMBOL} ${(record.netBalance || 0).toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 11, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold' } },
+        didParseCell: function(data) {
+            if (data.row.index === 6) { 
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62];
+            }
+        }
+    });
+
+    doc.save(`Demand_Receipt_${record.customer || 'Customer'}_${record.date ? new Date(record.date).toLocaleDateString() : 'Date'}.pdf`);
+}
+
+
+// =========================================================
+// ENHANCED DEMAND MODULE REPORT GENERATOR (A4 LANDSCAPE)
+// =========================================================
+function generateDemandPDF(reportType) {
+    const { jsPDF } = window.jspdf;
+    
+    // A4 Landscape ('l') format ka istemal kiya hai taake wide columns clear dikhein
+    const doc = new jsPDF('l', 'mm', 'a4');
+    
+    let now = getCloudDate();
+    let startDate, endDate, reportTitle;
+
+    // Report Type ke hisab se date boundaries set karein
+    if (reportType === 'daily') {
+        reportTitle = "Daily Demand Summary Report";
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        endDate = new Date(now.setHours(23, 59, 59, 999));
+    } else if (reportType === 'weekly') {
+        reportTitle = "Weekly Demand Summary Report";
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Monday se hafta shuru hoga
+        startDate = new Date(now.setDate(diff));
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+    } else if (reportType === 'monthly') {
+        reportTitle = "Monthly Demand Summary Report";
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+    } else {
+        alert("Ghalat report selection!");
+        return;
+    }
+
+    // Records ko date filter ke mutabiq nikalen
+    const filteredRecords = (demandRecords || []).filter(rec => {
+        const recDate = new Date(rec.date);
+        return recDate >= startDate && recDate <= endDate;
+    });
+
+    if (filteredRecords.length === 0) {
+        alert(`Selected duration (${reportType}) ke liye koi records nahi mile.`);
+        return;
+    }
+
+    // Purani dates se lekar nayi dates ke hisab se sort karein
+    filteredRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Summary variables initialization
+    let grandTotalDemandQty = 0;
+    let grandTotalSales = 0;        // Total Bill generated
+    let grandTotalPaid = 0;         // Total Recovery (Cash + Online)
+    let grandTotalBalance = 0;      // Current Transaction Balance
+    let grandTotalNetBalance = 0;   // Net Outstanding Balance (Old Bal + Balance)
+
+    // Table ke liye data prepare karein
+    const rows = filteredRecords.map((rec, index) => {
+        const qty = Number(rec.demand) || 0;
+        const price = Number(rec.price) || 0;
+        const bill = Number(rec.bill) || 0;
+        const cashPaid = Number(rec.recovery) || 0;
+        const onlinePaid = Number(rec.onlineRec) || 0;
+        const totalPaid = cashPaid + onlinePaid;
+        const balance = Number(rec.balance) || 0;
+        const netBalance = Number(rec.netBalance) || 0;
+        
+        // Paid / Unpaid Status filter logic
+        const statusStr = (netBalance <= 0.01) ? "PAID" : "UNPAID";
+
+        // Totals ko update karein
+        grandTotalDemandQty += qty;
+        grandTotalSales += bill;
+        grandTotalPaid += totalPaid;
+        grandTotalBalance += balance;
+        grandTotalNetBalance += netBalance;
+
+        return [
+            index + 1,
+            new Date(rec.date).toLocaleDateString(),
+            rec.customer + (rec.phone ? ` (${rec.phone})` : ''),
+            rec.worker ? rec.worker.name : 'N/A',
+            qty,
+            `${CURRENCY_SYMBOL}${price.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${totalPaid.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${balance.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${netBalance.toFixed(2)}`,
+            statusStr
+        ];
+    });
+
+    // Brand and Header Section
+    let yPos = 15;
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 148, yPos, { align: 'center' });
+    yPos += 7;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 148, yPos, { align: 'center' });
+    yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 148, yPos, { align: 'center' });
+    yPos += 10;
+
+    // Report Title
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(reportTitle.toUpperCase(), 148, yPos, { align: 'center' });
+    yPos += 5;
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Duration: ${startDate.toLocaleDateString()} se ${endDate.toLocaleDateString()}`, 148, yPos, { align: 'center' });
+    yPos += 10;
+
+    // Detailed Table rendering using jsPDF AutoTable
+    doc.autoTable({
+        startY: yPos,
+        head: [['S.No', 'Date', 'Customer Name', 'Assigned Worker', 'Qty', 'Unit Price', 'Bill Amount', 'Total Paid', 'Current Bal', 'Net Balance', 'Status']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255 }, // Theme matching Teal color
+        styles: { fontSize: 8, cellPadding: 2 },
+        columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 'auto' },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 12, halign: 'right' },
+            5: { cellWidth: 20, halign: 'right' },
+            6: { cellWidth: 22, halign: 'right' },
+            7: { cellWidth: 22, halign: 'right' },
+            8: { cellWidth: 22, halign: 'right' },
+            9: { cellWidth: 22, halign: 'right' },
+            10: { cellWidth: 18, halign: 'center' }
+        },
+        didParseCell: function(data) {
+            // Unpaid customers ko Red aur Paid ko Green highlight karne ke liye
+            if (data.column.index === 10 && data.cell.section === 'body') {
+                if (data.cell.text[0] === 'UNPAID') {
+                    data.cell.styles.textColor = [239, 68, 68]; // Light Red
+                    data.cell.styles.fontStyle = 'bold';
+                } else {
+                    data.cell.styles.textColor = [16, 185, 129]; // Light Green
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        }
+    });
+
+    yPos = doc.previousAutoTable.finalY + 12;
+
+    // Agar safe space na bache bottom par summary ke liye to new page shamil ho jaye
+    if (yPos > 155) {
+        doc.addPage();
+        yPos = 20;
+    }
+
+    // PDF Table Footer / Summary Section
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text("FINANCIAL OVERVIEW SUMMARY:", 14, yPos);
+    yPos += 5;
+
+    const summaryTableData = [
+        ['Total Demand Quantity Issued:', `${grandTotalDemandQty} Items`],
+        ['Total Sales (Bill Generated):', `${CURRENCY_SYMBOL} ${grandTotalSales.toFixed(2)}`],
+        ['Total Amount Paid (Recovery):', `${CURRENCY_SYMBOL} ${grandTotalPaid.toFixed(2)}`],
+        ['Total Remaining Current Balance:', `${CURRENCY_SYMBOL} ${grandTotalBalance.toFixed(2)}`],
+        ['Total Outstanding Net Balance:', `${CURRENCY_SYMBOL} ${grandTotalNetBalance.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: { 
+            0: { fontStyle: 'bold', cellWidth: 100 }, 
+            1: { halign: 'right', cellWidth: 60 } 
+        },
+        margin: { left: 14 },
+        didParseCell: function(data) {
+            if (data.row.index === 4) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62]; // Net balance alert color (Red)
+            }
+        }
+    });
+
+    // File download prompt
+    doc.save(`Demand_Report_${reportType}_${startDate.toISOString().split('T')[0]}.pdf`);
+}
+
+function generateSingleDemandPDFById(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (record) {
+        generateSingleDemandPDF(record);
+    } else {
+        alert("Record nahi mila!");
+    }
+}
+
+function renderDemandRecord() {
+    const tbody = document.getElementById('demand-record-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    if (!demandRecords || !Array.isArray(demandRecords)) return;
+
+    const searchInput = document.getElementById('demand-search');
+    const filterDateInput = document.getElementById('demand-filter-date');
+    
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const filterDate = filterDateInput ? filterDateInput.value : '';
+
+    const filtered = demandRecords.filter(r => {
+        const matchesName = r.customer && r.customer.toLowerCase().includes(searchTerm);
+        const matchesPhone = r.phone && r.phone.toLowerCase().includes(searchTerm);
+        const matchesDate = !filterDate || r.date.startsWith(filterDate);
+        return (matchesName || matchesPhone) && matchesDate;
+    });
+
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        const workerDisplay = rec.worker ? rec.worker.name : 'N/A';
+        const totalRecovery = (rec.recovery || 0) + (rec.onlineRec || 0);
+        tbody.innerHTML += `<tr>
+            <td>${new Date(rec.date).toLocaleDateString()}</td>
+            <td>${rec.customer || '-'}</td>
+            <td>${rec.phone || '-'}</td>
+            <td style="font-weight:bold; color:var(--info-color);">${workerDisplay}</td>
+            <td>${rec.demand || 0}</td>
+            <td>${rec.price || 0}</td>
+            <td>${totalRecovery || 0}</td>
+            <td>${rec.bill || 0}</td>
+            <td>${rec.oldBalance || 0}</td>
+            <td>${rec.balance || 0}</td>
+            <td style="font-weight:bold; color:#14b8a6;">${(rec.netBalance || 0).toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-primary" onclick="generateSingleDemandPDFById('${rec.id}')">PDF</button>
+                    <button class="btn btn-sm btn-warning" onclick="editDemandRecord('${rec.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteDemandRecord('${rec.id}')">Delete</button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    
+    if(typeof renderDemandList === 'function') renderDemandList('all');
+}
+
+// Client Record ko Edit form mein load karne ka function
+function editDemandRecord(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) {
+        alert("Record nahi mila!");
+        return;
+    }
+    editingDemandId = id;
+
+    // Inputs mein data load karein
+    document.getElementById('d-customer').value = record.customer || '';
+    document.getElementById('d-phone').value = record.phone || '';
+    
+    const workerSelect = document.getElementById('d-worker');
+    if (workerSelect && record.worker) {
+        const worker = demandWorkers.find(w => w.name === record.worker.name && w.phone === record.worker.phone);
+        workerSelect.value = worker ? worker.id : '';
+    } else if (workerSelect) {
+        workerSelect.value = '';
+    }
+
+    document.getElementById('d-demand').value = record.demand || '';
+    document.getElementById('d-price').value = record.price || '';
+    document.getElementById('d-bill').value = (record.bill || 0).toFixed(2);
+    
+    const totalRecovery = (record.recovery || 0) + (record.onlineRec || 0);
+    document.getElementById('d-recovery').value = totalRecovery || '';
+    
+    let mode = 'cash';
+    if (record.onlineRec > 0) {
+        mode = 'online';
+    } else if (totalRecovery === 0) {
+        mode = 'unpaid';
+    }
+    toggleDemandRecoveryMode(mode);
+
+    document.getElementById('d-old-balance').value = record.oldBalance || '';
+    document.getElementById('d-balance').value = (record.balance || 0).toFixed(2);
+    document.getElementById('d-net-balance').value = (record.netBalance || 0).toFixed(2);
+
+    // Save button ka text aur design tabdeel karein
+    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
+    if (saveBtn) {
+        saveBtn.textContent = "Update Client Demand";
+        saveBtn.className = "btn btn-warning";
+    }
+
+    // Form tab par auto-redirect karein
+    const demandFormTab = document.querySelector('.sub-tab[onclick*="DemandForm"]');
+    if (demandFormTab) {
+        openModule({ currentTarget: demandFormTab }, 'DemandForm');
+    }
+}
+
+// Client Record ko delete karne ka function
+async function deleteDemandRecord(id) {
+    if (!confirm("Kya aap waqai is client record ko delete karna chahte hain?")) return;
+    
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        demandRecords = demandRecords.filter(r => r.id !== id);
+        
+        // Firebase Cloud DB update
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+        
+        alert("Record delete ho gaya!");
+        renderDemandRecord();
+    } catch (e) {
+        alert("Delete karne mein error: " + e.message);
+    }
+}
+
+// 4. Clean Reset Logic
+function resetDemandInputs() {
+    if(document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if(document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if(document.getElementById('d-price')) document.getElementById('d-price').value = '';
+    if(document.getElementById('d-recovery')) document.getElementById('d-recovery').value = '';
+    
+    // Wapas default 'Cash' mode par le aayega
+    if(document.getElementById('d-recovery-mode')) toggleDemandRecoveryMode('cash');
+    
+    if(document.getElementById('d-old-balance')) document.getElementById('d-old-balance').value = '';
+    if(document.getElementById('d-balance')) document.getElementById('d-balance').value = '';
+    if(document.getElementById('d-bill')) document.getElementById('d-bill').value = '';
+    if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
+}
+// 4. Clean Reset Logic
+function resetDemandInputs() {
+    if(document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if(document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if(document.getElementById('d-price')) document.getElementById('d-price').value = '';
+    if(document.getElementById('d-recovery')) document.getElementById('d-recovery').value = '';
+    if(document.getElementById('d-recovery-mode')) toggleDemandRecoveryMode('cash');
+    if(document.getElementById('d-old-balance')) document.getElementById('d-old-balance').value = '';
+    if(document.getElementById('d-balance')) document.getElementById('d-balance').value = '';
+    if(document.getElementById('d-bill')) document.getElementById('d-bill').value = '';
+    if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
+}
+
+// 4. Form Clear Function (Resets the Slider too)
+function clearDemandForm() {
+    if(document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if(document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if(document.getElementById('d-price')) document.getElementById('d-price').value = '';
+    
+    // Recovery input saaf karein
+    if(document.getElementById('d-recovery')) document.getElementById('d-recovery').value = '';
+    
+    // Slider ko wapas "Cash" par set karein
+    if(document.getElementById('d-recovery-mode')) toggleDemandRecoveryMode('cash');
+    
+    if(document.getElementById('d-old-balance')) document.getElementById('d-old-balance').value = '';
+    if(document.getElementById('d-balance')) document.getElementById('d-balance').value = '';
+    if(document.getElementById('d-bill')) document.getElementById('d-bill').value = '';
+    if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
+}
+
+// Render List Logic (Status auto-evaluation ke sath)
+function renderDemandList(filter = 'all') {
+    const tbody = document.getElementById('current-demand-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Safety status evaluator function
+    const getRecordStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+
+    let filtered = demandRecords;
+    if (filter === 'paid') filtered = demandRecords.filter(r => getRecordStatus(r) === 'paid');
+    if (filter === 'unpaid') filtered = demandRecords.filter(r => getRecordStatus(r) === 'unpaid');
+
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        const recordStatus = getRecordStatus(rec);
+        
+        const statusHTML = recordStatus === 'paid' ? 
+            '<span style="color:#10b981; font-weight:bold;">✅ PAID</span>' : 
+            '<span style="color:#ef4444; font-weight:bold;">❌ UNPAID</span>';
+
+        const actionBtn = recordStatus === 'unpaid' ? 
+    `<button class="btn btn-sm btn-success" onclick="markAsPaid('${rec.id}')">Add Payment</button>` : 
+    `<button class="btn btn-sm btn-secondary" disabled>Fully Paid</button>`;
+
+        const safeNetBalance = Number(rec.netBalance) || 0;
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(rec.date).toLocaleDateString()}</td>
+                <td>${rec.customer}</td>
+                <td>Rs. ${safeNetBalance.toFixed(2)}</td>
+                <td>${statusHTML}</td>
+                <td>${actionBtn}</td>
+            </tr>
+        `;
+    });
+}
+
+async function markAsPaid(id) {
+    const index = demandRecords.findIndex(r => r.id === id);
+    if (index === -1) {
+        alert("Record nahi mila!");
+        return;
+    }
+
+    const record = demandRecords[index];
+    // Sahi variable jo calculations mein use hoga
+    const currentNetBalance = Number(record.netBalance) || 0; 
+
+    // Ghalat variable 'currentBalance' ki jagah 'currentNetBalance' use kiya hai
+    if (currentNetBalance <= 0) { 
+        alert("Is customer ka koi outstanding balance nahi hai!");
+        return;
+    }
+
+    // 1. User se input lein ke kitni raqam receive hui hai
+    const amountStr = prompt(
+        `Customer: ${record.customer}\nRemaining Balance: ${CURRENCY_SYMBOL}${currentNetBalance.toFixed(2)}\n\nMeharbani karke received raqam likhein:`, 
+        currentNetBalance.toFixed(2)
+    );
+
+    // Cancel press hone par operation abort karein
+    if (amountStr === null) return;
+
+    const paymentAmount = parseFloat(amountStr);
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+        alert("Ghalti: Meharbani karke sahi aur positive raqam likhein.");
+        return;
+    }
+
+    if (paymentAmount > currentNetBalance + 0.01) {
+        alert(`Ghalti: Received raqam outstanding balance (${CURRENCY_SYMBOL}${currentNetBalance.toFixed(2)}) se zyada nahi ho sakti.`);
+        return;
+    }
+
+    // 2. Calculations aur values update karein
+    record.recovery = (Number(record.recovery) || 0) + paymentAmount;
+    record.balance = (Number(record.balance) || 0) - paymentAmount;
+    record.netBalance = currentNetBalance - paymentAmount;
+
+    // 3. Status check karein (Agar balance khatam ho jaye to Fully Paid warna Unpaid rahega)
+    if (record.netBalance <= 0.01) {
+        record.netBalance = 0;
+        record.status = 'paid';
+    } else {
+        record.status = 'unpaid';
+    }
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        
+        // Firebase Cloud mein data save karein
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        // Cash Book mein entry shamil karein (Cash In)
+        addTransactionToCashBook(
+            `Demand Payment Rcvd - ${record.customer}`, 
+            'in', 
+            paymentAmount, 
+            new Date().toISOString(), 
+            'cb_dem_pay_' + Date.now()
+        );
+
+        alert(`Raqam ${CURRENCY_SYMBOL}${paymentAmount.toFixed(2)} kamyabi se record ho gayi hai!`);
+        
+        // UI ko refresh karein
+        renderDemandList('all');
+        if (typeof renderDemandRecord === "function") renderDemandRecord();
+        refreshAll();
+    } catch (e) {
+        alert("Cloud Database update fail ho gaya: " + e.message);
+    }
+}
+
+// 6. PDF for Paid/Unpaid separately
+function generateFilteredDemandPDF(status) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    const reportData = demandRecords.filter(r => r.status === status);
+    if (reportData.length === 0) { alert(`${status} ka koi record nahi mila.`); return; }
+
+    doc.setFontSize(18);
+    doc.text(`${status.toUpperCase()} CUSTOMERS REPORT`, 105, 15, { align: 'center' });
+
+    const rows = reportData.map(r => [
+        new Date(r.date).toLocaleDateString(),
+        r.customer,
+        r.bill,
+        r.netBalance,
+        status.toUpperCase()
+    ]);
+
+    doc.autoTable({
+        startY: 25,
+        head: [['Date', 'Customer', 'Bill', 'Net Balance', 'Status']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: status === 'paid' ? [16, 185, 129] : [239, 68, 68] }
+    });
+
+    doc.save(`Demand_${status}_Report.pdf`);
+}
+
 
 // Closes the pop-up modal
 function closeEditPurchaserPaymentModal() {
@@ -3046,7 +4107,7 @@ const IMG_PLACEHOLDER = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2264
 const defaultProducts =[];
 
 // --- Application State Variables ---
-let appSettings = {}, products = [], salesLog = [], users = [], sessions = [], notifications =[], expenses =[], expenseCategories = [], partialPaymentInvoices =[], purchasers = [], purchaseLog = [], cashBookLog =[], gatePassLog =[], sellReturnsLog =[], stockUpdatesLog =[], selectedCategory = "All", selectedProductIdToManage = null, selectedInvoiceId = null, currentImageBase64 = null, loggedInUser = null;
+let appSettings = {}, products = [], salesLog = [], demandRecords = [], users = [], sessions = [], notifications =[], expenses =[], expenseCategories = [], partialPaymentInvoices =[], purchasers = [], purchaseLog = [], cashBookLog =[], gatePassLog =[], sellReturnsLog =[], stockUpdatesLog =[], selectedCategory = "All", selectedProductIdToManage = null, selectedInvoiceId = null, currentImageBase64 = null, loggedInUser = null;
 
 const { jsPDF } = window.jspdf;
 
@@ -3611,39 +4672,56 @@ function handleNewProductImageUpload(event) {
     reader.readAsDataURL(file);
 }
 
+// Product Add karne ka sahi function
 function addManagedProduct() {
     const name = document.getElementById('new-product-name').value.trim();
     const price = parseFloat(document.getElementById('new-product-price').value);
     const costPrice = parseFloat(document.getElementById('new-product-cost-price').value) || 0;
-    const lowStockThreshold = parseInt(document.getElementById('new-product-low-stock').value) || 5;
+    const lowStock = parseInt(document.getElementById('new-product-low-stock').value) || 5;
     
-    if (!name || isNaN(price) || price < 0) {
-        alert("Product name and a valid selling price are required.");
-        return;
-    }
-    if (products.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-        alert("A product with this name already exists.");
+    if (!name || isNaN(price)) {
+        alert("Product name and selling price are required!");
         return;
     }
 
     const newProduct = {
         id: 'p' + Date.now(),
         name: name,
-        image_path: currentImageBase64,
         price: price,
         costPrice: costPrice,
         quantity: 0, 
-        category: 'Uncategorized',
-        lowStockThreshold: lowStockThreshold 
+        lowStockThreshold: lowStock,
+        image_path: currentImageBase64 || null
     };
 
     products.push(newProduct);
     saveProducts();
     alert("Product added successfully!");
-    
     resetManagedProductForm();
     renderManageProductsList();
-    populatePurchaseProductSelect();
+}
+
+// Product Edit karne ka sahi function
+function editProduct(productId) {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    selectedProductIdToManage = productId;
+    document.getElementById('manage-product-form-title').textContent = "Edit Product";
+    document.getElementById('new-product-name').value = product.name;
+    document.getElementById('new-product-price').value = product.price;
+    document.getElementById('new-product-cost-price').value = product.costPrice || 0;
+    document.getElementById('new-product-low-stock').value = product.lowStockThreshold || 5;
+    
+    if (product.image_path) {
+        document.getElementById('new-product-preview').src = product.image_path;
+        document.getElementById('new-product-preview').style.display = 'block';
+        currentImageBase64 = product.image_path;
+    }
+
+    document.getElementById('btn-add-managed-product').style.display = 'none';
+    document.getElementById('btn-save-managed-product').style.display = 'inline-flex';
+    document.getElementById('btn-cancel-edit-managed-product').style.display = 'inline-flex';
 }
 
 function getLatestPurchasePrice(productId) {
@@ -9140,9 +10218,19 @@ if (moduleName === 'SellReturn') {
             await dbFetchPurchaseLog();
             renderInventoryCostingReport();
         }
-        if (moduleName === 'Settings') {
+       if (moduleName === 'Settings') {
             populateSettingsForm();
         }
+        // --- NAYI CONDITIONS SHAMIL KI GAYI HAIN ---
+        if (moduleName === 'DemandForm') {
+            await dbFetchDemandWorkers(); // Cloud se workers ka data mangwaya
+            populateDemandWorkersDropdown(); // Dropdown menu refresh kiya
+        }
+        if (moduleName === 'DemandWorkers') {
+            await dbFetchDemandWorkers(); // Cloud se workers ka data mangwaya
+            renderDemandWorkersTable(); // Workers ki list table mein render ki
+        }
+        // -------------------------------------------
         if (moduleName === 'AdminDashboard') {
             await renderAdminDashboard();
         }
@@ -9150,6 +10238,7 @@ if (moduleName === 'SellReturn') {
     } catch (e) {
         console.error("Online lazy load failed: ", e);
         alert("Internet Slow ya disconnect hai! Data sahi se load nahi ho saka.");
+    
     } finally {
         // FIX: Ab button variable safe hai aur wapas apney puraney text par reset ho jayega
         button.innerHTML = originalText;
@@ -9877,156 +10966,531 @@ function deleteCashBookTransaction(id) {
     renderDashboard();
 }
 
-// Demand save karne ka function
-async function saveDemandRecord() {
-    const customer = document.getElementById('d-customer').value;
-    // ... baki sab fields get karein ...
-    const record = {
-        id: 'dem' + Date.now(),
-        customer: customer,
-        mobile: document.getElementById('d-mobile').value,
-        pBalance: document.getElementById('d-pbalance').value,
-        demand: document.getElementById('d-demand').value,
-        bill: document.getElementById('d-bill').value,
-        cashRP: document.getElementById('d-cashrp').value,
-        date: new Date().toISOString()
-    };
+
+
+// 1. Sahi alignment aur poore 12 columns ke sath table render karne ka function
+function renderDemandRecord() {
+    const tbody = document.getElementById('demand-record-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
     
-    // 1. Array mein add karein
-    demandRecords.push(record);
+    if (!demandRecords || !Array.isArray(demandRecords)) return;
+
+    const searchInput = document.getElementById('demand-search');
+    const filterDateInput = document.getElementById('demand-filter-date');
     
-    // 2. Firebase Cloud par save karein (Permanent)
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    const filterDate = filterDateInput ? filterDateInput.value : '';
+
+    const filtered = demandRecords.filter(r => {
+        const matchesName = r.customer && r.customer.toLowerCase().includes(searchTerm);
+        const matchesPhone = r.phone && r.phone.toLowerCase().includes(searchTerm);
+        const matchesDate = !filterDate || r.date.startsWith(filterDate);
+        return (matchesName || matchesPhone) && matchesDate;
+    });
+
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        const workerDisplay = rec.worker ? rec.worker.name : 'N/A';
+        const totalRecovery = (rec.recovery || 0) + (rec.onlineRec || 0);
+        
+        tbody.innerHTML += `<tr>
+            <td>${new Date(rec.date).toLocaleDateString()}</td>
+            <td>${rec.customer || '-'}</td>
+            <td>${rec.phone || '-'}</td>
+            <td style="font-weight:bold; color:var(--info-color);">${workerDisplay}</td>
+            <td>${rec.demand || 0}</td>
+            <td>${rec.price || 0}</td>
+            <td>${totalRecovery}</td>
+            <td>${rec.bill || 0}</td>
+            <td>${rec.oldBalance || 0}</td>
+            <td>${rec.balance || 0}</td>
+            <td style="font-weight:bold; color:#14b8a6;">${(rec.netBalance || 0).toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-primary" onclick="generateSingleDemandPDFById('${rec.id}')">PDF</button>
+                    <button class="btn btn-sm btn-warning" onclick="editDemandRecord('${rec.id}')">Edit</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteDemandRecord('${rec.id}')">Delete</button>
+                </div>
+            </td>
+        </tr>`;
+    });
+    
+    if(typeof renderDemandList === 'function') renderDemandList('all');
+}
+
+// 2. Client/Demand Record ko Edit form mein load karne ka function
+function editDemandRecord(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) {
+        alert("Record nahi mila!");
+        return;
+    }
+    editingDemandId = id;
+
+    // Inputs mein data fill karein
+    document.getElementById('d-customer').value = record.customer || '';
+    document.getElementById('d-phone').value = record.phone || '';
+    
+    const workerSelect = document.getElementById('d-worker');
+    if (workerSelect && record.worker) {
+        const worker = demandWorkers.find(w => w.name === record.worker.name && w.phone === record.worker.phone);
+        workerSelect.value = worker ? worker.id : '';
+    } else if (workerSelect) {
+        workerSelect.value = '';
+    }
+
+    document.getElementById('d-demand').value = record.demand || '';
+    document.getElementById('d-price').value = record.price || '';
+    document.getElementById('d-bill').value = (record.bill || 0).toFixed(2);
+    
+    const totalRecovery = (record.recovery || 0) + (record.onlineRec || 0);
+    document.getElementById('d-recovery').value = totalRecovery || '';
+    
+    let mode = 'cash';
+    if (record.onlineRec > 0) {
+        mode = 'online';
+    } else if (totalRecovery === 0) {
+        mode = 'unpaid';
+    }
+    toggleDemandRecoveryMode(mode);
+
+    document.getElementById('d-old-balance').value = record.oldBalance || '';
+    document.getElementById('d-balance').value = (record.balance || 0).toFixed(2);
+    document.getElementById('d-net-balance').value = (record.netBalance || 0).toFixed(2);
+
+    // Save button ka text tabdeel karein
+    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
+    if (saveBtn) {
+        saveBtn.textContent = "Update Client Demand";
+        saveBtn.className = "btn btn-warning";
+    }
+
+    // Form wale Tab par redirect karein
+    const demandFormTab = document.querySelector('.sub-tab[onclick*="DemandForm"]');
+    if (demandFormTab) {
+        openModule({ currentTarget: demandFormTab }, 'DemandForm');
+    }
+}
+
+// 3. Client Record ko delete karne ka function
+async function deleteDemandRecord(id) {
+    if (!confirm("Kya aap waqai is client record ko delete karna chahte hain?")) return;
+    
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
+        demandRecords = demandRecords.filter(r => r.id !== id);
+        
+        // Cloud Database sync
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
-        alert("Data cloud par save ho gaya!");
+        
+        alert("Record delete ho gaya!");
+        renderDemandRecord();
     } catch (e) {
-        alert("Cloud par save nahi hua: " + e.message);
+        alert("Delete karne mein error: " + e.message);
     }
-    
-    // 3. Form clear karein
-    clearDemandForm();
-    
-    // 4. List update karein
-    renderDemandRecord();
 }
 
-// Demand Record table dikhane ka function
-function renderDemandRecord() {
-    const tbody = document.getElementById('demand-record-body');
-    const searchTerm = document.getElementById('demand-search').value.toLowerCase();
-    const filterDate = document.getElementById('demand-filter-date').value;
-    
-    if(!tbody) return;
-    tbody.innerHTML = '';
-    
-    let totalD = 0;
-    let totalC = 0;
-    
-    demandRecords.filter(r => {
-        const matchesName = r.customer.toLowerCase().includes(searchTerm);
-        const matchesDate = !filterDate || r.date.startsWith(filterDate);
-        return matchesName && matchesDate;
-    }).sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
-        totalD += parseFloat(rec.demand) || 0;
-        totalC += parseFloat(rec.cashRP) || 0;
-
-        tbody.innerHTML += `<tr>
-            <td>${new Date(rec.date).toLocaleDateString()}</td>
-            <td>${rec.customer}</td>
-            <td>${rec.pBalance}</td>
-            <td>${rec.demand}</td>
-            <td>${rec.bill}</td>
-            <td>${rec.cashRP}</td>
-        </tr>`;
-    });
-    // Summary Cards update karein
-    const demandSum = document.getElementById('total-demand-summary');
-    const cashSum = document.getElementById('total-cash-summary');
-    if(demandSum) demandSum.textContent = `Rs. ${totalD.toFixed(2)}`;
-    if(cashSum) cashSum.textContent = `Rs. ${totalC.toFixed(2)}`;
-}
-
-
-// Data Rendering (Search aur Date filter ke sath)
-function renderDemandRecord() {
-    const tbody = document.getElementById('demand-record-body');
-    const searchTerm = document.getElementById('demand-search').value.toLowerCase();
-    const filterDate = document.getElementById('demand-filter-date').value;
-    
-    tbody.innerHTML = '';
-    
-    demandRecords.filter(r => {
-        const matchesName = r.customer.toLowerCase().includes(searchTerm);
-        const matchesDate = !filterDate || r.date.startsWith(filterDate);
-        return matchesName && matchesDate;
-    }).sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
-        tbody.innerHTML += `<tr>
-            <td>${new Date(rec.date).toLocaleDateString()}</td>
-            <td>${rec.customer}</td>
-            <td>${rec.pBalance}</td>
-            <td>${rec.demand}</td>
-            <td>${rec.bill}</td>
-            <td>${rec.cashRP}</td>
-            <td>${rec.balance}</td>
-        </tr>`;
-    });
-}
-
-// PDF Download Logic
-function generateDemandPDF(type) {
+// NAYA FUNCTION: Search Result Statement PDF Download
+function downloadSearchResultPDF() {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
 
-    // 1. Company Header
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM Social Media", 105, 15, { align: 'center' });
-    
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text("Demand Record Report", 105, 22, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.text(`Report Type: ${type.toUpperCase()} | Date: ${new Date().toLocaleDateString()}`, 14, 30);
+    const searchInput = document.getElementById('demand-tracking-search');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-    // 2. Data Preparation
-    let filteredData = demandRecords; 
-    const tableData = filteredData.map(r => [
-        new Date(r.date).toLocaleDateString(), 
-        r.customer, 
-        r.mobile || 'N/A', 
-        r.pBalance, 
-        r.demand, 
-        r.bill, 
-        r.cashRP
+    if (!searchQuery) {
+        alert("Meharbani karke pehle search bar mein koi naam ya mobile number likhein!");
+        return;
+    }
+
+    const getRecordStatus = (rec) => (rec && (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01)) ? 'paid' : 'unpaid';
+
+    let filtered = demandRecords || [];
+    filtered = filtered.filter(rec => rec); // Corrupt aur khali records ko skip karne ke liye
+
+    if (activeDemandTrackingFilter === 'paid') filtered = filtered.filter(r => getRecordStatus(r) === 'paid');
+    if (activeDemandTrackingFilter === 'unpaid') filtered = filtered.filter(r => getRecordStatus(r) === 'unpaid');
+
+    filtered = filtered.filter(rec => {
+        const matchesName = rec.customer && rec.customer.toLowerCase().includes(searchQuery);
+        const matchesPhone = rec.phone && rec.phone.toLowerCase().includes(searchQuery);
+        return matchesName || matchesPhone;
+    });
+
+    if (filtered.length === 0) {
+        alert("Is search query ke mutabiq koi records nahi mile!");
+        return;
+    }
+
+    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Receipt Brand Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 12;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Demand Statement", 105, yPos, { align: 'center' }); yPos += 12;
+
+    const sampleRec = filtered[0];
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Details:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Customer Name: ${sampleRec.customer || 'N/A'}`, 14, yPos);
+    doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 5;
+    doc.text(`Mobile Number: ${sampleRec.phone || 'N/A'}`, 14, yPos); yPos += 15;
+
+    const rows = filtered.map((rec, index) => [
+        index + 1,
+        rec.date ? new Date(rec.date).toLocaleDateString() : 'N/A',
+        rec.worker ? (rec.worker.name || 'N/A') : 'N/A',
+        rec.demand || 0,
+        `${CURRENCY_SYMBOL}${(rec.price || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(rec.bill || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(rec.recovery || rec.onlineRec || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.netBalance) || 0).toFixed(2)}`,
+        getRecordStatus(rec).toUpperCase()
     ]);
-    
-    // 3. Professional Table Styling
+
     doc.autoTable({
-        startY: 35,
-        head: [['Date', 'Customer', 'Mobile', 'P. Balance', 'Demand', 'Bill', 'Cash RP']],
-        body: tableData,
-        theme: 'grid', // 'grid' ya 'striped' professional lagta hai
-        headStyles: { fillColor: [42, 105, 185], textColor: 255, fontSize: 10 },
-        bodyStyles: { fontSize: 9 },
-        margin: { top: 10 }
+        startY: yPos,
+        head: [['S.No', 'Date', 'Worker', 'Qty', 'Price', 'Bill Amount', 'Recovery', 'Net Balance', 'Status']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255 },
+        styles: { fontSize: 8 }
     });
     
-    doc.save(`Demand_Report_${type}_${new Date().toISOString().split('T')[0]}.pdf`);
+    yPos = doc.previousAutoTable.finalY + 12;
+
+    const totalBill = filtered.reduce((sum, r) => sum + (r.bill || 0), 0);
+    const totalRecovery = filtered.reduce((sum, r) => sum + (r.recovery || r.onlineRec || 0), 0);
+    const latestRecord = filtered[filtered.length - 1];
+    const finalNetBalance = latestRecord ? (Number(latestRecord.netBalance) || 0) : 0;
+
+    const summaryTableData = [
+        ['Total Demand Bill:', `${CURRENCY_SYMBOL} ${totalBill.toFixed(2)}`],
+        ['Total Recovery Received:', `${CURRENCY_SYMBOL} ${totalRecovery.toFixed(2)}`],
+        ['Current Outstanding Balance:', `${CURRENCY_SYMBOL} ${finalNetBalance.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        didParseCell: function(data) {
+            if (data.row.index === 2) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62];
+            }
+        }
+    });
+
+    doc.save(`Demand_Statement_${(sampleRec.customer || 'Customer').replace(/\s+/g, '_')}.pdf`);
 }
 
-function resetDemandFilters() {
-    document.getElementById('demand-search').value = '';
-    document.getElementById('demand-filter-date').value = '';
-    renderDemandRecord();
+function showWorkerStats(workerId) {
+    const worker = demandWorkers.find(w => w.id === workerId);
+    if (!worker) return;
+
+    const workerDemands = (demandRecords || []).filter(rec => 
+        rec.worker && rec.worker.name === worker.name && rec.worker.phone === worker.phone
+    );
+
+    // Dynamic helper for accurate status checking
+    const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+
+    const totalClients = workerDemands.length;
+    const paidClients = workerDemands.filter(rec => getStatus(rec) === 'paid').length;
+    const unpaidClients = workerDemands.filter(rec => getStatus(rec) === 'unpaid').length;
+    const totalOutstanding = workerDemands.reduce((sum, rec) => sum + (Number(rec.netBalance) || 0), 0);
+
+    // UI elements update
+    document.getElementById('ws-worker-name').textContent = worker.name;
+    document.getElementById('ws-total-clients').textContent = totalClients;
+    document.getElementById('ws-paid-clients').textContent = paidClients;
+    document.getElementById('ws-unpaid-clients').textContent = unpaidClients;
+    document.getElementById('ws-outstanding-balance').textContent = `${CURRENCY_SYMBOL}${totalOutstanding.toFixed(2)}`;
+
+    const tbody = document.getElementById('worker-clients-tbody');
+    tbody.innerHTML = '';
+
+    if (workerDemands.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Is worker ko abhi tak koi demand assign nahi ki gayi.</td></tr>';
+    } else {
+        workerDemands.forEach(rec => {
+            const currentStatus = getStatus(rec);
+            const statusHTML = currentStatus === 'paid' ? 
+                '<span style="color:#10b981; font-weight:bold;">✅ PAID</span>' : 
+                '<span style="color:#ef4444; font-weight:bold;">❌ UNPAID</span>';
+
+            const safeNetBalance = Number(rec.netBalance) || 0;
+            const safeBill = Number(rec.bill) || 0; // Safe conversion to avoid crash
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${new Date(rec.date).toLocaleDateString()}</td>
+                <td>${rec.customer}</td>
+                <td>${rec.phone || 'N/A'}</td>
+                <td>${rec.demand}</td>
+                <td>${CURRENCY_SYMBOL}${safeBill.toFixed(2)}</td>
+                <td>${CURRENCY_SYMBOL}${safeNetBalance.toFixed(2)}</td>
+                <td>${statusHTML}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    document.getElementById('worker-stats-container').style.display = 'block';
+
+    const pdfBtn = document.getElementById('btn-download-worker-pdf');
+    pdfBtn.onclick = () => generateWorkerReportPDF(worker, workerDemands, totalClients, paidClients, unpaidClients, totalOutstanding);
+
+    document.getElementById('worker-stats-container').scrollIntoView({ behavior: 'smooth' });
 }
 
 
+function generateWorkerReportPDF(worker, demands, total, paid, unpaid, balance) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 15;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Worker Client Performance Report", 105, yPos, { align: 'center' }); yPos += 12;
+
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Worker Details:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Name: ${worker.name}`, 14, yPos);
+    doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 5;
+    doc.text(`Mobile: ${worker.phone}`, 14, yPos); yPos += 5;
+    doc.text(`Address: ${worker.address}`, 14, yPos); yPos += 15;
+
+    // Safe variables scope declaration
+    const totalBill = demands.reduce((s, r) => s + (Number(r.bill) || 0), 0);
+    const totalItemsBought = demands.reduce((s, r) => s + (Number(r.demand) || 0), 0).toString();
+
+    const summaryTableData = [
+        ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBill.toFixed(2)}`],
+        ['Total Items Bought:', totalItemsBought],
+        ['Paid Clients / Demands', paid.toString()],
+        ['Unpaid Clients / Demands', unpaid.toString()],
+        ['Total Outstanding Balance', `${CURRENCY_SYMBOL} ${balance.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
+    });
+    yPos = doc.previousAutoTable.finalY + 12;
+
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 5;
+
+    const clientRows = demands.map((rec, index) => [
+        index + 1,
+        new Date(rec.date).toLocaleDateString(),
+        rec.customer,
+        rec.phone || 'N/A',
+        rec.demand,
+        `${CURRENCY_SYMBOL}${(Number(rec.bill) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.netBalance) || 0).toFixed(2)}`,
+        getStatus(rec).toUpperCase()
+    ]);
+
+    doc.autoTable({
+        startY: yPos,
+        head: [['S.No', 'Date', 'Customer Name', 'Phone', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
+        body: clientRows,
+        theme: 'striped',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255 },
+        styles: { fontSize: 9 }
+    });
+
+    doc.save(`Worker_Report_${worker.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+}
 
 
+// Client/Demand Record ko Edit form mein load karne ke liye
+function editDemandRecord(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) {
+        alert("Record nahi mila!");
+        return;
+    }
+    editingDemandId = id;
+
+    // Form fields ko purane data se fill karein
+    document.getElementById('d-customer').value = record.customer || '';
+    document.getElementById('d-phone').value = record.phone || '';
+    
+    // Assigned Worker set karein
+    const workerSelect = document.getElementById('d-worker');
+    if (workerSelect && record.worker) {
+        const worker = demandWorkers.find(w => w.name === record.worker.name && w.phone === record.worker.phone);
+        workerSelect.value = worker ? worker.id : '';
+    } else if (workerSelect) {
+        workerSelect.value = '';
+    }
+
+    document.getElementById('d-demand').value = record.demand || '';
+    document.getElementById('d-price').value = record.price || '';
+    document.getElementById('d-bill').value = (record.bill || 0).toFixed(2);
+    
+    // Recovery payment modes handles
+    const totalRecovery = (record.recovery || 0) + (record.onlineRec || 0);
+    document.getElementById('d-recovery').value = totalRecovery || '';
+    
+    let mode = 'cash';
+    if (record.onlineRec > 0) {
+        mode = 'online';
+    } else if (totalRecovery === 0) {
+        mode = 'unpaid';
+    }
+    toggleDemandRecoveryMode(mode);
+
+    document.getElementById('d-old-balance').value = record.oldBalance || '';
+    document.getElementById('d-balance').value = (record.balance || 0).toFixed(2);
+    document.getElementById('d-net-balance').value = (record.netBalance || 0).toFixed(2);
+
+    // Save Button ka text aur style badlein
+    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
+    if (saveBtn) {
+        saveBtn.textContent = "Update Client Demand";
+        saveBtn.className = "btn btn-warning";
+    }
+
+    // Form wale Tab par redirect karein
+    const demandFormTab = document.querySelector('.sub-tab[onclick*="DemandForm"]');
+    if (demandFormTab) {
+        openModule({ currentTarget: demandFormTab }, 'DemandForm');
+    }
+}
+
+// Client Record delete karne ke liye
+async function deleteDemandRecord(id) {
+    if (!confirm("Kya aap waqai is client record ko delete karna chahte hain?")) return;
+    
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        demandRecords = demandRecords.filter(r => r.id !== id);
+        
+        // Cloud par updated list save karein
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+        
+        alert("Record delete ho gaya!");
+        renderDemandRecord();
+    } catch (e) {
+        alert("Delete karne mein error: " + e.message);
+    }
+}
+
+
+function renderDemandList(filter) {
+    if (filter !== undefined) {
+        activeDemandTrackingFilter = filter;
+    }
+
+    const allBtn = document.getElementById('demand-filter-all-btn');
+    const paidBtn = document.getElementById('demand-filter-paid-btn');
+    const unpaidBtn = document.getElementById('demand-filter-unpaid-btn');
+
+    if (allBtn && paidBtn && unpaidBtn) {
+        allBtn.classList.remove('active');
+        paidBtn.classList.remove('active');
+        unpaidBtn.classList.remove('active');
+
+        if (activeDemandTrackingFilter === 'all') allBtn.classList.add('active');
+        else if (activeDemandTrackingFilter === 'paid') paidBtn.classList.add('active');
+        else if (activeDemandTrackingFilter === 'unpaid') unpaidBtn.classList.add('active');
+    }
+
+    const tbody = document.getElementById('current-demand-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const getRecordStatus = (rec) => (rec && (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01)) ? 'paid' : 'unpaid';
+
+    let filtered = demandRecords || [];
+    filtered = filtered.filter(rec => rec); // Corrupt aur khali records ko skip karne ke liye
+
+    if (activeDemandTrackingFilter === 'paid') filtered = filtered.filter(r => getRecordStatus(r) === 'paid');
+    if (activeDemandTrackingFilter === 'unpaid') filtered = filtered.filter(r => getRecordStatus(r) === 'unpaid');
+
+    const searchInput = document.getElementById('demand-tracking-search');
+    const searchQuery = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    const downloadSearchPdfBtn = document.getElementById('btn-download-search-pdf');
+    if (downloadSearchPdfBtn) {
+        if (searchQuery) {
+            downloadSearchPdfBtn.style.display = 'inline-flex';
+        } else {
+            downloadSearchPdfBtn.style.display = 'none';
+        }
+    }
+
+    if (searchQuery) {
+        filtered = filtered.filter(rec => {
+            const matchesName = rec.customer && rec.customer.toLowerCase().includes(searchQuery);
+            const matchesPhone = rec.phone && rec.phone.toLowerCase().includes(searchQuery);
+            return matchesName || matchesPhone;
+        });
+    }
+
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        const recordStatus = getRecordStatus(rec);
+        const statusHTML = recordStatus === 'paid' ? 
+            '<span style="color:#10b981; font-weight:bold;">✅ PAID</span>' : 
+            '<span style="color:#ef4444; font-weight:bold;">❌ UNPAID</span>';
+
+        let actionBtn = '';
+        if (recordStatus === 'unpaid') {
+            actionBtn += `<button class="btn btn-sm btn-success" onclick="markAsPaid('${rec.id}')" style="margin-right: 5px;">Add Payment</button>`;
+        } else {
+            actionBtn += `<button class="btn btn-sm btn-secondary" disabled style="margin-right: 5px;">Fully Paid</button>`;
+        }
+        
+        actionBtn += `<button class="btn btn-sm btn-primary" onclick="generateSingleDemandPDFById('${rec.id}')">Download PDF</button>`;
+
+        const safeNetBalance = Number(rec.netBalance) || 0;
+        const safePhone = rec.phone || 'N/A';
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${rec.date ? new Date(rec.date).toLocaleDateString() : 'N/A'}</td>
+                <td><strong>${rec.customer || 'N/A'}</strong></td>
+                <td>${safePhone}</td>
+                <td>${CURRENCY_SYMBOL}${safeNetBalance.toFixed(2)}</td>
+                <td>${statusHTML}</td>
+                <td><div style="display: flex; gap: 5px;">${actionBtn}</div></td>
+            </tr>
+        `;
+    });
+}
 
 </script>
 
