@@ -1044,22 +1044,21 @@ body,
             <div class="left-panel">
                 <div class="tabs">
                     <button class="tab-link active" onclick="openModule(event, 'Dashboard')">📊 Dashboard</button>
+                    
 
                     
 
 
-<!-- Demand Dropdown -->
 <div class="nav-item-dropdown" id="demand-nav-item">
     <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('demand-nav-item')">
         📝 Demand Module <span class="arrow">▼</span>
     </button>
     <div class="sub-tabs">
         <button class="tab-link sub-tab" onclick="openModule(event, 'DemandForm')">Demand</button>
-            <button class="tab-link sub-tab" onclick="openModule(event, 'DemandWorkers')">Demand Workers</button>
-
+        <button class="tab-link sub-tab" onclick="openModule(event, 'DemandRecord')">Demand Record</button> <!-- <-- YEH NAYA BUTTON SHAMIL KAREIN -->
+        <button class="tab-link sub-tab" onclick="openModule(event, 'DemandWorkers')">Demand Workers</button>
     </div>
 </div>
-
 
 
                     <!-- EXPENSE MODULE START -->
@@ -1093,6 +1092,97 @@ body,
 
             <!-- Center Panel: Module Content (Products, Manage, Reports, etc.) -->
             <div class="center-panel">
+
+                <!-- START NEW MODULE: DEMAND RECORD (SIMPLIFIED & AUTOMATED) -->
+<div id="DemandRecord" class="module-content">
+    <h2 class="panel-title">📝 Demand Record</h2>
+    <div class="manage-form">
+        <h3>Process Pending Demand</h3>
+        <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px; align-items: center;">
+            
+            <!-- 1. Customer/Demand Select Option -->
+            <label style="font-weight: bold; color: var(--accent-color);">Select Customer:</label>
+            <select id="dr-pending-select" class="form-control" onchange="handlePendingDemandSelection()" style="grid-column: 2 / 5; border: 1.5px solid var(--accent-color) !important;">
+                <option value="">-- Select Pending Demand --</option>
+            </select>
+            
+            <!-- 2. Automatic Read-only Displays -->
+            <label>Date:</label>
+            <input type="text" id="dr-display-date" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+            
+            <label>Customer Name:</label>
+            <input type="text" id="dr-display-customer" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+            
+            <label>Item Name:</label>
+            <input type="text" id="dr-display-item" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+
+            <label>Demand Qty:</label>
+            <input type="number" id="dr-display-qty" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+
+            <!-- 3. Calculations Inputs -->
+            <label style="font-weight: bold; color: var(--accent-color);">Rate (Per Unit):</label>
+            <input type="number" id="dr-rate" class="form-control" placeholder="Rate likhein..." oninput="calculateDemandRecordMath()">
+
+            <label>Bill Amount (Bill):</label>
+            <input type="number" id="dr-bill" class="form-control" placeholder="0.00" readonly style="background-color: rgba(255,255,255,0.05) !important; font-weight: bold;">
+
+            <label>Old Balance:</label>
+            <input type="number" id="dr-old-balance" class="form-control" placeholder="0.00" oninput="calculateDemandRecordMath()">
+
+            <label>Recovery Amount:</label>
+            <input type="number" id="dr-recovery" class="form-control" placeholder="0.00" oninput="calculateDemandRecordMath()">
+
+            <label style="font-weight: bold;">Remaining Balance:</label>
+            <input type="number" id="dr-net-balance" class="form-control" placeholder="0.00" readonly style="background-color: rgba(255,255,255,0.05) !important; font-weight: bold; color: var(--danger-color);">
+        </div>
+
+        <button class="btn btn-success" onclick="submitDemandRecord()" style="margin-top:20px; width: 100%;">Save Demand Record & Auto-Download PDF</button>
+    </div>
+
+    <!-- Filter Demand Records Table -->
+    <div class="manage-form" style="margin-top: 20px;">
+        <h3>🔍 Filter Demand Record History</h3>
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Search by Customer:</label>
+                <input type="text" id="dr-search" class="form-control" placeholder="Type customer name..." oninput="renderDemandRecordTable()">
+            </div>
+            <div>
+                <label>From Date:</label>
+                <input type="date" id="dr-filter-from" class="form-control" onchange="renderDemandRecordTable()">
+            </div>
+            <div>
+                <label>To Date:</label>
+                <input type="date" id="dr-filter-to" class="form-control" onchange="renderDemandRecordTable()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Demand Report -->
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>📋 Finalized Demand Record Report</h3>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Item Name</th>
+                    <th>Demand</th>
+                    <th>Rate</th>
+                    <th>Bill</th>
+                    <th>Old Bal</th>
+                    <th>Recovery</th>
+                    <th>Net Bal</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="dr-table-body">
+                <!-- Loaded dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- END NEW MODULE: DEMAND RECORD -->
     
   <!-- Mukammal Simple Demand Form -->
 <div id="DemandForm" class="module-content">
@@ -3379,16 +3469,18 @@ async function submitNewDemand() {
     // 3. Serial Number
     const currentSerial = appSettings.nextSerialNo || 101;
 
-    const recordData = {
-        id: 'dem' + Date.now(),
-        serialNo: currentSerial,
-        customer: customer,
-        itemName: itemName,
-        demand: parseFloat(demandQty),
-        worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
-        date: new Date().toISOString(),
-        materialStatus: 'In warehouse'
-    };
+    // submitNewDemand ke andar is object ko check kar ke update karein:
+const recordData = {
+    id: 'dem' + Date.now(),
+    serialNo: currentSerial,
+    customer: customer,
+    itemName: itemName,
+    demand: parseFloat(demandQty),
+    worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
+    date: new Date().toISOString(),
+    materialStatus: 'In warehouse',
+    processed: false // <-- Yeh line yahan lazmi likhein taake database clean rahe
+};
 
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
@@ -4561,6 +4653,7 @@ function refreshAll() {
     populateQuickReturnSelect(); 
     renderPurchaserPaymentHistory();
     updateSellReturnSummaryCards(); 
+        renderMaalPurchaseTable();
 }
 
 // --- NEW DASHBOARD FUNCTIONS ---
@@ -10458,6 +10551,7 @@ await dbFetchCashBook();
 await dbFetchGatePasses();
 await dbFetchStockUpdates();
 await dbFetchSellReturns();
+await dbFetchMaalPurchases(); 
 refreshAll();
 }
 
@@ -10469,27 +10563,65 @@ function toggleSubMenu(elementId) {
 }
 
 async function openModule(evt, moduleName) {
+    // Safe parameter detection (Agar inline onclick mein event pass karna bhool jaye):
+    let actualModuleName = moduleName;
+    let eventObj = evt;
+    if (typeof evt === 'string') {
+        actualModuleName = evt;
+        eventObj = null;
+    }
+
+    if (!actualModuleName) {
+        console.error("openModule: moduleName is missing!");
+        return;
+    }
+
     const userRole = loggedInUser.role;
     if (userRole !== 'admin') {
         const userPermissions = (loggedInUser.permissions && loggedInUser.permissions.length > 0)
                                 ? loggedInUser.permissions
                                 : (appSettings.permissions[userRole] || []);
                                 
-        if (!userPermissions.includes('all') && !userPermissions.includes(moduleName)) {
+        if (!userPermissions.includes('all') && !userPermissions.includes(actualModuleName)) {
             alert("Aapko is hissay tak rasai ki ijazat nahi hai.");
             return; 
         }
     }
 
-    // FIX: Click hone wale button ka reference shuru me hi safe variable me save kar lein
-    const button = evt.currentTarget;
-    const originalText = button.innerHTML;
-    button.innerHTML = "⏳ Loading...";
-    button.disabled = true;
+    // Safe button loading element resolution:
+    let button = null;
+    let originalText = "";
+    if (eventObj && eventObj.currentTarget) {
+        button = eventObj.currentTarget;
+        originalText = button.innerHTML;
+        button.innerHTML = "⏳ Loading...";
+                button.disabled = true;
+
+if (actualModuleName === 'DemandRecord') {
+    await dbFetchDemandWorkers(); // Safe worker fetch
+    
+    // Cloud se updated demand lists ko dobara fetch karein
+    const userId = loggedInUser.id || loggedInUser.uid;
+    try {
+        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
+        if (doc.exists) {
+            demandRecords = JSON.parse(doc.data().payload) || [];
+        }
+    } catch (e) {
+        console.error("Demand records reload error:", e);
+    }
+
+    // Automated Dropdowns load karein (Yahan koi purani dr-date line nahi honi chahiye)
+    populatePendingDemandsDropdown();
+    handlePendingDemandSelection(); // reset inputs
+    renderDemandRecordTable();
+}
+
+    }
 
     try {
         // --- LAZY LOADING ACCORDING TO SELECTED TAB ---
-        if (moduleName === 'Dashboard') {
+        if (actualModuleName === 'Dashboard') {
             await dbFetchInvoices();
             await dbFetchExpenses();
             await dbFetchPurchaseLog();
@@ -10497,26 +10629,22 @@ async function openModule(evt, moduleName) {
             await dbFetchPurchasers();
             renderDashboard();
         }
-        if (moduleName === 'Products') {
+        if (actualModuleName === 'Products') {
             await dbFetchProducts();
             renderProductGrid();
         }
-        if (moduleName === 'ManageProducts') {
+        if (actualModuleName === 'ManageProducts') {
             await dbFetchProducts();
             resetManagedProductForm();
             renderManageProductsList();
-        
-        
-        
-        
         }
-        if (moduleName === 'ProductStockReport') {
+        if (actualModuleName === 'ProductStockReport') {
             await dbFetchProducts();
             await dbFetchInvoices();
             await dbFetchStockUpdates();
             renderProductStockReport('daily');
         }
-        if (moduleName === 'PartialPayments') { // POS
+        if (actualModuleName === 'PartialPayments') { // POS
             await dbFetchProducts();
             await dbFetchInvoices();
             clearPartialPaymentForm();
@@ -10525,40 +10653,36 @@ async function openModule(evt, moduleName) {
             renderPartialInvoiceCart();
             togglePaymentMode('cash');
         }
-        // openModule function ke andar is hissay ko badlein:
-if (moduleName === 'SellReturn') {
-    await dbFetchProducts();
-    await dbFetchInvoices();
-    await dbFetchSellReturns();
-    
-    // Sirf tab reset karein agar humne POS se return shuru NAHI kiya
-    if (!selectedInvoiceForReturn) {
-        resetSellReturnForm();
-    }
-    
-    renderSellReturnHistory();
-    populateQuickReturnSelect();
-    updateSellReturnSummaryCards();
-}
-        if (moduleName === 'AllReports') {
+        if (actualModuleName === 'SellReturn') {
+            await dbFetchProducts();
+            await dbFetchInvoices();
+            await dbFetchSellReturns();
+            if (!selectedInvoiceForReturn) {
+                resetSellReturnForm();
+            }
+            renderSellReturnHistory();
+            populateQuickReturnSelect();
+            updateSellReturnSummaryCards();
+        }
+        if (actualModuleName === 'AllReports') {
             await dbFetchInvoices();
             await dbFetchExpenses();
             await dbFetchSellReturns();
             setAllReportsFilter('daily');
         }
-        if (moduleName === 'ProfitLossStatement') {
+        if (actualModuleName === 'ProfitLossStatement') {
             await dbFetchProducts();
             await dbFetchInvoices();
             await dbFetchExpenses();
             await dbFetchSellReturns();
             setProfitLossFilter('daily');
         }
-        if (moduleName === 'PurchasePurchaserDetail') {
+        if (actualModuleName === 'PurchasePurchaserDetail') {
             await dbFetchPurchasers();
             populatePurchaserDatalist('purchaser-list-payment');
             populatePurchaserDatalist('purchaser-list-add-payment');
         }
-        if (moduleName === 'PurchaseProductPayment') {
+        if (actualModuleName === 'PurchaseProductPayment') {
             await dbFetchPurchasers();
             await dbFetchProducts();
             await dbFetchPurchaseLog();
@@ -10566,7 +10690,7 @@ if (moduleName === 'SellReturn') {
             populatePurchaserDatalist('purchaser-list-payment');
             populatePurchaseProductSelect();
         }
-        if (moduleName === 'PurchaseAddPayment') {
+        if (actualModuleName === 'PurchaseAddPayment') {
             await dbFetchPurchasers();
             await dbFetchPurchaseLog();
             selectedPurchaserForPayment = null;
@@ -10577,31 +10701,31 @@ if (moduleName === 'SellReturn') {
             document.getElementById('purchase-add-payment-details-container').style.display = 'none'; 
             document.getElementById('add-payment-date-purchaser').value = getLocalDateString(getCloudDate());
         }
-        if (moduleName === 'PurchaseHistory') {
+        if (actualModuleName === 'PurchaseHistory') {
             await dbFetchPurchasers();
             await dbFetchPurchaseLog();
             renderPurchaseHistoryTable();
         }
-        if (moduleName === 'PurchaseReports') {
+        if (actualModuleName === 'PurchaseReports') {
             await dbFetchPurchasers();
             await dbFetchPurchaseLog();
             renderPurchaserReportTable();
         }
-        if (moduleName === 'AddExpense') {
+        if (actualModuleName === 'AddExpense') {
             await dbFetchCategories();
             populateExpenseCategoryDropdowns();
             if (!editingExpenseId) {
-    clearExpenseForm(true);
-    document.getElementById('expense-date').value = getLocalDateString(getCloudDate());
-}
+                clearExpenseForm(true);
+                document.getElementById('expense-date').value = getLocalDateString(getCloudDate());
+            }
         }
-        if (moduleName === 'ExpenseHistory') {
+        if (actualModuleName === 'ExpenseHistory') {
             await dbFetchExpenses();
             await dbFetchCategories();
             populateExpenseCategoryDropdowns();
             renderExpensesList();
         }
-        if (moduleName === 'CashBook') {
+        if (actualModuleName === 'CashBook') {
             await dbFetchPurchaseLog();
             await dbFetchCashBook();
             await dbFetchInvoices();
@@ -10609,34 +10733,27 @@ if (moduleName === 'SellReturn') {
             await dbFetchSellReturns();
             renderCashBook();
         }
-
-        if (moduleName === 'CashBookHistory') {
-    await dbFetchPurchaseLog();
-    await dbFetchCashBook();
-    await dbFetchInvoices();
-    await dbFetchExpenses();
-    await dbFetchSellReturns();
-    renderCashBookHistory();
-}
-
-       if (moduleName === 'BankAndCash') {
+        if (actualModuleName === 'CashBookHistory') {
+            await dbFetchPurchaseLog();
+            await dbFetchCashBook();
+            await dbFetchInvoices();
+            await dbFetchExpenses();
+            await dbFetchSellReturns();
+            renderCashBookHistory();
+        }
+        if (actualModuleName === 'BankAndCash') {
             await dbFetchInvoices();
             await dbFetchPurchaseLog();
             await dbFetchExpenses();
             await dbFetchSellReturns();
             await dbFetchCashBook();
-            
-            // Adjusted local cloud date detect karne ke liye helper use karein
             const aajKiDate = getLocalDateString();
             document.getElementById('bc-filter-date').value = aajKiDate;
-            
             renderBankAndCash(aajKiDate);
             renderBCManageBanksTable();
         }
-   if (moduleName === 'GatePass') {
+        if (actualModuleName === 'GatePass') {
             const userId = loggedInUser.id || loggedInUser.uid;
-            
-            // 1. Taza tareen Demand Records direct Cloud se load karein
             try {
                 const demandDoc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
                 if (demandDoc.exists) {
@@ -10645,58 +10762,63 @@ if (moduleName === 'SellReturn') {
             } catch (e) {
                 console.error("Error loading demand records for gate pass:", e);
             }
-
-            // 2. Cloud se Maal Purchase ka fresh data load karein
             const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
             if (doc.exists) {
                 maalPurchases = JSON.parse(doc.data().payload);
             }
-
             await dbFetchProducts();
             await dbFetchDemandWorkers(); 
-            populateGatePassDemandDropdown(); // Dropdown list refresh ho jayegi
+            populateGatePassDemandDropdown();
             populateGatePassProductSelect(); 
             renderGatePassList();
         }
-
-
-if (moduleName === 'GatePassHistory') {
-    await dbFetchProducts();
-    await dbFetchGatePasses();
-    renderGatePassHistory();
-}
-        if (moduleName === 'InventoryCosting') {
+        if (actualModuleName === 'GatePassHistory') {
+            await dbFetchProducts();
+            await dbFetchGatePasses();
+            renderGatePassHistory();
+        }
+        if (actualModuleName === 'InventoryCosting') {
             await dbFetchProducts();
             await dbFetchPurchaseLog();
             renderInventoryCostingReport();
         }
-       if (moduleName === 'Settings') {
+        if (actualModuleName === 'Settings') {
             populateSettingsForm();
             document.getElementById('setting-gatepass-start-number').value = appSettings.nextGatePassNumber || 100;
         }
-        // --- NAYI CONDITIONS SHAMIL KI GAYI HAIN ---
-       if (moduleName === 'DemandForm') {
-    const userId = loggedInUser.id || loggedInUser.uid;
-    // Cloud se Maal Purchase ka data taza (fresh) mangwayein
-    const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
-    if (doc.exists) {
-        maalPurchases = JSON.parse(doc.data().payload);
-    }
+        if (actualModuleName === 'DemandForm') {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
+            if (doc.exists) {
+                maalPurchases = JSON.parse(doc.data().payload);
+            }
+            await dbFetchDemandWorkers(); 
+            populateDemandWorkersDropdown(); 
+            populateDemandItemDropdown(); 
+            renderRecentDemands();
+        }
+        if (actualModuleName === 'DemandWorkers') {
+            await dbFetchDemandWorkers();
+            renderDemandWorkersTable();
+        }
+        
 
-    await dbFetchDemandWorkers(); 
-    populateDemandWorkersDropdown(); 
-    populateDemandItemDropdown(); 
-    renderRecentDemands();
-}
-
+        
+        // === YEH MISSING HANDLER SHAMIL KIYA GAYA HAI ===
+        if (actualModuleName === 'MaalPurchase') {
+            await dbFetchMaalPurchases();
+            renderMaalPurchaseTable();
+        }
+        
     } catch (e) {
         console.error("Online lazy load failed: ", e);
         alert("Internet Slow ya disconnect hai! Data sahi se load nahi ho saka.");
-    
     } finally {
-        // FIX: Ab button variable safe hai aur wapas apney puraney text par reset ho jayega
-        button.innerHTML = originalText;
-        button.disabled = false;
+        // Safe button text restoration
+        if (button) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
     }
 
     // --- TAB TOGGLING SCREEN DISPLAY ---
@@ -10717,20 +10839,21 @@ if (moduleName === 'GatePassHistory') {
         }
     }
 
-    const targetModule = document.getElementById(moduleName);
-    targetModule.style.display = "flex";
-    targetModule.classList.add("active");
+    const targetModule = document.getElementById(actualModuleName);
+    if (targetModule) {
+        targetModule.style.display = "flex";
+        targetModule.classList.add("active");
+    }
 
-    // FIX: Yahan bhi clickedTab ke liye safe 'button' reference use ho raha hai
-    const clickedTab = button;
-    clickedTab.classList.add("active");
-
-    const parentDropdown = clickedTab.closest('.nav-item-dropdown');
-    if (parentDropdown) {
-        parentDropdown.classList.add('parent-active');
-    } else {
-        const openDropdowns = document.querySelectorAll('.nav-item-dropdown.open');
-        openDropdowns.forEach(od => od.classList.remove('open'));
+    if (button) {
+        button.classList.add("active");
+        const parentDropdown = button.closest('.nav-item-dropdown');
+        if (parentDropdown) {
+            parentDropdown.classList.add('parent-active');
+        } else {
+            const openDropdowns = document.querySelectorAll('.nav-item-dropdown.open');
+            openDropdowns.forEach(od => od.classList.remove('open'));
+        }
     }
 
     if (window.innerWidth <= 768) {
@@ -10738,6 +10861,9 @@ if (moduleName === 'GatePassHistory') {
         document.getElementById('sidebar-arrow').textContent = '▶';
     }
 }
+
+
+
 
 function populateQuickReturnSelect() {
     const select = document.getElementById('quick-return-check-select');
@@ -11944,6 +12070,22 @@ function calculatePurchaseBill() {
     document.getElementById('pc-balance').value = netBalance.toFixed(2);
 }
 
+
+async function deleteMaalPurchase(id) {
+    if (!confirm("Kya aap waqai is purchase record ko delete karna chahte hain?")) return;
+    maalPurchases = maalPurchases.filter(item => item.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
+            payload: JSON.stringify(maalPurchases)
+        });
+        alert("Record delete ho gaya!");
+        renderMaalPurchaseTable();
+    } catch(e) {
+        alert("Delete karne mein error aaya: " + e.message);
+    }
+}
+
 // Save Function (Item name ke sath)
 async function saveMaalPurchase() {
     const item = document.getElementById('pc-item').value; // Item Name
@@ -12147,6 +12289,347 @@ async function saveUpdatedDemand() {
         console.error("Update Error:", e);
         alert("Ghalti: Update save nahi ho saka. Error: " + e.message);
     }
+}
+
+async function dbFetchMaalPurchases() {
+    if (!loggedInUser) return;
+    const userId = loggedInUser.id || loggedInUser.uid;
+    try {
+        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
+        if (doc.exists) {
+            const data = doc.data();
+            if (data && data.payload) {
+                maalPurchases = JSON.parse(data.payload);
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching maal_purchases from Firebase:", e);
+    }
+}
+
+// =========================================================================
+// AUTOMATED DEMAND RECORD SYSTEM & CALCULATIONS (CORE FUNCTIONS)
+// =========================================================================
+
+function populatePendingDemandsDropdown() {
+    const select = document.getElementById('dr-pending-select');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Select Pending Customer/Demand --</option>';
+
+    // Unprocessed entries ko filter karega (chahe processed field false ho ya bilkul blank/undefined ho)
+    const pendingDemands = (demandRecords || []).filter(rec => rec.processed !== true);
+    
+    pendingDemands.forEach(rec => {
+        const option = document.createElement('option');
+        option.value = rec.id;
+        option.textContent = `S.No: ${rec.serialNo || '-'} | Client: ${rec.customer} | Item: ${rec.itemName} | Qty: ${rec.demand}`;
+        select.appendChild(option);
+    });
+}
+// 2. Selected customer ki basic details ko automatic read-only fields mein fill karna
+function handlePendingDemandSelection() {
+    const select = document.getElementById('dr-pending-select');
+    const selectedId = select.value;
+
+    if (!selectedId) {
+        // Clear all fields if nothing is selected
+        document.getElementById('dr-display-date').value = '';
+        document.getElementById('dr-display-customer').value = '';
+        document.getElementById('dr-display-item').value = '';
+        document.getElementById('dr-display-qty').value = '';
+        document.getElementById('dr-rate').value = '';
+        document.getElementById('dr-bill').value = '';
+        document.getElementById('dr-old-balance').value = '';
+        document.getElementById('dr-recovery').value = '';
+        document.getElementById('dr-net-balance').value = '';
+        return;
+    }
+
+    const record = demandRecords.find(r => r.id === selectedId);
+    if (record) {
+        document.getElementById('dr-display-date').value = record.date ? new Date(record.date).toLocaleDateString() : '';
+        document.getElementById('dr-display-customer').value = record.customer || '';
+        document.getElementById('dr-display-item').value = record.itemName || '';
+        document.getElementById('dr-display-qty').value = record.demand || 0;
+
+        // Reset user calculation fields
+        document.getElementById('dr-rate').value = '';
+        document.getElementById('dr-bill').value = '';
+        document.getElementById('dr-old-balance').value = '';
+        document.getElementById('dr-recovery').value = '';
+        document.getElementById('dr-net-balance').value = '';
+
+        calculateDemandRecordMath();
+    }
+}
+
+// 3. Automatic Multiplication (Qty * Rate) aur Balance Calculations
+function calculateDemandRecordMath() {
+    const qty = parseFloat(document.getElementById('dr-display-qty').value) || 0;
+    const rate = parseFloat(document.getElementById('dr-rate').value) || 0;
+    const oldBalance = parseFloat(document.getElementById('dr-old-balance').value) || 0;
+    const recovery = parseFloat(document.getElementById('dr-recovery').value) || 0;
+
+    const bill = qty * rate; // Automatic Multiplication
+    const netBalance = (bill + oldBalance) - recovery; // Live remaining balance
+
+    document.getElementById('dr-bill').value = bill.toFixed(2);
+    document.getElementById('dr-net-balance').value = netBalance.toFixed(2);
+}
+
+// 4. Record ko Save karna, Cloud par sync karna, Cash book entry dalna aur PDF download karna
+async function submitDemandRecord() {
+    const select = document.getElementById('dr-pending-select');
+    const selectedId = select.value;
+
+    if (!selectedId) {
+        alert("Pehle list se ek pending demand select karein!");
+        return;
+    }
+
+    const rate = parseFloat(document.getElementById('dr-rate').value) || 0;
+    const bill = parseFloat(document.getElementById('dr-bill').value) || 0;
+    const oldBalance = parseFloat(document.getElementById('dr-old-balance').value) || 0;
+    const recovery = parseFloat(document.getElementById('dr-recovery').value) || 0;
+    const netBalance = parseFloat(document.getElementById('dr-net-balance').value) || 0;
+
+    if (isNaN(rate) || rate <= 0) {
+        alert("Meharbani karke Rate darj karein!");
+        return;
+    }
+
+    const recordIndex = demandRecords.findIndex(r => r.id === selectedId);
+    if (recordIndex === -1) {
+        alert("Ghalti: Demand record database mein nahi mila.");
+        return;
+    }
+
+    // Original entry ko financial maths aur processed state ke sath update karna
+    const record = demandRecords[recordIndex];
+    record.rate = rate;
+    record.bill = bill;
+    record.oldBalance = oldBalance;
+    record.recovery = recovery;
+    record.netBalance = netBalance;
+    record.processed = true; // process confirm mark
+    record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+
+        // Firebase Cloud DB par updated demand Records sync karna
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        // Agar recovery shamil hai to cash book (Cash In) mein entry lagana
+        if (recovery > 0) {
+            addTransactionToCashBook(`Recovery Rcvd (S.No #${record.serialNo}) - ${record.customer}`, 'in', recovery, record.date, 'cb_dem_rec_' + record.id);
+        }
+
+        alert("Demand Record kamyabi se save ho gaya!");
+
+        // === AUTOMATIC PDF INVOICE DOWNLOAD ===
+        generateDemandRecordPDF(record);
+
+        // UI Forms aur Tables ko reload karna
+        populatePendingDemandsDropdown();
+        handlePendingDemandSelection(); // reset input fields
+        renderDemandRecordTable();
+        refreshAll();
+    } catch (e) {
+        console.error("Save Error:", e);
+        alert("Error saving processed demand: " + e.message);
+    }
+}
+
+// 5. Finalized Demand report table render karna (with search and date filters)
+function renderDemandRecordTable() {
+    const tbody = document.getElementById('dr-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const searchQuery = (document.getElementById('dr-search')?.value || '').trim().toLowerCase();
+    const fromDateVal = document.getElementById('dr-filter-from')?.value;
+    const toDateVal = document.getElementById('dr-filter-to')?.value;
+
+    // Report mein sirf wahi entries dikhayega jo process ho chuki hain (processed === true)
+    let filtered = (demandRecords || []).filter(r => r.processed);
+
+    // Filter Logic
+    if (fromDateVal) {
+        const fromDateObj = new Date(fromDateVal + 'T00:00:00');
+        filtered = filtered.filter(r => new Date(r.date) >= fromDateObj);
+    }
+    if (toDateVal) {
+        const toDateObj = new Date(toDateVal + 'T23:59:59');
+        filtered = filtered.filter(r => new Date(r.date) <= toDateObj);
+    }
+    if (searchQuery) {
+        filtered = filtered.filter(r => r.customer && r.customer.toLowerCase().includes(searchQuery));
+    }
+
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
+        const rateVal = `${CURRENCY_SYMBOL}${rec.rate.toFixed(2)}`;
+        const billVal = `${CURRENCY_SYMBOL}${rec.bill.toFixed(2)}`;
+        const oldBalVal = `${CURRENCY_SYMBOL}${rec.oldBalance.toFixed(2)}`;
+        const recVal = `${CURRENCY_SYMBOL}${rec.recovery.toFixed(2)}`;
+        const netBalVal = `${CURRENCY_SYMBOL}${rec.netBalance.toFixed(2)}`;
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${dateStr}</td>
+                <td><strong>${rec.customer}</strong></td>
+                <td>${rec.itemName || '-'}</td>
+                <td>${rec.demand}</td>
+                <td>${rateVal}</td>
+                <td><strong>${billVal}</strong></td>
+                <td>${oldBalVal}</td>
+                <td style="color:#10b981; font-weight:bold;">${recVal}</td>
+                <td style="color:#ef4444; font-weight:bold;">${netBalVal}</td>
+                <td>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// 6. ID ke mutabiq invoice reprint karne ka helper function
+function generateDemandRecordPDFById(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (record) {
+        generateDemandRecordPDF(record);
+    } else {
+        alert("Record nahi mila!");
+    }
+}
+
+// 7. Form resetting function
+function clearDemandRecordForm() {
+    document.getElementById('dr-date').value = getLocalDateString(getCloudDate());
+    document.getElementById('dr-customer').value = '';
+    document.getElementById('dr-item-name').value = '';
+    document.getElementById('dr-display-qty').value = '';
+    document.getElementById('dr-rate').value = '';
+    document.getElementById('dr-bill').value = '';
+    document.getElementById('dr-old-balance').value = '';
+    document.getElementById('dr-recovery').value = '';
+    document.getElementById('dr-net-balance').value = '';
+    document.getElementById('dr-worker').value = '';
+}
+
+// 8. Completed Record ko delete karna aur matching Cashbook entries ko revert karna
+async function deleteDemandRecordFromTable(id) {
+    if (!confirm("Kya aap waqai is record ko delete karna chahte hain? Cashbook aur lists se entries saaf ho jayengi.")) return;
+    
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        demandRecords = demandRecords.filter(r => r.id !== id);
+
+        // Firestore Update
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        // cashbook se matching entry remove karna
+        cashBookLog = cashBookLog.filter(log => log.id !== 'cb_dem_rec_' + id);
+        recalculateCashBookBalances();
+        saveCashBookLog();
+
+        alert("Record delete ho gaya!");
+        renderDemandRecordTable();
+        refreshAll();
+    } catch (e) {
+        alert("Delete karne mein error aaya: " + e.message);
+    }
+}
+
+// 9. invoice Report dynamic PDF generator
+function generateDemandRecordPDF(record) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    // Header Details
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 15;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Demand & Recovery Invoice", 105, yPos, { align: 'center' }); yPos += 12;
+
+    // Billing Info
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Bill To:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Customer Name: ${record.customer || 'N/A'}`, 14, yPos);
+    doc.text(`Invoice ID: Serial #${record.serialNo || 'N/A'}`, 120, yPos); yPos += 5;
+    doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 14, yPos);
+    doc.text(`Assigned Worker: ${record.worker ? record.worker.name : 'N/A'}`, 120, yPos); yPos += 15;
+
+    // Item Table details
+    const billVal = record.bill !== undefined ? record.bill : (record.demand * (record.rate || 0));
+    const tableData = [
+        [record.itemName || 'N/A', record.demand || 0, `${CURRENCY_SYMBOL} ${(record.rate || 0).toFixed(2)}`, `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        head: [['Item Description', 'Demand (Qty)', 'Unit Rate', 'Total Bill']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255 },
+        styles: { fontSize: 10 }
+    });
+    
+    yPos = doc.previousAutoTable.finalY + 12;
+
+    // Finance Statement Summary Table
+    const summaryTableData = [
+        ['Total Bill Amount:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
+        ['Old Balance:', `${CURRENCY_SYMBOL} ${(record.oldBalance || 0).toFixed(2)}`],
+        ['Recovery Amount Received:', `${CURRENCY_SYMBOL} ${(record.recovery || 0).toFixed(2)}`],
+        ['Outstanding Net Balance:', `${CURRENCY_SYMBOL} ${(record.netBalance || 0).toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 11, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        didParseCell: function(data) {
+            if (data.row.index === 3) { 
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62]; // Highlight Remaining balance in red
+            }
+        }
+    });
+
+    // Signature Area
+    yPos = doc.previousAutoTable.finalY + 30;
+    if (yPos > 260) {
+        doc.addPage();
+        yPos = 30;
+    }
+    doc.setFont('helvetica', 'normal');
+    doc.setLineWidth(0.3);
+    doc.line(20, yPos, 80, yPos);
+    doc.text('Prepared By', 50, yPos + 6, { align: 'center' });
+    
+    doc.line(130, yPos, 190, yPos);
+    doc.text('Customer Sign', 160, yPos + 6, { align: 'center' });
+
+    doc.save(`Demand_Invoice_${(record.customer || 'Customer').replace(/\s+/g, '_')}_Serial_${record.serialNo}.pdf`);
 }
 
 
