@@ -1084,6 +1084,23 @@ body,
                         </div>
                     </div>
                     <!-- GATE PASS DROPDOWN END -->
+                     
+
+                    
+
+                    <!-- LABOR MANAGEMENT DROPDOWN START -->
+<div class="nav-item-dropdown" id="labor-nav-item">
+    <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('labor-nav-item')">
+        👷 Labor Management <span class="arrow">▼</span>
+    </button>
+    <div class="sub-tabs">
+        <button class="tab-link sub-tab" onclick="openModule(event, 'AddLabor')">Add Labor</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'LaborSalary')">Labor Salary</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'LaborReport')">Report</button>
+    </div>
+</div>
+<!-- LABOR MANAGEMENT DROPDOWN END -->
+
 <button class="tab-link" onclick="openModule(event, 'MaalPurchase')">🛒 Purchase Maal</button>
                     <button class="tab-link" onclick="openModule(event, 'Settings')">⚙️ Settings</button>
                     <button class="tab-link admin-only" onclick="openModule(event, 'AdminDashboard')">👑 Admin Dashboard</button>
@@ -2596,6 +2613,119 @@ body,
 </div>
 <!-- END GATE PASS HISTORY & REPORTS MODULE -->
 
+<!-- START LABOR MANAGEMENT MODULES -->
+<div id="AddLabor" class="module-content">
+    <h2 class="panel-title">👷 Add Labor / Employee</h2>
+    <div class="manage-form">
+        <h3>Employee Details</h3>
+        <div class="form-grid">
+            <label>Employee Name:</label>
+            <input type="text" id="labor-name" class="form-control" placeholder="Full Name">
+            
+            <label>Phone Number:</label>
+            <input type="tel" id="labor-phone" class="form-control" placeholder="Mobile Number">
+            
+           <label>Monthly Full Salary:</label>
+<input type="number" id="labor-rate" class="form-control" placeholder="E.g. 25000 full salary">
+        </div>
+        <button class="btn btn-success" onclick="saveLabor()" style="margin-top:20px; width: 100%;">Save Employee</button>
+    </div>
+    
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>Registered Labor List</h3>
+        <table class="cart-table">
+            <thead><tr><th>Name</th><th>Phone</th><th>Per Hour Rate</th><th>Actions</th></tr></thead>
+            <tbody id="labor-list-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="LaborSalary" class="module-content">
+    <h2 class="panel-title">🕒 Labor Salary & Attendance</h2>
+    <div class="manage-form">
+        <h3>Mark Attendance</h3>
+        <div class="form-grid">
+            <label>Select Employee:</label>
+            <select id="labor-select" class="form-control" onchange="calculateLaborSalary()"></select>
+            
+            <label>Date:</label>
+            <input type="date" id="labor-date" class="form-control">
+            
+            <label>Mark as Leave:</label>
+            <div class="checkbox-group">
+                <input type="checkbox" id="labor-is-leave" onchange="toggleLaborLeave()">
+                <label for="labor-is-leave" style="color: var(--danger-color); font-weight: bold;">Employee is on Leave (Chutti)</label>
+            </div>
+            
+            <label>Time In:</label>
+            <input type="time" id="labor-time-in" class="form-control" oninput="calculateLaborSalary()">
+            
+            <label>Time Out:</label>
+            <input type="time" id="labor-time-out" class="form-control" oninput="calculateLaborSalary()">
+            
+            <label>Calculated Salary (Rs):</label>
+            <input type="text" id="labor-calculated-salary" class="form-control" readonly style="font-weight:bold; color:var(--success-color); background: rgba(0,0,0,0.2);">
+        </div>
+        <button class="btn btn-primary" onclick="saveLaborAttendance()" style="margin-top:20px; width: 100%;">Save Salary Record</button>
+    </div> <!-- Mark Attendance form yahan band hua -->
+
+    <!-- NAYA ADVANCE SALARY FORM (Ab ye LaborSalary div ke andar aa chuka hai) -->
+    <div class="manage-form" style="margin-top: 20px; border-top: 3px solid var(--warning-color);">
+        <h3>💸 Pay Advance Salary</h3>
+        <div class="form-grid">
+            <label>Select Employee:</label>
+            <select id="labor-advance-select" class="form-control"></select>
+            
+            <label>Date:</label>
+            <input type="date" id="labor-advance-date" class="form-control">
+            
+            <label>Advance Amount (Rs):</label>
+            <input type="number" id="labor-advance-amount" class="form-control" placeholder="Enter advance amount">
+            
+            <label>Notes / Details:</label>
+            <input type="text" id="labor-advance-notes" class="form-control" placeholder="E.g. Emergency advance">
+        </div>
+        <button class="btn btn-warning" onclick="saveLaborAdvance()" style="margin-top:20px; width: 100%;">Record Advance Payment</button>
+    </div>
+
+</div> <!-- <--- SAHI JAGAH: LaborSalary div ab yahan pure Advance form ke baad band hoga -->
+
+
+<div id="LaborReport" class="module-content">
+    <h2 class="panel-title">📋 Labor Monthly Report</h2>
+    <div class="manage-form">
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr auto;">
+            <div>
+                <label>Select Employee:</label>
+                <select id="report-labor-select" class="form-control"></select>
+            </div>
+            <div>
+                <label>Select Month:</label>
+                <input type="month" id="report-labor-month" class="form-control">
+            </div>
+            <div style="display: flex; align-items: flex-end;">
+                <button class="btn btn-info" onclick="generateLaborReport()">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="dashboard-grid" style="margin-top: 20px; display: none;" id="labor-report-summary">
+        <div class="dashboard-card"><p class="card-title">Total Present Days</p><h2 id="lr-present-days" class="card-value info">0</h2></div>
+        <div class="dashboard-card"><p class="card-title">Total Leaves</p><h2 id="lr-leaves" class="card-value danger">0</h2></div>
+        <div class="dashboard-card"><p class="card-title">Total Worked Hours</p><h2 id="lr-hours" class="card-value warning">0</h2></div>
+        <div class="dashboard-card"><p class="card-title">Total Monthly Salary</p><h2 id="lr-salary" class="card-value success">Rs. 0.00</h2></div>
+    </div>
+
+    <div class="table-container" style="margin-top: 20px;">
+        <table class="cart-table">
+            <thead><tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Worked Hours</th><th>Leave Status</th><th>Earned Salary</th></tr></thead>
+            <tbody id="labor-report-body"></tbody>
+        </table>
+    </div>
+</div>
+<!-- END LABOR MANAGEMENT MODULES -->
+
                 <!-- NEW CASH BOOK MODULE -->
                 <div id="CashBook" class="module-content">
                     <h2 class="panel-title">💰 Cash Book</h2>
@@ -3308,6 +3438,279 @@ if (recoveryMode === 'online') {
 // ==========================================
 
 let demandWorkers = [];
+
+let laborList = []; 
+let laborAttendance = [];
+
+// ==========================================
+// LABOR MANAGEMENT LOGIC
+// ==========================================
+
+// Labor ko fetch karne ka logic
+async function dbFetchLaborData() {
+    if (!loggedInUser) return;
+    const userId = loggedInUser.id || loggedInUser.uid;
+    try {
+        const doc1 = await db.collection('appData').doc(userId).collection('datasets').doc('labor_list').get();
+        if (doc1.exists) laborList = JSON.parse(doc1.data().payload) || [];
+
+        const doc2 = await db.collection('appData').doc(userId).collection('datasets').doc('labor_attendance').get();
+        if (doc2.exists) laborAttendance = JSON.parse(doc2.data().payload) || [];
+    } catch (e) {
+        console.error("Labor data fetch error:", e);
+    }
+}
+
+async function saveLabor() {
+    const name = document.getElementById('labor-name').value.trim();
+    const phone = document.getElementById('labor-phone').value.trim();
+    const rate = parseFloat(document.getElementById('labor-rate').value); // Monthly Salary
+
+    if (!name || isNaN(rate) || rate <= 0) {
+        alert("Naam aur Monthly Full Salary darj karna lazmi hai.");
+        return;
+    }
+
+    const newLabor = { id: 'lab_' + Date.now(), name, phone, rate };
+    laborList.push(newLabor);
+
+    await saveLaborToDB();
+    alert("Employee kamyabi se add ho gaya!");
+    document.getElementById('labor-name').value = '';
+    document.getElementById('labor-phone').value = '';
+    document.getElementById('labor-rate').value = '';
+    renderLaborList();
+}
+
+async function saveLaborToDB() {
+    const userId = loggedInUser.id || loggedInUser.uid;
+    await db.collection('appData').doc(userId).collection('datasets').doc('labor_list').set({
+        payload: JSON.stringify(laborList)
+    });
+}
+
+function renderLaborList() {
+    const tbody = document.getElementById('labor-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    laborList.forEach(lab => {
+        tbody.innerHTML += `<tr>
+            <td>${lab.name}</td>
+            <td>${lab.phone || '-'}</td>
+            <td>${CURRENCY_SYMBOL}${lab.rate.toFixed(2)} / Month</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteLabor('${lab.id}')">Delete</button></td>
+        </tr>`;
+    });
+}
+
+async function deleteLabor(id) {
+    if (!confirm("Kya waqai delete karna chahte hain?")) return;
+    laborList = laborList.filter(l => l.id !== id);
+    await saveLaborToDB();
+    renderLaborList();
+}
+
+function populateLaborDropdowns() {
+    const selects = [
+        document.getElementById('labor-select'), 
+        document.getElementById('report-labor-select'),
+        document.getElementById('labor-advance-select') // Naya dropdown element
+    ];
+    selects.forEach(select => {
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Select Employee --</option>';
+        laborList.forEach(lab => {
+            const opt = document.createElement('option');
+            opt.value = lab.id;
+            opt.textContent = `${lab.name} (Monthly Salary: ${CURRENCY_SYMBOL}${lab.rate})`;
+            select.appendChild(opt);
+        });
+    });
+}
+
+function toggleLaborLeave() {
+    const isLeave = document.getElementById('labor-is-leave').checked;
+    document.getElementById('labor-time-in').disabled = isLeave;
+    document.getElementById('labor-time-out').disabled = isLeave;
+    
+    if (isLeave) {
+        document.getElementById('labor-time-in').value = '';
+        document.getElementById('labor-time-out').value = '';
+    }
+    calculateLaborSalary();
+}
+
+function calculateLaborSalary() {
+    const laborId = document.getElementById('labor-select').value;
+    const isLeave = document.getElementById('labor-is-leave').checked;
+    const timeIn = document.getElementById('labor-time-in').value;
+    const timeOut = document.getElementById('labor-time-out').value;
+    const salaryEl = document.getElementById('labor-calculated-salary');
+
+    if (!laborId || isLeave) {
+        salaryEl.value = '0.00';
+        return;
+    }
+
+    if (timeIn && timeOut) {
+        const inDate = new Date(`1970-01-01T${timeIn}:00`);
+        const outDate = new Date(`1970-01-01T${timeOut}:00`);
+        
+        let diffHours = (outDate - inDate) / (1000 * 60 * 60);
+        if (diffHours < 0) diffHours += 24; // Agar shift raat ke 12 baje ke baad khatam ho
+
+        const labor = laborList.find(l => l.id === laborId);
+        
+        // --- Naya Calculation Logic ---
+        const monthlySalary = labor.rate || 0;     // Full Salary (e.g. 25000)
+        const dailyWage = monthlySalary / 30;     // Daily wage (Monthly Salary divided by 30)
+        const hourlyRate = dailyWage / 8;         // Hourly rate (Daily wage divided by 8 working hours)
+        
+        const earned = diffHours * hourlyRate;    // Jitne hours kaam kiya uski salary
+        
+        salaryEl.value = earned.toFixed(2);
+    } else {
+        salaryEl.value = '0.00';
+    }
+}
+
+async function saveLaborAttendance() {
+    const laborId = document.getElementById('labor-select').value;
+    const date = document.getElementById('labor-date').value;
+    const isLeave = document.getElementById('labor-is-leave').checked;
+    const timeIn = document.getElementById('labor-time-in').value;
+    const timeOut = document.getElementById('labor-time-out').value;
+    const earnedSalary = parseFloat(document.getElementById('labor-calculated-salary').value) || 0;
+
+    if (!laborId || !date) {
+        alert("Employee aur Date select karna lazmi hai.");
+        return;
+    }
+
+    if (!isLeave && (!timeIn || !timeOut)) {
+        alert("Agar leave nahi hai, to Time In aur Time Out dalna lazmi hai!");
+        return;
+    }
+
+    // Ek din me sirf ek entry hone ki logic
+    const existingIndex = laborAttendance.findIndex(a => a.laborId === laborId && a.date === date);
+    
+    const record = {
+        id: 'att_' + Date.now(),
+        laborId, date, isLeave, timeIn, timeOut, earnedSalary
+    };
+
+    if (existingIndex !== -1) {
+        if(confirm("Is din ki entry pehle se mojood hai, kya aap update karna chahte hain?")) {
+            laborAttendance[existingIndex] = record;
+        } else { return; }
+    } else {
+        laborAttendance.push(record);
+    }
+
+    // Cloud par Save
+    const userId = loggedInUser.id || loggedInUser.uid;
+    await db.collection('appData').doc(userId).collection('datasets').doc('labor_attendance').set({
+        payload: JSON.stringify(laborAttendance)
+    });
+
+    alert("Salary/Attendance record kamyabi se save ho gaya!");
+    
+    // Form Reset
+    document.getElementById('labor-is-leave').checked = false;
+    document.getElementById('labor-time-in').value = '';
+    document.getElementById('labor-time-out').value = '';
+    document.getElementById('labor-calculated-salary').value = '';
+    toggleLaborLeave();
+}
+
+function generateLaborReport() {
+    const laborId = document.getElementById('report-labor-select').value;
+    const monthVal = document.getElementById('report-labor-month').value; // Format: "YYYY-MM"
+
+    if (!laborId || !monthVal) {
+        alert("Employee aur Month dono select karein!");
+        return;
+    }
+
+    const tbody = document.getElementById('labor-report-body');
+    tbody.innerHTML = '';
+    
+    let totalPresent = 0, totalLeaves = 0, totalHours = 0, totalSalary = 0, totalAdvances = 0;
+
+    const filtered = laborAttendance.filter(a => a.laborId === laborId && a.date.startsWith(monthVal));
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Is mahine ka koi record nahi mila.</td></tr>';
+        document.getElementById('labor-report-summary').style.display = 'none';
+        return;
+    }
+
+    filtered.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(att => {
+        // Agar record advance payment hai to isko report table mein alag dikhein
+        if (att.isAdvance) {
+            totalAdvances += att.advanceAmount;
+            tbody.innerHTML += `
+                <tr style="background: rgba(239, 68, 68, 0.08);">
+                    <td>${new Date(att.date).toLocaleDateString()}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td style="font-weight:bold; color:var(--danger-color);">💸 Advance Taken</td>
+                    <td style="font-weight:bold; color:var(--danger-color);">- ${CURRENCY_SYMBOL}${att.advanceAmount.toFixed(2)} (${att.notes || ''})</td>
+                </tr>
+            `;
+            return;
+        }
+
+        let workedHours = 0;
+        let leaveStatusText = '❌ Leave';
+        
+        if (!att.isLeave) {
+            leaveStatusText = '✅ Present';
+            totalPresent++;
+            totalSalary += att.earnedSalary;
+            
+            const inDate = new Date(`1970-01-01T${att.timeIn}:00`);
+            const outDate = new Date(`1970-01-01T${att.timeOut}:00`);
+            workedHours = (outDate - inDate) / (1000 * 60 * 60);
+            if (workedHours < 0) workedHours += 24;
+            totalHours += workedHours;
+        } else {
+            totalLeaves++;
+        }
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(att.date).toLocaleDateString()}</td>
+                <td>${att.isLeave ? '-' : formatTimeFriendly(att.timeIn)}</td>
+                <td>${att.isLeave ? '-' : formatTimeFriendly(att.timeOut)}</td>
+                <td>${att.isLeave ? '-' : workedHours.toFixed(1) + ' hrs'}</td>
+                <td style="font-weight:bold; color:${att.isLeave ? 'var(--danger-color)' : 'var(--success-color)'};">${leaveStatusText}</td>
+                <td style="font-weight:bold;">${CURRENCY_SYMBOL}${att.earnedSalary.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+
+    // Net payable calculations (Earned salary minus advances)
+    const netSalary = totalSalary - totalAdvances;
+
+    document.getElementById('lr-present-days').textContent = totalPresent;
+    document.getElementById('lr-leaves').textContent = totalLeaves;
+    document.getElementById('lr-hours').textContent = totalHours.toFixed(1);
+    
+    // Summary display ko breakdown ke sath update kiya
+    document.getElementById('lr-salary').innerHTML = `
+        Earned: ${CURRENCY_SYMBOL}${totalSalary.toFixed(2)}<br>
+        Advance: <span style="color:var(--danger-color); font-size: 0.95rem;">-${CURRENCY_SYMBOL}${totalAdvances.toFixed(2)}</span><br>
+        <span style="border-top: 1px solid var(--border-color); display:block; margin-top:5px; padding-top:5px; color:var(--success-color);">
+            Net Pay: ${CURRENCY_SYMBOL}${netSalary.toFixed(2)}
+        </span>
+    `;
+    
+    document.getElementById('labor-report-summary').style.display = 'grid';
+}
+
 
 // Workers ko Cloud se fetch karne ka function
 async function dbFetchDemandWorkers() {
@@ -4055,8 +4458,16 @@ function compileCashBookTransactions() {
         // Agar yeh transaction pehle hi step 1 mein process ho chuki hai to skip karein
         if (log.id && allTransactions.some(t => t.id === log.id)) return;
 
-        // System generated tags ko skip karein, lekin 'ptxn' (advance payments) ko skip na karein agar wo step 1 me process nahi huin
-        if (log.id && (log.id.startsWith('cb_ret_') || log.id.startsWith('cb_sale_') || log.id.startsWith('cb_spay_') || log.id.startsWith('cb_pch_') || log.id.startsWith('cb_exp_') || log.id.startsWith('cb_lab_'))) return; 
+        // --- UPDATE KIYA GAYA CHECK ---
+        // Agr ID 'cb_lab_' se shuru ho par 'cb_lab_adv_' se shuru NA ho, sirf tab skip karein.
+        if (log.id && (
+            log.id.startsWith('cb_ret_') || 
+            log.id.startsWith('cb_sale_') || 
+            log.id.startsWith('cb_spay_') || 
+            log.id.startsWith('cb_pch_') || 
+            log.id.startsWith('cb_exp_') || 
+            (log.id.startsWith('cb_lab_') && !log.id.startsWith('cb_lab_adv_'))
+        )) return; 
         
         const desc = log.description || '';
         if (desc.startsWith('Labor Advance given to') || desc.startsWith('Salary Paid to') || desc.includes('(Paid To: junaid)')) return;
@@ -4090,7 +4501,6 @@ function compileCashBookTransactions() {
 
     sellReturnsLog.forEach(ret => {
         if (typeof ret.netAmount === 'number' && !isNaN(ret.netAmount)) { 
-            // Unify date formatting to local en-CA (same as invoices)
             const d = new Date(ret.date).toLocaleDateString('en-CA');
             dailyNet[d] = (dailyNet[d] || 0) - ret.netAmount;
         }
@@ -4110,7 +4520,6 @@ function compileCashBookTransactions() {
         }
     }
 
-    // Purani entries ke mutabiq sort karein taake running balance sahi aaye
     allTransactions.sort((a, b) => a.date - b.date);
 
     let currentBalance = 0;
@@ -9462,6 +9871,9 @@ async function handleLogin() {
         loginBtn.innerText = "Login";
         loginBtn.disabled = false;
     }
+
+await dbFetchLaborData();
+
 }
 
 
@@ -10563,6 +10975,8 @@ function toggleSubMenu(elementId) {
 }
 
 async function openModule(evt, moduleName) {
+
+    
     // Safe parameter detection (Agar inline onclick mein event pass karna bhool jaye):
     let actualModuleName = moduleName;
     let eventObj = evt;
@@ -10616,6 +11030,21 @@ if (actualModuleName === 'DemandRecord') {
     handlePendingDemandSelection(); // reset inputs
     renderDemandRecordTable();
 }
+
+if (actualModuleName === 'AddLabor') {
+            await dbFetchLaborData();
+            renderLaborList();
+        }
+        if (actualModuleName === 'LaborSalary') {
+    await dbFetchLaborData();
+    populateLaborDropdowns();
+    document.getElementById('labor-date').value = getLocalDateString();
+    document.getElementById('labor-advance-date').value = getLocalDateString(); // Nayi line
+}
+        if (actualModuleName === 'LaborReport') {
+            await dbFetchLaborData();
+            populateLaborDropdowns();
+        }
 
     }
 
@@ -12632,6 +13061,59 @@ function generateDemandRecordPDF(record) {
     doc.save(`Demand_Invoice_${(record.customer || 'Customer').replace(/\s+/g, '_')}_Serial_${record.serialNo}.pdf`);
 }
 
+
+
+async function saveLaborAdvance() {
+    const laborId = document.getElementById('labor-advance-select').value;
+    const date = document.getElementById('labor-advance-date').value;
+    const amount = parseFloat(document.getElementById('labor-advance-amount').value);
+    const notes = document.getElementById('labor-advance-notes').value.trim() || 'Advance Salary';
+
+    if (!laborId || !date || isNaN(amount) || amount <= 0) {
+        alert("Employee, Date aur Advance Amount darj karna lazmi hai.");
+        return;
+    }
+
+    const labor = laborList.find(l => l.id === laborId);
+    const id = 'att_' + Date.now(); 
+
+    const record = {
+        id: id,
+        laborId: laborId,
+        date: date,
+        isAdvance: true,
+        advanceAmount: amount,
+        notes: notes,
+        earnedSalary: 0 
+    };
+
+    laborAttendance.push(record);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('labor_attendance').set({
+            payload: JSON.stringify(laborAttendance)
+        });
+
+        // Cash Book mein automatic Cash Out entry shamil karein
+        addTransactionToCashBook(
+            `Salary Advance to ${labor.name} (${notes})`, 
+            'out', 
+            amount, 
+            date, 
+            'cb_lab_adv_' + id
+        );
+
+        alert("Advance Salary record kamyabi se save ho gaya aur Cash Book mein Cash Out darj ho gaya!");
+        
+        document.getElementById('labor-advance-amount').value = '';
+        document.getElementById('labor-advance-notes').value = '';
+        
+        if (typeof renderCashBook === 'function') renderCashBook();
+    } catch (e) {
+        alert("Error saving advance: " + e.message);
+    }
+}
 
 </script>
 
