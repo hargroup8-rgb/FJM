@@ -9270,9 +9270,10 @@ function renderGatePassHistory() {
             <td>${itemsList}</td>
             <td>${statusDropdown}</td>
             <td>${inTimeInput}</td>
-            <td>
+<td>
                 <div style="display:flex; gap:5px; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-info btn-sm" onclick="reprintGatePass('${gp.id}')">Download PDF</button>
+                    <button type="button" class="btn btn-info btn-sm" onclick="reprintGatePass('${gp.id}')">A4 PDF</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="reprintGatePassThermal('${gp.id}')">Thermal PDF</button>
                     <button type="button" class="btn btn-warning btn-sm" onclick="editGatePass('${gp.id}')">Edit</button>
                     <button type="button" class="btn btn-success btn-sm" onclick="saveGatePassStatusAndInTime(event, '${gp.id}')">Save</button>
                     <button type="button" class="btn btn-danger btn-sm" onclick="deleteGatePass('${gp.id}')">Delete</button>
@@ -9477,6 +9478,105 @@ function reprintGatePass(gatePassId) {
         alert("Gate Pass record nahi mila.");
     }
 }
+
+
+// ====== NAYA CODE THERMAL PRINTER KE LIYE YAHAN SE SHURU ======
+
+// Thermal Button click hone par record dhoondne ka function
+function reprintGatePassThermal(gatePassId) {
+    const record = gatePassLog.find(gp => String(gp.id) === String(gatePassId));
+    if (record) {
+        generateGatePassThermalPDF(record);
+    } else {
+        alert("Gate Pass record nahi mila.");
+    }
+}
+
+// 80mm Thermal Printer ke size ki PDF Generate karne ka function (Exact A4 Format)
+function generateGatePassThermalPDF(gatePassRecord) {
+    if (!gatePassRecord) return;
+
+    const { jsPDF } = window.jspdf;
+    // 80mm width (Standard thermal receipt printer) x 297mm length
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 297] });
+    
+    let yPos = 12;
+    const centerX = 40; // 80mm slip ka center
+
+    // 1. Header (GATE PASS)
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('GATE PASS', centerX, yPos, { align: 'center' });
+    yPos += 10;
+
+    // 2. Top Info Section (Left aur Right side par)
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    
+    // Line 1: Rider Name aur Gate Pass Num
+    doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 4, yPos);
+    doc.text(`GATE PAS NUM: ${gatePassRecord.id || 'N/A'}`, 42, yPos);
+    yPos += 6;
+    
+    // Line 2: Vehicle Num aur Status
+    let vehicle = gatePassRecord.numberPlate || 'N/A';
+    if (vehicle.length > 12) vehicle = vehicle.substring(0, 10) + '..'; // Safety cut for 80mm
+    doc.text(`VEHICLE NUM: ${vehicle}`, 4, yPos);
+    doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 42, yPos);
+    yPos += 6;
+
+    // Line 3: Out Time aur In Time
+    doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 4, yPos);
+    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 42, yPos);
+    yPos += 8;
+
+    // 3. Table Data Preparation
+    const tableData = [];
+    const clients = gatePassRecord.clients || [];
+    const items = gatePassRecord.items || [];
+    const rows = Math.max(clients.length, items.length);
+
+    for (let i = 0; i < rows; i++) {
+        tableData.push([
+            clients[i] ? (clients[i].serialNo || '-') : '',
+            clients[i] ? (clients[i].customer || '') : '',
+            items[i] ? (items[i].name || '') : '',
+            items[i] ? (items[i].quantity || '') : ''
+        ]);
+    }
+
+    // 4. Table Draw karna (Bilkul A4 jaisa Grid Design)
+    doc.autoTable({
+        startY: yPos,
+        head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'ITEM NAME', 'QTY']],
+        body: tableData,
+        theme: 'grid', // A4 jaisi lines (borders) ke liye
+        headStyles: { 
+            fillColor: [240, 240, 240], // Light grey background jaisa tasveer mein hai
+            textColor: [0, 0, 0], 
+            fontStyle: 'bold', 
+            fontSize: 7, 
+            halign: 'left' 
+        },
+        bodyStyles: { 
+            fontSize: 7, 
+            textColor: [0, 0, 0], 
+            cellPadding: 2 
+        },
+        columnStyles: {
+            0: { cellWidth: 16 }, // Customer Code
+            1: { cellWidth: 22 }, // Customer Name
+            2: { cellWidth: 22 }, // Item Name
+            3: { cellWidth: 12, halign: 'center' } // QTY
+        },
+        margin: { left: 4, right: 4 }
+    });
+
+    // File Download karwana
+    doc.save(`GatePass_Thermal_${gatePassRecord.id}.pdf`);
+}
+// ====== NAYA CODE THERMAL PRINTER KE LIYE YAHAN KHATAM HOTA HAI ======
+
 
 // --- PROFIT & LOSS STATEMENT ---
 function initializeProfitLossStatement() {
