@@ -1044,6 +1044,8 @@ body,
             <div class="left-panel">
                 <div class="tabs">
                     <button class="tab-link active" onclick="openModule(event, 'Dashboard')">📊 Dashboard</button>
+
+                    
                     
 
                     
@@ -1059,6 +1061,8 @@ body,
         <button class="tab-link sub-tab" onclick="openModule(event, 'DemandWorkers')">Demand Workers</button>
     </div>
 </div>
+
+
 
 
                     <!-- EXPENSE MODULE START -->
@@ -1079,14 +1083,24 @@ body,
                             📤 Gate Pass <span class="arrow">▼</span>
                         </button>
                         <div class="sub-tabs">
-                            <button class="tab-link sub-tab" onclick="openModule(event, 'GatePass')">Create Gate Pass</button>
-                            <button class="tab-link sub-tab" onclick="openModule(event, 'GatePassHistory')">Gate Pass History</button>
+                            <button class="tab-link sub-tab" onclick="openModule(event, 'GatePass')">Gate Pass Open</button>
+<button class="tab-link sub-tab" onclick="openModule(event, 'GatePassHistory')">Gate Pass Close</button>
+
                         </div>
                     </div>
-                    <!-- GATE PASS DROPDOWN END -->
-                     
 
-                    
+<!-- RIDER MANAGEMENT DROPDOWN START -->
+<div class="nav-item-dropdown" id="rider-nav-item">
+    <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('rider-nav-item')">
+        🏍️ Rider Management <span class="arrow">▼</span>
+    </button>
+    <div class="sub-tabs">
+        <button class="tab-link sub-tab" onclick="openModule(event, 'RiderDetailsModule')">Rider Details</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'VehicleDetailsModule')">Add Vehicle Number</button>
+    </div>
+</div>
+<!-- RIDER MANAGEMENT DROPDOWN END -->
+
 
                     <!-- LABOR MANAGEMENT DROPDOWN START -->
 <div class="nav-item-dropdown" id="labor-nav-item">
@@ -1101,6 +1115,9 @@ body,
 </div>
 <!-- LABOR MANAGEMENT DROPDOWN END -->
 
+<button class="tab-link" onclick="openModule(event, 'RecoverySheet')">📄 Recovery Sheet</button>
+
+
 <button class="tab-link" onclick="openModule(event, 'MaalPurchase')">🛒 Purchase Maal</button>
                     <button class="tab-link" onclick="openModule(event, 'Settings')">⚙️ Settings</button>
                     <button class="tab-link admin-only" onclick="openModule(event, 'AdminDashboard')">👑 Admin Dashboard</button>
@@ -1109,6 +1126,86 @@ body,
 
             <!-- Center Panel: Module Content (Products, Manage, Reports, etc.) -->
             <div class="center-panel">
+            <!-- START NEW MODULE: RECOVERY SHEET & REPORTS -->
+<!-- START NEW MODULE: RECOVERY SHEET & REPORTS -->
+<div id="RecoverySheet" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">📄 Recovery Sheet & Reports</h2>
+    
+    <!-- General Report Generation Buttons -->
+    <div class="manage-form" style="margin-bottom: 20px;">
+        <h3>📊 Generate General Recovery Reports</h3>
+        <p style="color: var(--text-color); font-size: 0.9rem; margin-bottom: 15px;">
+            Yahan se aap kisi bhi qisam ke customer (Paid, Unpaid ya All) ki recovery report PDF mein download kar sakte hain.
+        </p>
+        <div class="report-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn btn-success" onclick="generateRecoveryReportPDF('paid')">✅ Paid Customers</button>
+            <button class="btn btn-danger" onclick="generateRecoveryReportPDF('unpaid')">❌ Unpaid Customers</button>
+            <button class="btn btn-primary" onclick="generateRecoveryReportPDF('all')">📋 All Customers</button>
+        </div>
+    </div>
+
+    <!-- Worker Specific Report Section -->
+    <div class="manage-form" style="border-left: 5px solid var(--info-color);">
+        <h3>👷 Worker Performance Report</h3>
+        <p style="color: var(--text-color); font-size: 0.9rem; margin-bottom: 15px;">
+            Kisi khaas worker ki recovery aur performance report download karne ke liye pehle worker select karein.
+        </p>
+        <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: center; gap: 15px;">
+            <select id="recovery-worker-select" class="form-control">
+                <option value="">-- Select Worker --</option>
+            </select>
+            <button class="btn btn-info" onclick="generateSelectedWorkerReport()">Download Worker Report</button>
+        </div>
+    </div>
+</div>
+<!-- END NEW MODULE: RECOVERY SHEET -->
+
+
+                
+<!-- START NAYA RIDER MODULE 1: SIRF RIDER DETAILS -->
+<div id="RiderDetailsModule" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">🏍️ Rider Details</h2>
+    <div class="manage-form">
+        <h3>Add New Rider</h3>
+        <div class="form-grid" style="grid-template-columns: 150px 1fr; align-items: center;">
+            <label>Rider Name:</label>
+            <input type="text" id="only-rider-name-input" class="form-control" placeholder="Rider ka mukammal naam likhein">
+        </div>
+        <button class="btn btn-success" onclick="saveOnlyRider()" style="margin-top:20px; width: 100%;">Save Rider</button>
+    </div>
+    
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>Saved Riders</h3>
+        <table class="cart-table">
+            <thead><tr><th>Date</th><th>Rider Name</th><th>Action</th></tr></thead>
+            <tbody id="only-rider-list-body"></tbody>
+        </table>
+    </div>
+</div>
+<!-- END NAYA RIDER MODULE 1 -->
+
+<!-- START NAYA VEHICLE MODULE 2: SIRF VEHICLE NUMBER -->
+<div id="VehicleDetailsModule" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">🚛 Add Vehicle Number</h2>
+    <div class="manage-form">
+        <h3>Register New Vehicle</h3>
+        <div class="form-grid" style="grid-template-columns: 150px 1fr; align-items: center;">
+            <label>Vehicle Number:</label>
+            <input type="text" id="only-vehicle-no-input" class="form-control" placeholder="e.g., KHI-1234">
+        </div>
+        <button class="btn btn-info" onclick="saveOnlyVehicle()" style="margin-top:20px; width: 100%;">Save Vehicle Number</button>
+    </div>
+    
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>Saved Vehicles</h3>
+        <table class="cart-table">
+            <thead><tr><th>Date</th><th>Vehicle Number</th><th>Action</th></tr></thead>
+            <tbody id="only-vehicle-list-body"></tbody>
+        </table>
+    </div>
+</div>
+<!-- END NAYA VEHICLE MODULE 2 -->
+
 
                 <!-- START NEW MODULE: DEMAND RECORD (SIMPLIFIED & AUTOMATED) -->
 <div id="DemandRecord" class="module-content">
@@ -1127,8 +1224,9 @@ body,
             <label>Date:</label>
             <input type="text" id="dr-display-date" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
             
-            <label>Customer Name:</label>
-            <input type="text" id="dr-display-customer" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+            <!-- Is naye code ke sath badlein: -->
+<label>Customer Name:</label>
+<input type="text" id="dr-display-customer" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
             
             <label>Item Name:</label>
             <input type="text" id="dr-display-item" class="form-control" readonly placeholder="Automatic" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
@@ -1149,6 +1247,13 @@ body,
             <label>Recovery Amount:</label>
             <input type="number" id="dr-recovery" class="form-control" placeholder="0.00" oninput="calculateDemandRecordMath()">
 
+            <!-- Yeh code dr-recovery input ke niche paste karein -->
+<label style="font-weight: bold;">Received By:</label>
+            <select id="dr-received-by" class="form-control">
+                <option value="">-- Select Received name --</option>
+            </select>
+            
+
             <label style="font-weight: bold;">Remaining Balance:</label>
             <input type="number" id="dr-net-balance" class="form-control" placeholder="0.00" readonly style="background-color: rgba(255,255,255,0.05) !important; font-weight: bold; color: var(--danger-color);">
         </div>
@@ -1167,6 +1272,9 @@ body,
             <div>
                 <label>From Date:</label>
                 <input type="date" id="dr-filter-from" class="form-control" onchange="renderDemandRecordTable()">
+                <th>Received By</th>
+                <td>${rec.receivedBy || '-'}</td>
+
             </div>
             <div>
                 <label>To Date:</label>
@@ -1179,20 +1287,22 @@ body,
     <div class="table-container" style="margin-top: 20px;">
         <h3>📋 Finalized Demand Record Report</h3>
         <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Customer Name</th>
-                    <th>Item Name</th>
-                    <th>Demand</th>
-                    <th>Rate</th>
-                    <th>Bill</th>
-                    <th>Old Bal</th>
-                    <th>Recovery</th>
-                    <th>Net Bal</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+            <!-- Table Header Update -->
+<thead>
+    <tr>
+        <th>Date</th>
+        <th>Customer Name</th>
+        <th>Item Name</th>
+        <th>Demand</th>
+        <th>Rate</th>
+        <th>Bill</th>
+        <th>Old Bal</th>
+        <th>Recovery</th>
+        <th>Received By</th> <!-- Naya column -->
+        <th>Net Bal</th>
+        <th>Actions</th>
+    </tr>
+</thead>
             <tbody id="dr-table-body">
                 <!-- Loaded dynamically -->
             </tbody>
@@ -1207,8 +1317,9 @@ body,
     <div class="manage-form">
         <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px;">
             
-            <label>Customer Name:</label>
-            <input type="text" id="d-customer" class="form-control" placeholder="Customer Name">
+            <!-- Naya Code (Is se replace karein): -->
+<label>Customer Name:</label>
+<input type="text" id="d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off" onclick="try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}">
             
             <label>Item Name:</label>
             <select id="d-item-name" class="form-control">
@@ -1216,7 +1327,9 @@ body,
             </select>
 
             <label>Demand (Qty):</label>
-            <input type="number" id="d-demand" class="form-control" placeholder="0">
+<select id="d-demand" class="form-control">
+    <!-- options niche diye gaye JavaScript code se automatic generate ho kar add ho jayengi -->
+</select>
 
             <label>Assign Worker:</label>
             <select id="d-worker" class="form-control">
@@ -2489,7 +2602,8 @@ body,
 
  <!-- Simple Gate Pass Module -->
 <div id="GatePass" class="module-content">
-    <h2 class="panel-title">📤 Create Gate Pass</h2>
+    <h2 class="panel-title">📤 Gate Pass Open</h2>
+
     <div class="manage-form">
         
         <!-- 1. Rider Details (Ab sab se upar hai) -->
@@ -2497,23 +2611,27 @@ body,
         <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
             <div>
                 <label>Rider Name:</label>
-                <input type="text" id="gp-rider-name" class="form-control" placeholder="Rider Name">
+                <select id="gp-rider-name" class="form-control">
+                    <option value="">-- Select Rider --</option>
+                </select>
             </div>
             <div>
                 <label>Vehicle Number:</label>
-                <input type="text" id="gp-number-plate" class="form-control" placeholder="ABC-123">
+                <select id="gp-number-plate" class="form-control">
+                    <option value="">-- Select Vehicle --</option>
+                </select>
             </div>
             <div>
                 <label>Out Time:</label>
                 <input type="time" id="gp-out-time" class="form-control">
             </div>
             <div>
-                <label>Status:</label>
-                <select id="gp-status" class="form-control">
-                    <option value="Open">🟢 Open</option>
-                    <option value="Closed">⚪ Closed</option>
-                </select>
-            </div>
+    <label>Status:</label>
+    <!-- Disabled lagane se ye locked ho jayega aur sirf Open rahega -->
+    <select id="gp-status" class="form-control" disabled style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;">
+        <option value="Open">🟢 Open</option>
+    </select>
+</div>
         </div>
 
         <hr style="border-color: var(--border-color); margin: 20px 0;">
@@ -2575,10 +2693,13 @@ body,
     <button class="btn btn-success" id="btn-save-gatepass" style="flex-grow: 1;">Save & Generate Gate Pass</button>
     <button class="btn btn-secondary" id="btn-clear-gatepass-list">Clear List</button>
 </div>    </div>
-</div>                
+</div>             
+
+
+
                 <!-- START GATE PASS HISTORY & REPORTS MODULE -->
 <div id="GatePassHistory" class="module-content">
-    <h2 class="panel-title">Gate Pass History & Reports</h2>
+<h2 class="panel-title">Gate Pass Close</h2>
     
     <!-- Search and Date Filter Controls -->
     <div class="manage-form">
@@ -2594,17 +2715,18 @@ body,
     <!-- Gate Pass History Table -->
     <div class="table-container" style="flex-grow: 1; overflow-y: auto;">
         <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Gate Pass ID</th>
-                    <th>Client(s)</th>
-                    <th>Rider Details</th>
-                    <th>Items</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
+           <thead>
+    <tr>
+        <th>Date</th>
+        <th>Gate Pass ID</th>
+        <th>Client(s)</th>
+        <th>Rider Details</th>
+        <th>Items</th>
+        <th>Status</th>
+        <th>In-Time</th> <!-- NAYA COLUMN -->
+        <th>Actions</th>
+    </tr>
+</thead>
             <tbody id="gatepass-history-tbody">
                 <!-- Data dynamically populated by JS -->
             </tbody>
@@ -3124,6 +3246,98 @@ body,
 </div>
 
 <script>
+
+    // Dropdown mein tamam Workers load karne ka function
+function populateRecoveryWorkerDropdown() {
+    const select = document.getElementById('recovery-worker-select');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">-- Select Worker --</option>';
+    
+    if (typeof demandWorkers !== 'undefined' && demandWorkers.length > 0) {
+        demandWorkers.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w.id;
+            opt.textContent = `${w.name} (${w.phone})`;
+            select.appendChild(opt);
+        });
+    }
+}
+
+// Select kiye gaye Worker ki report generate karne ka function
+function generateSelectedWorkerReport() {
+    const workerId = document.getElementById('recovery-worker-select').value;
+    
+    if (!workerId) {
+        alert("Meharbani karke pehle ek worker select karein!");
+        return;
+    }
+
+    const worker = demandWorkers.find(w => w.id === workerId);
+    if (!worker) return;
+
+    // Is worker se mutaliq tamam demands dhoondein
+    const workerDemands = (demandRecords || []).filter(rec =>
+        rec.worker && rec.worker.name === worker.name && rec.worker.phone === worker.phone
+    );
+
+    if (workerDemands.length === 0) {
+        alert("Is worker ke naam par koi demands ya clients nahi hain.");
+        return;
+    }
+
+    // Status aur totals calculate karein
+    const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+
+    const totalClients = workerDemands.length;
+    const paidClients = workerDemands.filter(rec => getStatus(rec) === 'paid').length;
+    const unpaidClients = workerDemands.filter(rec => getStatus(rec) === 'unpaid').length;
+    const totalOutstanding = workerDemands.reduce((sum, rec) => sum + (Number(rec.netBalance) || 0), 0);
+
+    // Pehle se mojood PDF generator function ka istemal karein
+    generateWorkerReportPDF(worker, workerDemands, totalClients, paidClients, unpaidClients, totalOutstanding);
+}
+
+    function populateCustomerNamesDatalist() {
+    const datalist = document.getElementById('customer-names-list');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+
+    // demandRecords se unique aur valid customer names nikalna
+    const uniqueNames = [...new Set((demandRecords || []).map(rec => rec.customer).filter(name => name && name.trim() !== ''))];
+
+    uniqueNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        datalist.appendChild(option);
+    });
+}
+
+    function populateDemandQtyDropdown() {
+    const selectMain = document.getElementById('d-demand');
+    if (selectMain) {
+        selectMain.innerHTML = '<option value="">-- Select Qty --</option>';
+        // Loop ko 300 tak chalane ke liye i <= 300 kar diya gaya hai
+        for (let i = 1; i <= 300; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            selectMain.appendChild(opt);
+        }
+    }
+
+    // Edit Demand Modal ke dropdown ko bhi 300 tak barhane ke liye
+    const selectEdit = document.getElementById('edit-d-demand');
+    if (selectEdit) {
+        selectEdit.innerHTML = '<option value="">-- Select Qty --</option>';
+        for (let i = 1; i <= 300; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            selectEdit.appendChild(opt);
+        }
+    }
+}
 
 // Popup ko band karne ka function
 function closeEditDemandModal() {
@@ -3897,10 +4111,11 @@ const recordData = {
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
-
+populateCustomerNamesDatalist();
         alert("Demand kamyabi se save ho gayi!");
         clearDemandForm();
         renderDemandRecord(); 
+        
 renderRecentDemands(); 
 
     } catch (e) {
@@ -8931,102 +9146,54 @@ function generateGatePassPDF(gatePassRecord) {
     }
 
     const { jsPDF } = window.jspdf;
-    // Standard Portrait A4 Page size ('p', 'mm', 'a4')
-    const doc = new jsPDF('p', 'mm', 'a4'); 
-    let yPos = 15;
-
-    // --- 1. HEADER (Top Center for Portrait A4) ---
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM Social Media", 105, yPos, { align: 'center' });
-    yPos += 8;
-
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Gate Pass Receipt', 105, yPos, { align: 'center' });
-    yPos += 7;
-
-    doc.setFontSize(10);
-    const dateStr = new Date(gatePassRecord.date).toLocaleDateString();
-    doc.text(`Date: ${dateStr}   |   ID: ${gatePassRecord.id}`, 105, yPos, { align: 'center' });
-    yPos += 6;
+    const doc = new jsPDF('p', 'mm', 'a4');
     
-    // NAYA BADLAO: Status strictly 'Open' ya 'Closed' show karega (Quantity ko top se hata diya gaya hai)
-    const currentStatus = gatePassRecord.status || 'Open'; 
-    doc.setFontSize(12);
+    // Header
+    doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text(`Status: ${currentStatus}`, 105, yPos, { align: 'center' });
-    yPos += 15;
+    doc.text('GATE PASS', 105, 20, { align: 'center' });
+    
+    // Top Info Section
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    // Left side info
+    doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 20, 35);
+    doc.text(`VEHICLE NUM: ${gatePassRecord.numberPlate || 'N/A'}`, 20, 42);
+    doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 20, 49);
+    
+    // Right side info
+    doc.text(`GATE PAS NUM: ${gatePassRecord.id || '1'}`, 130, 35);
+    doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 130, 42);
+    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 130, 49);
 
-    // --- 2. PREPARE DYNAMIC FLAT TABLE DATA ---
-    const clientsList = gatePassRecord.clients || [];
-    const itemsList = gatePassRecord.items || [];
-    const maxRows = Math.max(clientsList.length, itemsList.length);
+    // Table Data preparation
     const tableData = [];
+    // Hum max rows uthayenge (Client ya Items mein se jo zyada ho)
+    const clients = gatePassRecord.clients || [];
+    const items = gatePassRecord.items || [];
+    const rows = Math.max(clients.length, items.length);
 
-    for (let i = 0; i < maxRows; i++) {
-        const client = clientsList[i] || null;
-        const item = itemsList[i] || null;
-
+    for (let i = 0; i < rows; i++) {
         tableData.push([
-            item ? item.name : '',                               // Column 1: Product Name
-            client ? client.customer : '',                       // Column 2: Client Name
-            client ? (client.serialNo || '-') : '',              // Column 3: Client S.No (Customer Serial No)
-            i === 0 ? (gatePassRecord.riderName || 'N/A') : '',  // Column 4: Rider Name (Sirf pehli row mein)
-            i === 0 ? (gatePassRecord.numberPlate || 'N/A') : '',// Column 5: Vehicle Number (Sirf pehli row mein)
-            i === 0 ? (formatTimeFriendly(gatePassRecord.outTime) || 'N/A') : '', // Column 6: Out Time (Sirf pehli row mein)
-            item ? item.quantity : ''                            // Column 7: Quantity
+            clients[i] ? (clients[i].serialNo || '-') : '',
+            clients[i] ? (clients[i].customer || '') : '',
+            items[i] ? (items[i].name || '') : '',
+            items[i] ? (items[i].quantity || '') : ''
         ]);
     }
 
-    // Kul Quantity (Total Qty) calculate karna bottom mein dikhane ke liye
-    const totalQty = itemsList.reduce((sum, item) => sum + (parseInt(item.quantity) || 0), 0);
-
-    // --- 3. RENDER THE COMBINED TABLE (Quantity bottom footer ke sath) ---
+    // Table Draw karna
     doc.autoTable({
-        startY: yPos,
-        head: [['Product Name', 'Client Name', 'Client S.No.', 'Rider Name', 'Vehicle No.', 'Out Time', 'Quantity']],
+        startY: 60,
+        head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'ITEM NAME', 'QTY']],
         body: tableData,
-        // NAYA BADLAO: Quantity ko bottom mein 'Total' footer row mein set kiya hai
-        foot: [['Total', '', '', '', '', '', totalQty]], 
         theme: 'grid',
-        headStyles: { fillColor: [20, 184, 166], textColor: 255, halign: 'center' },
-        bodyStyles: { valign: 'middle', textColor: [0, 0, 0], halign: 'center', fontSize: 8 },
-        footStyles: { fillColor: [230, 242, 240], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', fontSize: 9 },
-        styles: { cellPadding: 2, overflow: 'linebreak' },
-        columnStyles: {
-            0: { cellWidth: 35 }, // Product Name
-            1: { cellWidth: 35 }, // Client Name
-            2: { cellWidth: 22 }, // Client S.No.
-            3: { cellWidth: 25 }, // Rider Name
-            4: { cellWidth: 25 }, // Vehicle No.
-            5: { cellWidth: 20 }, // Out Time
-            6: { cellWidth: 20 }  // Quantity
-        },
-        margin: { left: 14, right: 14 } // Standard A4 Margins
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+        styles: { fontSize: 10, cellPadding: 3 }
     });
 
-    // --- 4. SIGNATURES (Portrait A4 Page Height check) ---
-    yPos = doc.previousAutoTable.finalY + 35;
-
-    if (yPos > 260) {
-        doc.addPage();
-        yPos = 30;
-    }
-
-    doc.setFont('helvetica', 'normal');
-    doc.setLineWidth(0.3);
-    
-    // Left Signature
-    doc.line(20, yPos, 80, yPos);
-    doc.text('Prepared By', 50, yPos + 6, { align: 'center' });
-    
-    // Right Signature
-    doc.line(130, yPos, 190, yPos);
-    doc.text('Receiver / Guard Sign', 160, yPos + 6, { align: 'center' });
-
-    // PDF Download
-    doc.save(`GatePass_${dateStr.replace(/\//g, '-')}.pdf`);
+    doc.save(`GatePass_${gatePassRecord.id}.pdf`);
 }
 function renderGatePassHistory() {
     const tbody = document.getElementById('gatepass-history-tbody');
@@ -9049,10 +9216,9 @@ function renderGatePassHistory() {
         });
     }
 
-    // Text Search Filter (Gate Pass ID, Rider Name, ya Client Name)
+    // Text Search Filter
     if (searchQuery) {
         filteredLog = filteredLog.filter(gp => {
-            // ID aur Rider Name ko String mein convert kar ke search match kiya hai
             const matchesId = gp.id && String(gp.id).toLowerCase().includes(searchQuery);
             const matchesRider = gp.riderName && String(gp.riderName).toLowerCase().includes(searchQuery);
             const matchesClients = gp.clients && gp.clients.some(c => c.customer && String(c.customer).toLowerCase().includes(searchQuery));
@@ -9061,7 +9227,7 @@ function renderGatePassHistory() {
     }
 
     if (filteredLog.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No matching Gate Pass records found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No matching Gate Pass records found.</td></tr>';
         return;
     }
 
@@ -9071,8 +9237,26 @@ function renderGatePassHistory() {
         const clientsText = (gp.clients || []).map(c => `• ${c.customer} (S.No: ${c.serialNo || '-'})`).join('<br>');
         const itemsList = (gp.items || []).map(item => `• ${item.name} (Qty: ${item.quantity})`).join('<br>');
         
-        const statusColor = gp.status === 'Closed' ? 'var(--success-color)' : 'var(--warning-color)';
-        const statusText = gp.status === 'Closed' ? 'Closed' : 'Open';
+        // --- 100% STRICT STATUS MATCHING FIX ---
+        const currentStatus = String(gp.status || 'Open').toLowerCase();
+        const isClosed = currentStatus.includes('close'); 
+        const displayStatus = isClosed ? 'Closed' : 'Open';
+        
+        // Purana ghalat data memory mein theek karna
+        gp.status = displayStatus;
+
+        const selectColorStyle = isClosed ? 'border: 1px solid var(--success-color); color: var(--success-color);' : 'border: 1px solid var(--warning-color); color: var(--warning-color);';
+        
+        const statusDropdown = `
+            <select id="gp-status-${gp.id}" class="form-control" style="width:110px; padding:5px; font-weight:bold; background-color: var(--surface-color); ${selectColorStyle}" onchange="updateDropdownStyle('${gp.id}')">
+                <option value="Open" ${!isClosed ? 'selected' : ''}>🟢 Open</option>
+                <option value="Closed" ${isClosed ? 'selected' : ''}>⚪ Closed</option>
+            </select>
+        `;
+
+        const inTimeInput = `
+            <input type="time" id="gp-intime-${gp.id}" class="form-control" style="width:105px; padding:5px; background-color: var(--surface-color);" value="${gp.inTime && gp.inTime !== 'N/A' ? gp.inTime : ''}">
+        `;
 
         row.innerHTML = `
             <td>${new Date(gp.date).toLocaleDateString()}</td>
@@ -9084,18 +9268,78 @@ function renderGatePassHistory() {
                 <strong>Out Time:</strong> ${formatTimeFriendly(gp.outTime) || 'N/A'}
             </td>
             <td>${itemsList}</td>
-            <td style="font-weight:bold; color:${statusColor};">${statusText}</td>
+            <td>${statusDropdown}</td>
+            <td>${inTimeInput}</td>
             <td>
                 <div style="display:flex; gap:5px; flex-wrap: wrap;">
-                    <button class="btn btn-info btn-sm" onclick="reprintGatePass('${gp.id}')">Download PDF</button>
-                    <button class="btn btn-warning btn-sm" onclick="editGatePass('${gp.id}')">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteGatePass('${gp.id}')">Delete</button>
+                    <button type="button" class="btn btn-info btn-sm" onclick="reprintGatePass('${gp.id}')">Download PDF</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="editGatePass('${gp.id}')">Edit</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="saveGatePassStatusAndInTime(event, '${gp.id}')">Save</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteGatePass('${gp.id}')">Delete</button>
                 </div>
             </td>
         `;
         tbody.appendChild(row);
     });
 }
+
+// Dropdown ka color change karne ke liye helper function
+function updateDropdownStyle(id) {
+    const select = document.getElementById(`gp-status-${id}`);
+    if (!select) return;
+    if (select.value === 'Closed') {
+        select.style.borderColor = 'var(--success-color)';
+        select.style.color = 'var(--success-color)';
+    } else {
+        select.style.borderColor = 'var(--warning-color)';
+        select.style.color = 'var(--warning-color)';
+    }
+}
+
+async function saveGatePassStatusAndInTime(event, id) {
+    if (event) {
+        event.preventDefault(); 
+    }
+
+    const recordIndex = gatePassLog.findIndex(gp => String(gp.id) === String(id));
+    if (recordIndex === -1) {
+        alert("Ghalti: Gate Pass record nahi mila.");
+        return;
+    }
+
+    const dropdown = document.getElementById(`gp-status-${id}`);
+    const inTimeInput = document.getElementById(`gp-intime-${id}`);
+
+    if (!dropdown) return;
+
+    const newStatus = dropdown.value; 
+    const newInTime = inTimeInput ? inTimeInput.value : 'N/A';
+
+    // Data Update Karein
+    gatePassLog[recordIndex].status = newStatus;
+    gatePassLog[recordIndex].inTime = newInTime || 'N/A';
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        
+        // 1. LOCAL BROWSER STORAGE MEIN LAZMI SAVE KAREIN TA KE REFRESH PAR WAPAS OPEN NA HO JAYE (Bug Fix)
+        localStorage.setItem(getUserSpecificKey(GATE_PASS_LOG_KEY), JSON.stringify(gatePassLog));
+        
+        // 2. Cloud Database mein Save Karein
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({
+            payload: JSON.stringify(gatePassLog)
+        });
+
+        alert(`Gate Pass #${id} ka Status (${newStatus}) save ho gaya!`);
+        
+        // Table ko naye status ke sath refresh karein
+        renderGatePassHistory();
+    } catch (e) {
+        console.error("Save Error:", e);
+        alert("Ghalti: Data save nahi ho saka. Error: " + e.message);
+    }
+}
+
 
 function resetGatePassHistoryFilters() {
     if (document.getElementById('gatepass-history-search')) document.getElementById('gatepass-history-search').value = '';
@@ -9105,8 +9349,8 @@ function resetGatePassHistoryFilters() {
 }
 
 
+// 1. Edit Gate Pass Modal kholte waqt data load karne ka function
 function editGatePass(id) {
-    // strict check === ke bajaye dono ko String mein convert kar ke match karein
     const record = gatePassLog.find(gp => String(gp.id) === String(id));
     if (!record) {
         alert("Record nahi mila!");
@@ -9118,15 +9362,12 @@ function editGatePass(id) {
     document.getElementById('edit-gp-number-plate').value = record.numberPlate || '';
     document.getElementById('edit-gp-out-time').value = record.outTime || '';
     document.getElementById('edit-gp-status').value = record.status || 'Open';
+    
+    // NAYA: Purana In-time modal ke andar load karna
+    document.getElementById('edit-gp-in-time').value = (record.inTime && record.inTime !== 'N/A') ? record.inTime : '';
 
     document.getElementById('edit-gatepass-modal').style.display = 'flex';
 }
-
-
-function closeEditGatePassModal() {
-    document.getElementById('edit-gatepass-modal').style.display = 'none';
-}
-
 
 async function saveUpdatedGatePass() {
     const id = document.getElementById('edit-gp-id').value;
@@ -9134,26 +9375,33 @@ async function saveUpdatedGatePass() {
     const numberPlate = document.getElementById('edit-gp-number-plate').value.trim();
     const outTime = document.getElementById('edit-gp-out-time').value;
     const status = document.getElementById('edit-gp-status').value;
+    const inTime = document.getElementById('edit-gp-in-time').value;
 
     if (!riderName) {
         alert("Rider Name likhna zaruri hai!");
         return;
     }
 
-    // Strict === ke bajaye String matching istemal karein
     const recordIndex = gatePassLog.findIndex(gp => String(gp.id) === String(id));
     if (recordIndex === -1) {
         alert("Record nahi mila!");
         return;
     }
 
+    // Database object ko update karna
     gatePassLog[recordIndex].riderName = riderName;
     gatePassLog[recordIndex].numberPlate = numberPlate;
     gatePassLog[recordIndex].outTime = outTime;
     gatePassLog[recordIndex].status = status;
+    gatePassLog[recordIndex].inTime = inTime || 'N/A'; 
 
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
+        
+        // YAHAN BHI LOCAL STORAGE UPDATE KAREIN (Bug Fix)
+        localStorage.setItem(getUserSpecificKey(GATE_PASS_LOG_KEY), JSON.stringify(gatePassLog));
+
+        // Cloud Firestore mein save
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({
             payload: JSON.stringify(gatePassLog)
         });
@@ -9163,6 +9411,14 @@ async function saveUpdatedGatePass() {
         renderGatePassHistory();
     } catch (e) {
         alert("Error: " + e.message);
+    }
+}
+
+// Edit Gate Pass modal ko band karne ka function
+function closeEditGatePassModal() {
+    const modal = document.getElementById('edit-gatepass-modal');
+    if (modal) {
+        modal.style.display = 'none';
     }
 }
 
@@ -9909,6 +10165,7 @@ async function handlePasswordUpdateAndLogin() {
         document.getElementById('auth-container').style.display = 'none'; 
         document.getElementById('main-app').style.display = 'flex'; 
         initializeApp(); 
+        
         // ------------------------------------------------
 
     } catch (e) {
@@ -10636,7 +10893,7 @@ function renderUserPermissions() {
         'PartialPayments', 'SellReturn', 'AllReports', 'ProfitLossStatement',
         'PurchasePurchaserDetail', 'PurchaseProductPayment', 'PurchaseAddPayment',
         'PurchaseHistory', 'PurchaseReports', 'AddExpense', 'ExpenseHistory',
-        'GatePass', 'GatePassHistory', 'CashBook', 'BankAndCash', 'Settings'
+        'GatePass', 'GatePassHistory', 'CashBook', 'BankAndCash',  'RecoverySheet', 'Settings'
     ];
 
     const grid = document.createElement('div');
@@ -10810,6 +11067,10 @@ async function initializeApp() {
     // 2. Direct online settings load karein
     await loadUserSettingsOnline();
 
+    // Dropdowns ko bina kisi network delay ke furan generate karein
+    populateDemandQtyDropdown();
+    populateCustomerNamesDatalist();
+
     // 3. Admin permissions set karein
     if (!appSettings.permissions) {
         appSettings.permissions = {
@@ -10835,12 +11096,16 @@ async function initializeApp() {
         if (doc.exists) {
             demandRecords = JSON.parse(doc.data().payload);
             renderDemandRecord(); 
+            populateCustomerNamesDatalist(); // <--- YE CALL YAHAN SHAMIL KAREIN
+
         }
     } catch (e) {
         console.error("Demand data load nahi hua:", e);
     }
 
     await dbFetchCategories();
+
+
 
 
     // 4. Default categories and payment UI setup
@@ -11014,19 +11279,26 @@ async function openModule(evt, moduleName) {
 if (actualModuleName === 'DemandRecord') {
     await dbFetchDemandWorkers(); // Safe worker fetch
     
-    // Cloud se updated demand lists ko dobara fetch karein
+    // Cloud se updated demand lists aur riders ko dobara fetch karein
     const userId = loggedInUser.id || loggedInUser.uid;
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
         if (doc.exists) {
             demandRecords = JSON.parse(doc.data().payload) || [];
         }
+
+        // NAYA CODE: Riders ka data load karein
+        const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
+        if (docRiders.exists) {
+            savedRiders = JSON.parse(docRiders.data().payload) || [];
+        }
     } catch (e) {
-        console.error("Demand records reload error:", e);
+        console.error("Demand records/Riders reload error:", e);
     }
 
-    // Automated Dropdowns load karein (Yahan koi purani dr-date line nahi honi chahiye)
+    // Automated Dropdowns load karein
     populatePendingDemandsDropdown();
+    populateDemandRecordRiderDropdown(); // <-- NAYA: Rider Dropdown ko fill karega
     handlePendingDemandSelection(); // reset inputs
     renderDemandRecordTable();
 }
@@ -11058,6 +11330,17 @@ if (actualModuleName === 'AddLabor') {
             await dbFetchPurchasers();
             renderDashboard();
         }
+
+if (actualModuleName === 'RecoverySheet') {
+            await dbFetchDemandWorkers(); // Cloud se workers fresh load karein
+            populateRecoveryWorkerDropdown(); // Dropdown mein data dalein
+        }
+
+
+if (actualModuleName === 'RecoverySheet') {
+            renderRecoverySheetTable();
+        }
+
         if (actualModuleName === 'Products') {
             await dbFetchProducts();
             renderProductGrid();
@@ -11200,6 +11483,17 @@ if (actualModuleName === 'AddLabor') {
             populateGatePassDemandDropdown();
             populateGatePassProductSelect(); 
             renderGatePassList();
+            // Naya code: Riders aur Vehicles ka data load kar ke dropdowns mein bhejna
+            try {
+                const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
+                if(docRiders.exists) savedRiders = JSON.parse(docRiders.data().payload) || [];
+                
+                const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
+                if(docVehicles.exists) savedVehicles = JSON.parse(docVehicles.data().payload) || [];
+            } catch (e) {
+                console.error("Gate pass riders/vehicles load error:", e);
+            }
+            populateGatePassRiderAndVehicleDropdowns();
         }
         if (actualModuleName === 'GatePassHistory') {
             await dbFetchProducts();
@@ -11224,7 +11518,11 @@ if (actualModuleName === 'AddLabor') {
             await dbFetchDemandWorkers(); 
             populateDemandWorkersDropdown(); 
             populateDemandItemDropdown(); 
+            populateCustomerNamesDatalist(); // <--- YE NAYI LINE YAHAN SHAMIL KAREIN
+
             renderRecentDemands();
+            populateDemandQtyDropdown();
+
         }
         if (actualModuleName === 'DemandWorkers') {
             await dbFetchDemandWorkers();
@@ -12816,6 +13114,8 @@ async function submitDemandRecord() {
         return;
     }
 
+
+    
     const rate = parseFloat(document.getElementById('dr-rate').value) || 0;
     const bill = parseFloat(document.getElementById('dr-bill').value) || 0;
     const oldBalance = parseFloat(document.getElementById('dr-old-balance').value) || 0;
@@ -12840,6 +13140,9 @@ async function submitDemandRecord() {
     record.oldBalance = oldBalance;
     record.recovery = recovery;
     record.netBalance = netBalance;
+    record.receivedBy = document.getElementById('dr-received-by').value.trim() || 'N/A'; 
+record.processed = true;
+record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
     record.processed = true; // process confirm mark
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
@@ -12873,6 +13176,7 @@ async function submitDemandRecord() {
 }
 
 // 5. Finalized Demand report table render karna (with search and date filters)
+// TABLE RENDER FUNCTION UPDATE
 function renderDemandRecordTable() {
     const tbody = document.getElementById('dr-table-body');
     if (!tbody) return;
@@ -12882,10 +13186,9 @@ function renderDemandRecordTable() {
     const fromDateVal = document.getElementById('dr-filter-from')?.value;
     const toDateVal = document.getElementById('dr-filter-to')?.value;
 
-    // Report mein sirf wahi entries dikhayega jo process ho chuki hain (processed === true)
     let filtered = (demandRecords || []).filter(r => r.processed);
 
-    // Filter Logic
+    // Filter Logic...
     if (fromDateVal) {
         const fromDateObj = new Date(fromDateVal + 'T00:00:00');
         filtered = filtered.filter(r => new Date(r.date) >= fromDateObj);
@@ -12900,23 +13203,20 @@ function renderDemandRecordTable() {
 
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
         const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
-        const rateVal = `${CURRENCY_SYMBOL}${rec.rate.toFixed(2)}`;
-        const billVal = `${CURRENCY_SYMBOL}${rec.bill.toFixed(2)}`;
-        const oldBalVal = `${CURRENCY_SYMBOL}${rec.oldBalance.toFixed(2)}`;
-        const recVal = `${CURRENCY_SYMBOL}${rec.recovery.toFixed(2)}`;
-        const netBalVal = `${CURRENCY_SYMBOL}${rec.netBalance.toFixed(2)}`;
-
+        
+        // TABLE ROW MEIN "Received By" ADD KARNA
         tbody.innerHTML += `
             <tr>
                 <td>${dateStr}</td>
                 <td><strong>${rec.customer}</strong></td>
                 <td>${rec.itemName || '-'}</td>
                 <td>${rec.demand}</td>
-                <td>${rateVal}</td>
-                <td><strong>${billVal}</strong></td>
-                <td>${oldBalVal}</td>
-                <td style="color:#10b981; font-weight:bold;">${recVal}</td>
-                <td style="color:#ef4444; font-weight:bold;">${netBalVal}</td>
+                <td>${CURRENCY_SYMBOL}${rec.rate.toFixed(2)}</td>
+                <td><strong>${CURRENCY_SYMBOL}${rec.bill.toFixed(2)}</strong></td>
+                <td>${CURRENCY_SYMBOL}${rec.oldBalance.toFixed(2)}</td>
+                <td style="color:#10b981; font-weight:bold;">${CURRENCY_SYMBOL}${rec.recovery.toFixed(2)}</td>
+                <td style="font-weight:bold;">${rec.receivedBy || '-'}</td> <!-- Yahan naam show hoga -->
+                <td style="color:#ef4444; font-weight:bold;">${CURRENCY_SYMBOL}${rec.netBalance.toFixed(2)}</td>
                 <td>
                     <div style="display: flex; gap: 5px;">
                         <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
@@ -13002,10 +13302,12 @@ function generateDemandRecordPDF(record) {
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`Customer Name: ${record.customer || 'N/A'}`, 14, yPos);
     doc.text(`Invoice ID: Serial #${record.serialNo || 'N/A'}`, 120, yPos); yPos += 5;
+    
+    // Yahan top se Received From hata diya gaya hai
     doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 14, yPos);
     doc.text(`Assigned Worker: ${record.worker ? record.worker.name : 'N/A'}`, 120, yPos); yPos += 15;
 
-    // Item Table details
+    // Item Table
     const billVal = record.bill !== undefined ? record.bill : (record.demand * (record.rate || 0));
     const tableData = [
         [record.itemName || 'N/A', record.demand || 0, `${CURRENCY_SYMBOL} ${(record.rate || 0).toFixed(2)}`, `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`]
@@ -13022,11 +13324,13 @@ function generateDemandRecordPDF(record) {
     
     yPos = doc.previousAutoTable.finalY + 12;
 
-    // Finance Statement Summary Table
+    // Finance Statement (Yahan naam add kar diya gaya hai)
+    const recoveryLabel = `Recovery Amount Received (By: ${record.receivedBy || 'N/A'})`;
+
     const summaryTableData = [
         ['Total Bill Amount:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
         ['Old Balance:', `${CURRENCY_SYMBOL} ${(record.oldBalance || 0).toFixed(2)}`],
-        ['Recovery Amount Received:', `${CURRENCY_SYMBOL} ${(record.recovery || 0).toFixed(2)}`],
+        [recoveryLabel, `${CURRENCY_SYMBOL} ${(record.recovery || 0).toFixed(2)}`],
         ['Outstanding Net Balance:', `${CURRENCY_SYMBOL} ${(record.netBalance || 0).toFixed(2)}`]
     ];
 
@@ -13039,24 +13343,12 @@ function generateDemandRecordPDF(record) {
         didParseCell: function(data) {
             if (data.row.index === 3) { 
                 data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.textColor = [216, 69, 62]; // Highlight Remaining balance in red
+                data.cell.styles.textColor = [216, 69, 62]; 
             }
         }
     });
 
-    // Signature Area
-    yPos = doc.previousAutoTable.finalY + 30;
-    if (yPos > 260) {
-        doc.addPage();
-        yPos = 30;
-    }
-    doc.setFont('helvetica', 'normal');
-    doc.setLineWidth(0.3);
-    doc.line(20, yPos, 80, yPos);
-    doc.text('Prepared By', 50, yPos + 6, { align: 'center' });
     
-    doc.line(130, yPos, 190, yPos);
-    doc.text('Customer Sign', 160, yPos + 6, { align: 'center' });
 
     doc.save(`Demand_Invoice_${(record.customer || 'Customer').replace(/\s+/g, '_')}_Serial_${record.serialNo}.pdf`);
 }
@@ -13113,6 +13405,287 @@ async function saveLaborAdvance() {
     } catch (e) {
         alert("Error saving advance: " + e.message);
     }
+}
+
+// ==========================================
+// NEW RIDER & VEHICLE MANAGEMENT LOGIC
+// ==========================================
+
+let savedRiders = [];
+let savedVehicles = [];
+
+// 1. SIRF RIDER SAVE KARNE KA FUNCTION
+async function saveOnlyRider() {
+    const riderName = document.getElementById('only-rider-name-input').value.trim();
+    
+    if (!riderName) {
+        alert("Meharbani karke Rider ka naam likhein!");
+        return;
+    }
+
+    const newRider = {
+        id: 'rider_' + Date.now(),
+        name: riderName,
+        date: new Date().toISOString()
+    };
+
+    savedRiders.push(newRider);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+            payload: JSON.stringify(savedRiders)
+        });
+        
+        alert("Rider ka naam kamyabi se save ho gaya!");
+        document.getElementById('only-rider-name-input').value = ''; // Input khali karein
+        renderOnlyRiderTable();
+    } catch (e) {
+        alert("Rider save karne mein masla aaya: " + e.message);
+    }
+}
+
+// RIDER TABLE SHOW KARNE KA FUNCTION
+function renderOnlyRiderTable() {
+    const tbody = document.getElementById('only-rider-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    savedRiders.forEach(rider => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(rider.date).toLocaleDateString()}</td>
+            <td style="font-weight: bold; color: var(--accent-color);">${rider.name}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteOnlyRider('${rider.id}')">Delete</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// RIDER DELETE KARNE KA FUNCTION
+async function deleteOnlyRider(id) {
+    if(!confirm("Kya aap waqai is Rider ko delete karna chahte hain?")) return;
+    savedRiders = savedRiders.filter(r => r.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+            payload: JSON.stringify(savedRiders)
+        });
+        renderOnlyRiderTable();
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+// --------------------------------------------------------
+
+// 2. SIRF VEHICLE NUMBER SAVE KARNE KA FUNCTION
+async function saveOnlyVehicle() {
+    const vehicleNo = document.getElementById('only-vehicle-no-input').value.trim();
+    
+    if (!vehicleNo) {
+        alert("Meharbani karke Vehicle Number likhein!");
+        return;
+    }
+
+    const newVehicle = {
+        id: 'veh_' + Date.now(),
+        number: vehicleNo,
+        date: new Date().toISOString()
+    };
+
+    savedVehicles.push(newVehicle);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').set({
+            payload: JSON.stringify(savedVehicles)
+        });
+        
+        alert("Vehicle Number kamyabi se save ho gaya!");
+        document.getElementById('only-vehicle-no-input').value = ''; // Input khali karein
+        renderOnlyVehicleTable();
+    } catch (e) {
+        alert("Vehicle save karne mein masla aaya: " + e.message);
+    }
+}
+
+// VEHICLE TABLE SHOW KARNE KA FUNCTION
+function renderOnlyVehicleTable() {
+    const tbody = document.getElementById('only-vehicle-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    savedVehicles.forEach(veh => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(veh.date).toLocaleDateString()}</td>
+            <td style="font-weight: bold; color: var(--info-color);">${veh.number}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteOnlyVehicle('${veh.id}')">Delete</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// VEHICLE DELETE KARNE KA FUNCTION
+async function deleteOnlyVehicle(id) {
+    if(!confirm("Kya aap waqai is Vehicle ko delete karna chahte hain?")) return;
+    savedVehicles = savedVehicles.filter(v => v.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').set({
+            payload: JSON.stringify(savedVehicles)
+        });
+        renderOnlyVehicleTable();
+    } catch(e) {
+        console.error(e);
+    }
+}
+
+// GATE PASS MEIN RIDER AUR VEHICLE DROPDOWN BHARNE KA FUNCTION
+function populateGatePassRiderAndVehicleDropdowns() {
+    const riderSelect = document.getElementById('gp-rider-name');
+    const vehicleSelect = document.getElementById('gp-number-plate');
+
+    if (riderSelect) {
+        riderSelect.innerHTML = '<option value="">-- Select Rider --</option>';
+        savedRiders.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.name;
+            opt.textContent = r.name;
+            riderSelect.appendChild(opt);
+        });
+    }
+
+    if (vehicleSelect) {
+        vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>';
+        savedVehicles.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.number;
+            opt.textContent = v.number;
+            vehicleSelect.appendChild(opt);
+        });
+    }
+}
+
+// DEMAND RECORD MEIN RIDER DROPDOWN BHARNE KA FUNCTION
+function populateDemandRecordRiderDropdown() {
+    const select = document.getElementById('dr-received-by');
+    if (!select) return;
+    
+    // Pehle se mojood options ko saaf karke default option lagayein
+    select.innerHTML = '<option value="">-- Paisa dene wale rider ka naam --</option>';
+    
+    // Agar savedRiders array mojood hai tou usko dropdown mein add karein
+    if (typeof savedRiders !== 'undefined') {
+        savedRiders.forEach(rider => {
+            const opt = document.createElement('option');
+            opt.value = rider.name;
+            opt.textContent = rider.name;
+            select.appendChild(opt);
+        });
+    }
+}
+
+
+// Recovery Sheet ki Table Load karne ka function
+function renderRecoverySheetTable() {
+    const tbody = document.getElementById('recovery-sheet-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    // Sirf woh records jin ki demand (bill) bani ho ya processed hon
+    const validRecords = (demandRecords || []).filter(r => r.bill > 0 || r.processed === true);
+
+    validRecords.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+        const getStatus = (r) => (r.status === 'paid' || (Number(r.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+        const currentStatus = getStatus(rec);
+        const statusHTML = currentStatus === 'paid' ? '<span style="color:var(--success-color); font-weight:bold;">Paid</span>' : '<span style="color:var(--danger-color); font-weight:bold;">Unpaid</span>';
+        
+        tbody.innerHTML += `
+            <tr>
+                <td>${rec.date ? new Date(rec.date).toLocaleDateString() : '-'}</td>
+                <td>${rec.customer || 'N/A'}</td>
+                <td>${CURRENCY_SYMBOL}${(Number(rec.bill) || 0).toFixed(2)}</td>
+                <td style="color:var(--success-color); font-weight:bold;">${CURRENCY_SYMBOL}${(Number(rec.recovery) || 0).toFixed(2)}</td>
+                <td style="color:var(--danger-color); font-weight:bold;">${CURRENCY_SYMBOL}${(Number(rec.netBalance) || 0).toFixed(2)}</td>
+                <td>${statusHTML}</td>
+            </tr>
+        `;
+    });
+}
+
+// PDF Generate karne ka function (Paid, Unpaid, All)
+function generateRecoveryReportPDF(reportType) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    const getStatus = (r) => (r.status === 'paid' || (Number(r.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+    
+    // Base data
+    let reportData = (demandRecords || []).filter(r => r.bill > 0 || r.processed === true);
+    
+    let title = "All Customers Recovery Report";
+    if (reportType === 'paid') {
+        reportData = reportData.filter(r => getStatus(r) === 'paid');
+        title = "Paid Customers Recovery Report";
+    } else if (reportType === 'unpaid') {
+        reportData = reportData.filter(r => getStatus(r) === 'unpaid');
+        title = "Unpaid Customers Recovery Report";
+    }
+
+    if (reportData.length === 0) {
+        alert(`Is waqt kisi ${reportType} customer ka record nahi mila.`);
+        return;
+    }
+
+    // Header Print karein
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, yPos, { align: 'center' }); yPos += 12;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text(title, 105, yPos, { align: 'center' }); yPos += 10;
+
+    // Table Data Set karein
+    const rows = reportData.map((rec, index) => [
+        index + 1,
+        rec.date ? new Date(rec.date).toLocaleDateString() : '-',
+        rec.customer || 'N/A',
+        `${CURRENCY_SYMBOL}${(Number(rec.bill) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.recovery) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.netBalance) || 0).toFixed(2)}`,
+        getStatus(rec).toUpperCase()
+    ]);
+
+    // Table Design
+    doc.autoTable({
+        startY: yPos,
+        head: [['S.No', 'Date', 'Customer', 'Bill Amount', 'Recovery', 'Balance', 'Status']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { 
+            fillColor: reportType === 'paid' ? [16, 185, 129] : (reportType === 'unpaid' ? [239, 68, 68] : [42, 105, 185]), 
+            textColor: 255 
+        },
+        styles: { fontSize: 9 }
+    });
+
+    // Summary Totals
+    const finalY = doc.previousAutoTable.finalY + 10;
+    const totalBill = reportData.reduce((s, r) => s + (Number(r.bill) || 0), 0);
+    const totalRec = reportData.reduce((s, r) => s + (Number(r.recovery) || 0), 0);
+    const totalBal = reportData.reduce((s, r) => s + (Number(r.netBalance) || 0), 0);
+
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text(`Total Bill Generated: ${CURRENCY_SYMBOL}${totalBill.toFixed(2)}`, 14, finalY);
+    doc.text(`Total Recovery Received: ${CURRENCY_SYMBOL}${totalRec.toFixed(2)}`, 14, finalY + 6);
+    doc.text(`Total Remaining Balance: ${CURRENCY_SYMBOL}${totalBal.toFixed(2)}`, 14, finalY + 12);
+
+    // Save PDF file
+    doc.save(`Recovery_Report_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 </script>
@@ -13196,7 +13769,7 @@ async function saveLaborAdvance() {
         <input type="hidden" id="edit-demand-id">
         <div class="form-grid">
             <label>Customer Name:</label>
-            <input type="text" id="edit-d-customer" class="form-control" placeholder="Customer Name">
+<input type="text" id="edit-d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off">
 
             <label>Item Name:</label>
             <select id="edit-d-item-name" class="form-control">
@@ -13204,7 +13777,9 @@ async function saveLaborAdvance() {
             </select>
 
             <label>Demand (Qty):</label>
-            <input type="number" id="edit-d-demand" class="form-control" placeholder="0">
+<select id="edit-d-demand" class="form-control">
+    <!-- options auto-populate hongi -->
+</select>
 
             <label>Assign Worker:</label>
             <select id="edit-d-worker" class="form-control">
@@ -13218,7 +13793,7 @@ async function saveLaborAdvance() {
     </div>
 </div>
 
-<!-- EDIT GATE PASS MODAL (POPUP) -->
+<!-- Is naye edit modal code se replace karein -->
 <div id="edit-gatepass-modal" class="modal-backdrop">
     <div class="modal-content">
         <h3 class="panel-title">Edit Gate Pass Details</h3>
@@ -13238,6 +13813,10 @@ async function saveLaborAdvance() {
                 <option value="Open">🟢 Open</option>
                 <option value="Closed">⚪ Closed</option>
             </select>
+
+            <!-- NAYA FIELD: Edit modal ke andar In-Time ka option -->
+            <label for="edit-gp-in-time">In Time:</label>
+            <input type="time" id="edit-gp-in-time" class="form-control">
         </div>
         <div class="manage-buttons" style="margin-top: 20px;">
             <button class="btn btn-success" onclick="saveUpdatedGatePass()">Save Changes</button>
@@ -13245,6 +13824,8 @@ async function saveLaborAdvance() {
         </div>
     </div>
 </div>
+
+<datalist id="customer-names-list"></datalist>
 
 </body>
 </html>
