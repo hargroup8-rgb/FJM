@@ -1043,7 +1043,9 @@ body,
             <!-- Left Panel: Vertical Navigation Tabs (Modules) -->
             <div class="left-panel">
                 <div class="tabs">
+                    
                     <button class="tab-link active" onclick="openModule(event, 'Dashboard')">📊 Dashboard</button>
+                    <button class="tab-link" onclick="openModule(event, 'AddCustomer')">👥 Add Customer</button>
 
                     
                     
@@ -3051,6 +3053,74 @@ body,
         </table>
     </div>
 </div>
+<!-- START UPDATED MODULE: AUTOMATIC CODE, ITEM, ASSIGNED WORKER & PRICE -->
+<div id="AddCustomer" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">👥 Add / Manage Customers</h2>
+    
+    <!-- Customer Form -->
+    <div class="manage-form">
+        <h3 id="customer-form-title">Customer Details</h3>
+        <div class="form-grid">
+            <!-- Automatic Code Field (Read-only) -->
+            <label>Customer Code:</label>
+            <input type="text" id="cust-code" class="form-control" readonly placeholder="Auto-Generated" style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+
+            <!-- Assigned Worker Dropdown -->
+            <label>Assign Worker:</label>
+            <select id="cust-worker" class="form-control">
+                <option value="">-- Select Worker --</option>
+            </select>
+
+            <label>Item Name:</label>
+            <input type="text" id="cust-item" class="form-control" placeholder="e.g., Sariya, Cement, Silt, etc.">
+
+            <label>Customer Name:</label>
+            <input type="text" id="cust-name" class="form-control" placeholder="Full Name">
+            
+            <label>Phone Number:</label>
+            <input type="tel" id="cust-phone" class="form-control" placeholder="e.g., 0300-1234567">
+            
+            <label>Address:</label>
+            <input type="text" id="cust-address" class="form-control" placeholder="Complete Address">
+
+            <label>Price (Rs.):</label>
+            <input type="number" id="cust-price" class="form-control" placeholder="0.00" step="0.01">
+        </div>
+        <button class="btn btn-success" id="btn-save-customer" onclick="saveNewCustomer()" style="margin-top:20px; width: 100%;">Save Customer</button>
+        <button class="btn btn-secondary" id="btn-cancel-customer-edit" onclick="clearCustomerForm()" style="margin-top:10px; width: 100%; display: none;">Cancel Edit</button>
+    </div>
+    
+    <!-- Customers Table with Live Search -->
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>Saved Customers List</h3>
+        
+        <!-- Live Search Input -->
+        <div style="margin-bottom: 15px;">
+            <input type="text" id="cust-search-input" class="form-control" placeholder="🔍 Search by Code, Name, Phone, Worker, or Item..." oninput="renderCustomerTable()">
+        </div>
+
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Date Added</th>
+                    <th>Customer Code</th>
+                    <th>Customer Name</th>
+                    <th>Phone</th>
+                    <th>Address</th>
+                    <th>Item</th>
+                    <th>Assigned Worker</th> <!-- Naya Column -->
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="customer-list-body">
+                <!-- Data dynamically show hoga -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- END UPDATED MODULE -->
+
 
                 <div id="Settings" class="module-content">
                     <h2 class="panel-title">Invoice & System Settings</h2>
@@ -3073,7 +3143,9 @@ body,
                             <input type="number" id="setting-invoice-start-number" class="form-control">
 <label for="setting-gatepass-start-number">Next Gate Pass #:</label>
 <input type="number" id="setting-gatepass-start-number" class="form-control">
-                            
+
+
+
                         </div>
                         <hr style="border-color: var(--border-color); margin: 20px 0;">
                         <h3 class="panel-title" style="font-size: 1.2rem;">Branding Settings</h3>
@@ -3247,6 +3319,91 @@ body,
 
 <script>
 
+
+// ==========================================
+// DEMAND WORKERS MISSING FUNCTIONS FIX
+// ==========================================
+
+// 1. Naya worker save karne ka function
+async function saveDemandWorker() {
+    const name = document.getElementById('worker-name').value.trim();
+    const phone = document.getElementById('worker-phone').value.trim();
+    const address = document.getElementById('worker-address').value.trim();
+    const status = document.getElementById('worker-status').value;
+
+    if (!name || !phone) {
+        alert("Worker Name aur Mobile Number lazmi likhein!");
+        return;
+    }
+
+    const newWorker = {
+        id: 'wk_' + Date.now(),
+        name: name,
+        phone: phone,
+        address: address,
+        status: status,
+        date: new Date().toISOString()
+    };
+
+    demandWorkers.push(newWorker);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        // Firebase Firestore mein user ki specific key ke sath save karna
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
+            payload: JSON.stringify(demandWorkers)
+        });
+        
+        alert("Worker kamyabi se save ho gaya!");
+        clearWorkerForm();
+        renderDemandWorkersTable(); // Table ko update karein
+    } catch (e) {
+        console.error(e);
+        alert("Error saving worker: " + e.message);
+    }
+}
+
+// 2. Save karne ke baad form ko khali (clear) karne ka function
+function clearWorkerForm() {
+    document.getElementById('worker-name').value = '';
+    document.getElementById('worker-phone').value = '';
+    document.getElementById('worker-address').value = '';
+    document.getElementById('worker-status').value = 'Available';
+}
+
+// 3. Workers ko table mein show karne ka function (Jis ki wajah se error aa raha tha)
+function renderDemandWorkersTable() {
+    const tbody = document.getElementById('demand-workers-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    if (demandWorkers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Koi worker nahi mila. Upar form se naya worker add karein.</td></tr>';
+        return;
+    }
+
+    demandWorkers.forEach(worker => {
+        const row = document.createElement('tr');
+        
+        // Status ke hisaab se color change karein
+        const statusColor = worker.status === 'Available' ? '#10b981' : '#f59e0b';
+        
+        row.innerHTML = `
+            <td><strong>${worker.name}</strong></td>
+            <td>${worker.phone}</td>
+            <td>${worker.address || '-'}</td>
+            <td><span style="color: ${statusColor}; font-weight:bold;">${worker.status}</span></td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-info" onclick="showWorkerStats('${worker.id}')">Stats</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteDemandWorker('${worker.id}')">Delete</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
     // Dropdown mein tamam Workers load karne ka function
 function populateRecoveryWorkerDropdown() {
     const select = document.getElementById('recovery-worker-select');
@@ -3298,19 +3455,88 @@ function generateSelectedWorkerReport() {
     generateWorkerReportPDF(worker, workerDemands, totalClients, paidClients, unpaidClients, totalOutstanding);
 }
 
-    function populateCustomerNamesDatalist() {
+   function populateCustomerNamesDatalist() {
     const datalist = document.getElementById('customer-names-list');
     if (!datalist) return;
     datalist.innerHTML = '';
 
-    // demandRecords se unique aur valid customer names nikalna
-    const uniqueNames = [...new Set((demandRecords || []).map(rec => rec.customer).filter(name => name && name.trim() !== ''))];
+    const addedValues = new Set();
 
-    uniqueNames.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        datalist.appendChild(option);
+    // Sirf "Add Customer" wale saved customers ke NAAM add karein
+    if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+        savedCustomersList.forEach(cust => {
+            if (cust.name) {
+                const nameVal = cust.name.trim(); // Yahan se code hata diya gaya hai, sirf naam uthega
+                
+                if (!addedValues.has(nameVal.toLowerCase())) {
+                    const opt = document.createElement('option');
+                    opt.value = nameVal; 
+                    datalist.appendChild(opt);
+                    addedValues.add(nameVal.toLowerCase());
+                }
+            }
+        });
+    }
+
+    // 2. Existing Demand Records se purane naam uthayein (Fallback as backup)
+   if (typeof demandRecords !== 'undefined' && Array.isArray(demandRecords)) {
+        demandRecords.forEach(rec => {
+            if (rec.customer) {
+                const val = rec.customer.trim();
+                if (!addedValues.has(val.toLowerCase())) {
+                    const opt = document.createElement('option');
+                    opt.value = val;
+                    datalist.appendChild(opt);
+                    addedValues.add(val.toLowerCase());
+                }
+            }
+        });
+    }
+}
+
+
+function handleCustomerSelectionInDemand() {
+    const inputVal = document.getElementById('d-customer').value;
+    if (!inputVal) return;
+
+    // Ab match bhi sirf naam ke zariye hoga
+    const matchedCust = savedCustomersList.find(c => {
+        return c.name === inputVal;
     });
+
+    if (matchedCust) {
+        // Auto-fill Item Name
+        const itemSelect = document.getElementById('d-item-name');
+        if (itemSelect && matchedCust.item && matchedCust.item !== 'N/A') {
+            let itemFound = false;
+            for(let i = 0; i < itemSelect.options.length; i++) {
+                if (itemSelect.options[i].value === matchedCust.item) {
+                    itemSelect.selectedIndex = i;
+                    itemFound = true;
+                    break;
+                }
+            }
+            // Agar item dropdown list mein nahi hai to add karke select kar lein
+            if (!itemFound) {
+                const opt = document.createElement('option');
+                opt.value = matchedCust.item;
+                opt.textContent = matchedCust.item;
+                itemSelect.appendChild(opt);
+                itemSelect.value = matchedCust.item;
+            }
+        }
+
+        // Auto-fill Assigned Worker
+        const workerSelect = document.getElementById('d-worker');
+        if (workerSelect && matchedCust.worker && matchedCust.worker.name) {
+            for(let i = 0; i < workerSelect.options.length; i++) {
+                if (workerSelect.options[i].text.includes(matchedCust.worker.name)) {
+                    workerSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
 }
 
     function populateDemandQtyDropdown() {
@@ -3928,81 +4154,218 @@ function generateLaborReport() {
 
 // Workers ko Cloud se fetch karne ka function
 async function dbFetchDemandWorkers() {
-    demandWorkers = await dbFetchData('demand_workers') || [];
-}
-
-// Dropdown menu mein available workers shamil karne ka function
-function populateDemandWorkersDropdown() {
-    const select = document.getElementById('d-worker');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Select Available Worker --</option>';
-    demandWorkers.forEach(w => {
-        const option = document.createElement('option');
-        option.value = w.id;
-        // Available ya Busy status ke sath show karega
-        option.textContent = `${w.name} (${w.phone}) - [${w.status}]`;
-        select.appendChild(option);
-    });
-}
-
-// Naya Worker save karne ka function
-async function saveDemandWorker() {
-    const name = document.getElementById('worker-name').value.trim();
-    const phone = document.getElementById('worker-phone').value.trim();
-    const address = document.getElementById('worker-address').value.trim();
-    const status = document.getElementById('worker-status').value;
-
-    if (!name || !phone) {
-        alert("Worker Name aur Phone likhna lazmi hai!");
-        return;
-    }
-
-    const newWorker = {
-        id: 'wrk' + Date.now(),
-        name: name,
-        phone: phone,
-        address: address || 'N/A',
-        status: status
-    };
-
-    demandWorkers.push(newWorker);
-    
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
-            payload: JSON.stringify(demandWorkers)
-        });
-        alert("Worker kamyabi se save ho gaya!");
-        clearWorkerForm();
-        renderDemandWorkersTable();
+        const fetchedWorkers = await dbFetchData('demand_workers');
+        demandWorkers = Array.isArray(fetchedWorkers) ? fetchedWorkers : [];
     } catch (e) {
-        alert("Worker save karne mein error: " + e.message);
+        console.error("Workers fetch error: ", e);
+        demandWorkers = [];
     }
 }
 
-function clearWorkerForm() {
-    document.getElementById('worker-name').value = '';
-    document.getElementById('worker-phone').value = '';
-    document.getElementById('worker-address').value = '';
-    document.getElementById('worker-status').value = 'Available';
+// Customers ko Cloud se fetch karne ka safe function
+async function dbFetchCustomers() {
+    try {
+        const fetchedCustomers = await dbFetchData('customers_list');
+        savedCustomersList = Array.isArray(fetchedCustomers) ? fetchedCustomers : [];
+    } catch (e) {
+        console.error("Customers fetch error: ", e);
+        savedCustomersList = [];
+    }
 }
 
-// Workers ki table render karne ka updated function
-function renderDemandWorkersTable() {
-    const tbody = document.getElementById('demand-workers-table-body');
+// Dropdown mein allocated workers ko populate karne ka function
+function populateCustomerWorkerDropdown() {
+    const select = document.getElementById('cust-worker');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">-- Select Worker --</option>';
+    
+    // Check karein ke demand workers ki array khali to nahi hai
+    if (typeof demandWorkers !== 'undefined' && Array.isArray(demandWorkers) && demandWorkers.length > 0) {
+        demandWorkers.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w.id;
+            opt.textContent = `${w.name} (${w.phone})`;
+            select.appendChild(opt);
+        });
+    }
+}
+
+// Customer ko save ya update karne ka function (with Try-Catch Error tracking)
+async function saveNewCustomer() {
+    try {
+        console.log("Customer save process shuru ho raha hai...");
+
+        const workerId = document.getElementById('cust-worker').value;
+        const item = document.getElementById('cust-item').value.trim();
+        const name = document.getElementById('cust-name').value.trim();
+        const phone = document.getElementById('cust-phone').value.trim();
+        const address = document.getElementById('cust-address').value.trim();
+        const price = parseFloat(document.getElementById('cust-price').value) || 0;
+
+        if (!name || !phone) {
+            alert("Meharbani karke Customer Name aur Phone Number lazmi likhein!");
+            return;
+        }
+
+        // Selected worker ki details hasil karna
+        const selectedWorker = (typeof demandWorkers !== 'undefined' && Array.isArray(demandWorkers)) 
+                               ? demandWorkers.find(w => w.id === workerId) 
+                               : null;
+        const workerDetail = selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null;
+
+        if (editingCustomerId) {
+            // Editing Mode
+            const index = savedCustomersList.findIndex(c => c.id === editingCustomerId);
+            if (index !== -1) {
+                savedCustomersList[index].item = item;
+                savedCustomersList[index].name = name;
+                savedCustomersList[index].phone = phone;
+                savedCustomersList[index].address = address;
+                savedCustomersList[index].price = price;
+                savedCustomersList[index].worker = workerDetail;
+            }
+        } else {
+            // New Registration Mode (Auto Code Generation with Safety Checks)
+            if (typeof appSettings === 'undefined' || !appSettings) {
+                appSettings = {};
+            }
+            if (typeof appSettings.nextCustomerCode === 'undefined' || isNaN(appSettings.nextCustomerCode)) {
+                appSettings.nextCustomerCode = 1001;
+            }
+
+            const generatedCode = "CUST-" + appSettings.nextCustomerCode;
+
+            const newCust = {
+                id: 'cust_' + Date.now(),
+                code: generatedCode,
+                item: item || 'N/A',
+                name: name,
+                phone: phone,
+                address: address || 'N/A',
+                price: price,
+                worker: workerDetail, // Worker details perfectly bind ho rahi hain
+                date: new Date().toISOString()
+            };
+            
+            if (!Array.isArray(savedCustomersList)) {
+                savedCustomersList = [];
+            }
+            savedCustomersList.push(newCust);
+
+            // Counter update aur Settings save karna
+            appSettings.nextCustomerCode++;
+            await saveSettings();
+        }
+
+        // Native Firebase saving mechanism (Yahan se security rules pass ho jayenge)
+        // Native Firebase saving mechanism
+        const userSpecificKey = getUserSpecificKey('customers_list');
+        await saveData(userSpecificKey, savedCustomersList);
+        
+        alert("Customer data kamyabi se Cloud database mein save ho gaya!");
+        clearCustomerForm();
+        renderCustomerTable();
+        
+        // NAYA: Demand section ki slide list ko live update karein
+        populateCustomerNamesDatalist();
+        
+    } catch (error) {
+        console.error("Save Customer Error: ", error);
+        alert("System Error: Customer data save nahi ho saka. Error detail: " + error.message);
+    }
+}
+
+// Form clear karne ka function
+function clearCustomerForm() {
+    document.getElementById('cust-code').value = '';
+    document.getElementById('cust-worker').value = '';
+    document.getElementById('cust-item').value = '';
+    document.getElementById('cust-name').value = '';
+    document.getElementById('cust-phone').value = '';
+    document.getElementById('cust-address').value = '';
+    document.getElementById('cust-price').value = '';
+    
+    editingCustomerId = null;
+    
+    document.getElementById('customer-form-title').textContent = "Customer Details";
+    document.getElementById('btn-save-customer').textContent = "Save Customer";
+    document.getElementById('btn-save-customer').className = "btn btn-success";
+    document.getElementById('btn-cancel-customer-edit').style.display = 'none';
+}
+
+// Edit mode load karne ka function
+function editCustomer(id) {
+    const cust = savedCustomersList.find(c => c.id === id);
+    if (!cust) return;
+
+    editingCustomerId = id;
+    
+    document.getElementById('cust-code').value = cust.code || '';
+    document.getElementById('cust-item').value = cust.item || '';
+    document.getElementById('cust-name').value = cust.name || '';
+    document.getElementById('cust-phone').value = cust.phone || '';
+    document.getElementById('cust-address').value = cust.address || '';
+    document.getElementById('cust-price').value = cust.price || '';
+
+    // Dropdown mein selected worker set karna
+    const workerSelect = document.getElementById('cust-worker');
+    if (workerSelect && cust.worker) {
+        const workerObj = demandWorkers.find(w => w.name === cust.worker.name && w.phone === cust.worker.phone);
+        workerSelect.value = workerObj ? workerObj.id : '';
+    } else if (workerSelect) {
+        workerSelect.value = '';
+    }
+
+    document.getElementById('customer-form-title').textContent = "Edit Customer Details";
+    document.getElementById('btn-save-customer').textContent = "Update Customer";
+    document.getElementById('btn-save-customer').className = "btn btn-warning";
+    document.getElementById('btn-cancel-customer-edit').style.display = 'inline-flex';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Table render karne ka function (Live Search Filter ke sath)
+function renderCustomerTable() {
+    const tbody = document.getElementById('customer-list-body');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    demandWorkers.forEach(w => {
+    const searchInput = document.getElementById('cust-search-input');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    let filteredList = Array.isArray(savedCustomersList) ? savedCustomersList : [];
+    if (query) {
+        filteredList = filteredList.filter(cust => 
+            (cust.code && cust.code.toLowerCase().includes(query)) ||
+            (cust.name && cust.name.toLowerCase().includes(query)) ||
+            (cust.phone && cust.phone.toLowerCase().includes(query)) ||
+            (cust.item && cust.item.toLowerCase().includes(query)) ||
+            (cust.worker && cust.worker.name && cust.worker.name.toLowerCase().includes(query))
+        );
+    }
+
+    filteredList.forEach(cust => {
         const row = document.createElement('tr');
+        const safePrice = Number(cust.price) || 0;
+        const workerName = cust.worker ? cust.worker.name : 'N/A';
+
         row.innerHTML = `
-            <td>${w.name}</td>
-            <td>${w.phone}</td>
-            <td>${w.address}</td>
-            <td style="font-weight:bold; color: ${w.status === 'Available' ? 'var(--success-color)' : 'var(--warning-color)'};">${w.status}</td>
+            <td>${new Date(cust.date).toLocaleDateString()}</td>
+            <td style="font-weight: bold; color: var(--info-color);">${cust.code || '-'}</td>
+            <td><strong>${cust.name || '-'}</strong></td>
+            <td>${cust.phone || '-'}</td>
+            <td>${cust.address || '-'}</td>
+            <td>${cust.item || '-'}</td>
+            <td style="color: var(--accent-color); font-weight: bold;">${workerName}</td>
+            <td style="font-weight: bold; color: var(--success-color);">${CURRENCY_SYMBOL}${safePrice.toFixed(2)}</td>
             <td>
-                <button class="btn btn-sm btn-info" onclick="showWorkerStats('${w.id}')" style="margin-right: 5px;">View Stats</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteDemandWorker('${w.id}')">Delete</button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-warning" onclick="editCustomer('${cust.id}')">Edit</button>
+                    <button class="btn btn-sm btn-info" onclick="generateCustomerSinglePDF('${cust.id}')">PDF</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${cust.id}')">Delete</button>
+                </div>
             </td>
         `;
         tbody.appendChild(row);
@@ -4944,6 +5307,7 @@ async function loadUserSettingsOnline() {
     appSettings.enableTax = appSettings.enableTax ?? true;
     appSettings.logoBase64 = appSettings.logoBase64 || null;
 appSettings.nextSerialNo = appSettings.nextSerialNo ?? 101; // Naya code
+appSettings.nextCustomerCode = appSettings.nextCustomerCode ?? 1001; // Agar pehle se na ho to 1001 se start karega
     
     if (!appSettings.paymentMethods) {
         appSettings.paymentMethods = ["Cash", "Credit", "Easypaisa", "JazzCash", "Meezan Bank", "HBL", "UBL", "Bank Alfalah", "Bank Al Habib"];
@@ -10989,7 +11353,7 @@ function renderUserPermissions() {
 
     // 'POS' ki jagah sahi key 'PartialPayments' ka istemal kiya gaya hai
     const modules = [
-        'Dashboard', 'Products', 'ManageProducts', 'ProductStockReport',
+        'Dashboard', 'Products', 'ManageProducts', 'ProductStockReport','AddCustomer',
         'PartialPayments', 'SellReturn', 'AllReports', 'ProfitLossStatement',
         'PurchasePurchaserDetail', 'PurchaseProductPayment', 'PurchaseAddPayment',
         'PurchaseHistory', 'PurchaseReports', 'AddExpense', 'ExpenseHistory',
@@ -11341,7 +11705,6 @@ function toggleSubMenu(elementId) {
 
 async function openModule(evt, moduleName) {
 
-    
     // Safe parameter detection (Agar inline onclick mein event pass karna bhool jaye):
     let actualModuleName = moduleName;
     let eventObj = evt;
@@ -11360,10 +11723,10 @@ async function openModule(evt, moduleName) {
         const userPermissions = (loggedInUser.permissions && loggedInUser.permissions.length > 0)
                                 ? loggedInUser.permissions
                                 : (appSettings.permissions[userRole] || []);
-                                
+
         if (!userPermissions.includes('all') && !userPermissions.includes(actualModuleName)) {
             alert("Aapko is hissay tak rasai ki ijazat nahi hai.");
-            return; 
+            return;
         }
     }
 
@@ -11374,50 +11737,49 @@ async function openModule(evt, moduleName) {
         button = eventObj.currentTarget;
         originalText = button.innerHTML;
         button.innerHTML = "⏳ Loading...";
-                button.disabled = true;
+        button.disabled = true;
 
-if (actualModuleName === 'DemandRecord') {
-    await dbFetchDemandWorkers(); // Safe worker fetch
-    
-    // Cloud se updated demand lists aur riders ko dobara fetch karein
-    const userId = loggedInUser.id || loggedInUser.uid;
-    try {
-        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
-        if (doc.exists) {
-            demandRecords = JSON.parse(doc.data().payload) || [];
+        if (actualModuleName === 'DemandRecord') {
+            await dbFetchDemandWorkers(); // Safe worker fetch
+
+            // Cloud se updated demand lists aur riders ko dobara fetch karein
+            const userId = loggedInUser.id || loggedInUser.uid;
+            try {
+                const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
+                if (doc.exists) {
+                    demandRecords = JSON.parse(doc.data().payload) || [];
+                }
+
+                // NAYA CODE: Riders ka data load karein
+                const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
+                if (docRiders.exists) {
+                    savedRiders = JSON.parse(docRiders.data().payload) || [];
+                }
+            } catch (e) {
+                console.error("Demand records/Riders reload error:", e);
+            }
+
+            // Automated Dropdowns load karein
+            populatePendingDemandsDropdown();
+            populateDemandRecordRiderDropdown(); // <-- NAYA: Rider Dropdown ko fill karega
+            handlePendingDemandSelection(); // reset inputs
+            renderDemandRecordTable();
         }
 
-        // NAYA CODE: Riders ka data load karein
-        const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
-        if (docRiders.exists) {
-            savedRiders = JSON.parse(docRiders.data().payload) || [];
-        }
-    } catch (e) {
-        console.error("Demand records/Riders reload error:", e);
-    }
-
-    // Automated Dropdowns load karein
-    populatePendingDemandsDropdown();
-    populateDemandRecordRiderDropdown(); // <-- NAYA: Rider Dropdown ko fill karega
-    handlePendingDemandSelection(); // reset inputs
-    renderDemandRecordTable();
-}
-
-if (actualModuleName === 'AddLabor') {
+        if (actualModuleName === 'AddLabor') {
             await dbFetchLaborData();
             renderLaborList();
         }
         if (actualModuleName === 'LaborSalary') {
-    await dbFetchLaborData();
-    populateLaborDropdowns();
-    document.getElementById('labor-date').value = getLocalDateString();
-    document.getElementById('labor-advance-date').value = getLocalDateString(); // Nayi line
-}
+            await dbFetchLaborData();
+            populateLaborDropdowns();
+            document.getElementById('labor-date').value = getLocalDateString();
+            document.getElementById('labor-advance-date').value = getLocalDateString(); // Nayi line
+        }
         if (actualModuleName === 'LaborReport') {
             await dbFetchLaborData();
             populateLaborDropdowns();
         }
-
     }
 
     try {
@@ -11431,13 +11793,20 @@ if (actualModuleName === 'AddLabor') {
             renderDashboard();
         }
 
-if (actualModuleName === 'RecoverySheet') {
+        // AddCustomer lazy loading block (with proper closing brackets)
+        if (actualModuleName === 'AddCustomer') {
+            await dbFetchDemandWorkers(); 
+            await dbFetchCustomers();     
+            populateCustomerWorkerDropdown(); 
+            renderCustomerTable();        
+        }
+
+        if (actualModuleName === 'RecoverySheet') {
             await dbFetchDemandWorkers(); // Cloud se workers fresh load karein
             populateRecoveryWorkerDropdown(); // Dropdown mein data dalein
         }
 
-
-if (actualModuleName === 'RecoverySheet') {
+        if (actualModuleName === 'RecoverySheet') {
             renderRecoverySheetTable();
         }
 
@@ -11510,7 +11879,7 @@ if (actualModuleName === 'RecoverySheet') {
             populatePurchaserDatalist('purchaser-list-add-payment');
             displayPurchaserBalance();
             document.getElementById('add-payment-method-purchaser').value = "Cash";
-            document.getElementById('purchase-add-payment-details-container').style.display = 'none'; 
+            document.getElementById('purchase-add-payment-details-container').style.display = 'none';
             document.getElementById('add-payment-date-purchaser').value = getLocalDateString(getCloudDate());
         }
         if (actualModuleName === 'PurchaseHistory') {
@@ -11579,15 +11948,14 @@ if (actualModuleName === 'RecoverySheet') {
                 maalPurchases = JSON.parse(doc.data().payload);
             }
             await dbFetchProducts();
-            await dbFetchDemandWorkers(); 
+            await dbFetchDemandWorkers();
             populateGatePassDemandDropdown();
-            populateGatePassProductSelect(); 
+            populateGatePassProductSelect();
             renderGatePassList();
-            // Naya code: Riders aur Vehicles ka data load kar ke dropdowns mein bhejna
             try {
                 const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
                 if(docRiders.exists) savedRiders = JSON.parse(docRiders.data().payload) || [];
-                
+
                 const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
                 if(docVehicles.exists) savedVehicles = JSON.parse(docVehicles.data().payload) || [];
             } catch (e) {
@@ -11615,33 +11983,30 @@ if (actualModuleName === 'RecoverySheet') {
             if (doc.exists) {
                 maalPurchases = JSON.parse(doc.data().payload);
             }
-            await dbFetchDemandWorkers(); 
-            populateDemandWorkersDropdown(); 
-            populateDemandItemDropdown(); 
-            populateCustomerNamesDatalist(); // <--- YE NAYI LINE YAHAN SHAMIL KAREIN
+            await dbFetchDemandWorkers();
+            await dbFetchCustomers();
+            populateDemandWorkersDropdown();
+            populateCustomerNamesDatalist();
+            populateDemandItemDropdown();
+            populateCustomerNamesDatalist();
 
             renderRecentDemands();
             populateDemandQtyDropdown();
-
         }
         if (actualModuleName === 'DemandWorkers') {
             await dbFetchDemandWorkers();
             renderDemandWorkersTable();
         }
-        
 
-        
-        // === YEH MISSING HANDLER SHAMIL KIYA GAYA HAI ===
         if (actualModuleName === 'MaalPurchase') {
             await dbFetchMaalPurchases();
             renderMaalPurchaseTable();
         }
-        
+
     } catch (e) {
         console.error("Online lazy load failed: ", e);
         alert("Internet Slow ya disconnect hai! Data sahi se load nahi ho saka.");
     } finally {
-        // Safe button text restoration
         if (button) {
             button.innerHTML = originalText;
             button.disabled = false;
@@ -11688,7 +12053,6 @@ if (actualModuleName === 'RecoverySheet') {
         document.getElementById('sidebar-arrow').textContent = '▶';
     }
 }
-
 
 
 
@@ -13512,66 +13876,69 @@ async function saveLaborAdvance() {
 // ==========================================
 
 let savedRiders = [];
+let savedCustomersList = [];
 let savedVehicles = [];
+let editingCustomerId = null;
+
 
 // 1. SIRF RIDER SAVE KARNE KA FUNCTION
 async function saveOnlyRider() {
     const riderName = document.getElementById('only-rider-name-input').value.trim();
-    
-    if (!riderName) {
-        alert("Meharbani karke Rider ka naam likhein!");
-        return;
-    }
-
-    const newRider = {
-        id: 'rider_' + Date.now(),
-        name: riderName,
-        date: new Date().toISOString()
-    };
-
-    savedRiders.push(newRider);
-
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
-            payload: JSON.stringify(savedRiders)
-        });
         
-        alert("Rider ka naam kamyabi se save ho gaya!");
-        document.getElementById('only-rider-name-input').value = ''; // Input khali karein
-        renderOnlyRiderTable();
-    } catch (e) {
-        alert("Rider save karne mein masla aaya: " + e.message);
-    }
-}
-
-// RIDER TABLE SHOW KARNE KA FUNCTION
-function renderOnlyRiderTable() {
-    const tbody = document.getElementById('only-rider-list-body');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-
-    savedRiders.forEach(rider => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${new Date(rider.date).toLocaleDateString()}</td>
-            <td style="font-weight: bold; color: var(--accent-color);">${rider.name}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteOnlyRider('${rider.id}')">Delete</button></td>
-        `;
-        tbody.appendChild(row);
-    });
-}
-
-// RIDER DELETE KARNE KA FUNCTION
-async function deleteOnlyRider(id) {
-    if(!confirm("Kya aap waqai is Rider ko delete karna chahte hain?")) return;
-    savedRiders = savedRiders.filter(r => r.id !== id);
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
-            payload: JSON.stringify(savedRiders)
-        });
-        renderOnlyRiderTable();
+            if (!riderName) {
+                    alert("Meharbani karke Rider ka naam likhein!");
+                            return;
+                                }
+                                
+                                    const newRider = {
+                                            id: 'rider_' + Date.now(),
+                                                    name: riderName,
+                                                            date: new Date().toISOString()
+                                                                };
+                                                                
+                                                                    savedRiders.push(newRider);
+                                                                    
+                                                                        try {
+                                                                                const userId = loggedInUser.id || loggedInUser.uid;
+                                                                                        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+                                                                                                    payload: JSON.stringify(savedRiders)
+                                                                                                            });
+                                                                                                                    
+                                                                                                                            alert("Rider ka naam kamyabi se save ho gaya!");
+                                                                                                                                    document.getElementById('only-rider-name-input').value = ''; // Input khali karein
+                                                                                                                                            renderOnlyRiderTable();
+                                                                                                                                                } catch (e) {
+                                                                                                                                                        alert("Rider save karne mein masla aaya: " + e.message);
+                                                                                                                                                            }
+                                                                                                                                                            }
+                                                                                                                                                            
+                                                                                                                                                            // RIDER TABLE SHOW KARNE KA FUNCTION
+                                                                                                                                                            function renderOnlyRiderTable() {
+                                                                                                                                                                const tbody = document.getElementById('only-rider-list-body');
+                                                                                                                                                                    if (!tbody) return;
+                                                                                                                                                                        tbody.innerHTML = '';
+                                                                                                                                                                        
+                                                                                                                                                                            savedRiders.forEach(rider => {
+                                                                                                                                                                                    const row = document.createElement('tr');
+                                                                                                                                                                                            row.innerHTML = `
+                                                                                                                                                                                                        <td>${new Date(rider.date).toLocaleDateString()}</td>
+                                                                                                                                                                                                                    <td style="font-weight: bold; color: var(--accent-color);">${rider.name}</td>
+                                                                                                                                                                                                                                <td><button class="btn btn-danger btn-sm" onclick="deleteOnlyRider('${rider.id}')">Delete</button></td>
+                                                                                                                                                                                                                                        `;
+                                                                                                                                                                                                                                                tbody.appendChild(row);
+                                                                                                                                                                                                                                                    });
+                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                    // RIDER DELETE KARNE KA FUNCTION
+                                                                                                                                                                                                                                                    async function deleteOnlyRider(id) {
+                                                                                                                                                                                                                                                        if(!confirm("Kya aap waqai is Rider ko delete karna chahte hain?")) return;
+                                                                                                                                                                                                                                                            savedRiders = savedRiders.filter(r => r.id !== id);
+                                                                                                                                                                                                                                                                try {
+                                                                                                                                                                                                                                                                        const userId = loggedInUser.id || loggedInUser.uid;
+                                                                                                                                                                                                                                                                                await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+                                                                                                                                                                                                                                                                                            payload: JSON.stringify(savedRiders)
+                                                                                                                                                                                                                                                                                                    });
+                                                                                                                                                                                                                                                                                                            renderOnlyRiderTable();
     } catch(e) {
         console.error(e);
     }
@@ -13786,6 +14153,270 @@ function generateRecoveryReportPDF(reportType) {
 
     // Save PDF file
     doc.save(`Recovery_Report_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+
+async function dbFetchCustomers() {
+    if (!loggedInUser) return;
+    const userId = loggedInUser.id || loggedInUser.uid;
+    try {
+        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('customers_list').get();
+        if (doc.exists) {
+            savedCustomersList = JSON.parse(doc.data().payload) || [];
+        }
+    } catch (e) {
+        console.error("Customers data fetch error:", e);
+    }
+}
+
+// Dropdown mein available workers load karne ka function
+function populateCustomerWorkerDropdown() {
+    const select = document.getElementById('cust-worker');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">-- Select Worker --</option>';
+    
+    if (typeof demandWorkers !== 'undefined' && demandWorkers.length > 0) {
+        demandWorkers.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w.id;
+            opt.textContent = `${w.name} (${w.phone})`;
+            select.appendChild(opt);
+        });
+    }
+}
+
+// Customer ko save ya update karne ka automatic function
+async function saveNewCustomer() {
+    const workerId = document.getElementById('cust-worker').value;
+    const item = document.getElementById('cust-item').value.trim();
+    const name = document.getElementById('cust-name').value.trim();
+    const phone = document.getElementById('cust-phone').value.trim();
+    const address = document.getElementById('cust-address').value.trim();
+    const price = parseFloat(document.getElementById('cust-price').value) || 0;
+
+    if (!name || !phone) {
+        alert("Meharbani karke Customer Name aur Phone Number lazmi likhein!");
+        return;
+    }
+
+    // Selected worker ki details nikalna
+    const selectedWorker = (typeof demandWorkers !== 'undefined') ? demandWorkers.find(w => w.id === workerId) : null;
+    const workerDetail = selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null;
+
+    if (editingCustomerId) {
+        // Editing Mode
+        const index = savedCustomersList.findIndex(c => c.id === editingCustomerId);
+        if (index !== -1) {
+            savedCustomersList[index].item = item;
+            savedCustomersList[index].name = name;
+            savedCustomersList[index].phone = phone;
+            savedCustomersList[index].address = address;
+            savedCustomersList[index].price = price;
+            savedCustomersList[index].worker = workerDetail; // Worker update ho gaya
+        }
+    } else {
+        // New Registration Mode (Auto Code Generation)
+        if (!appSettings.nextCustomerCode) {
+            appSettings.nextCustomerCode = 1001;
+        }
+        const generatedCode = "CUST-" + appSettings.nextCustomerCode;
+
+        const newCust = {
+            id: 'cust_' + Date.now(),
+            code: generatedCode,
+            item: item || 'N/A',
+            name: name,
+            phone: phone,
+            address: address || 'N/A',
+            price: price,
+            worker: workerDetail, // Worker details save ho gayi hain
+            date: new Date().toISOString()
+        };
+        savedCustomersList.push(newCust);
+
+        // Counter barhayein aur settings save karein
+        appSettings.nextCustomerCode++;
+        await saveSettings();
+    }
+
+    try {
+        // Aapke system ke native helper 'saveData' ka istemal (Yahan se error mukammal khatam ho jayega)
+        await saveData(getUserSpecificKey('customers_list'), savedCustomersList);
+        
+        alert("Customer data kamyabi se Cloud database mein save ho gaya!");
+        clearCustomerForm();
+        renderCustomerTable();
+    } catch (e) {
+        alert("Save karne mein error aaya: " + e.message);
+    }
+}
+
+// Form clear karne ka function
+function clearCustomerForm() {
+    document.getElementById('cust-code').value = '';
+    document.getElementById('cust-worker').value = '';
+    document.getElementById('cust-item').value = '';
+    document.getElementById('cust-name').value = '';
+    document.getElementById('cust-phone').value = '';
+    document.getElementById('cust-address').value = '';
+    document.getElementById('cust-price').value = '';
+    
+    editingCustomerId = null;
+    
+    document.getElementById('customer-form-title').textContent = "Customer Details";
+    document.getElementById('btn-save-customer').textContent = "Save Customer";
+    document.getElementById('btn-save-customer').className = "btn btn-success";
+    document.getElementById('btn-cancel-customer-edit').style.display = 'none';
+}
+
+// Edit mode load karne ka function
+function editCustomer(id) {
+    const cust = savedCustomersList.find(c => c.id === id);
+    if (!cust) return;
+
+    editingCustomerId = id;
+    
+    document.getElementById('cust-code').value = cust.code || '';
+    document.getElementById('cust-item').value = cust.item || '';
+    document.getElementById('cust-name').value = cust.name || '';
+    document.getElementById('cust-phone').value = cust.phone || '';
+    document.getElementById('cust-address').value = cust.address || '';
+    document.getElementById('cust-price').value = cust.price || '';
+
+    // Dropdown mein worker select karna
+    const workerSelect = document.getElementById('cust-worker');
+    if (workerSelect && cust.worker) {
+        const workerObj = demandWorkers.find(w => w.name === cust.worker.name && w.phone === cust.worker.phone);
+        workerSelect.value = workerObj ? workerObj.id : '';
+    } else if (workerSelect) {
+        workerSelect.value = '';
+    }
+
+    document.getElementById('customer-form-title').textContent = "Edit Customer Details";
+    document.getElementById('btn-save-customer').textContent = "Update Customer";
+    document.getElementById('btn-save-customer').className = "btn btn-warning";
+    document.getElementById('btn-cancel-customer-edit').style.display = 'inline-flex';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Table render karne ka function (Live Search Filter ke sath)
+function renderCustomerTable() {
+    const tbody = document.getElementById('customer-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const searchInput = document.getElementById('cust-search-input');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    // Search filter logic (Code, Name, Phone, Worker Name, ya Item se search ho sakega)
+    let filteredList = savedCustomersList;
+    if (query) {
+        filteredList = savedCustomersList.filter(cust => 
+            (cust.code && cust.code.toLowerCase().includes(query)) ||
+            (cust.name && cust.name.toLowerCase().includes(query)) ||
+            (cust.phone && cust.phone.toLowerCase().includes(query)) ||
+            (cust.item && cust.item.toLowerCase().includes(query)) ||
+            (cust.worker && cust.worker.name && cust.worker.name.toLowerCase().includes(query))
+        );
+    }
+
+    filteredList.forEach(cust => {
+        const row = document.createElement('tr');
+        const safePrice = Number(cust.price) || 0;
+        const workerName = cust.worker ? cust.worker.name : 'N/A';
+
+        row.innerHTML = `
+            <td>${new Date(cust.date).toLocaleDateString()}</td>
+            <td style="font-weight: bold; color: var(--info-color);">${cust.code || '-'}</td>
+            <td><strong>${cust.name || '-'}</strong></td>
+            <td>${cust.phone || '-'}</td>
+            <td>${cust.address || '-'}</td>
+            <td>${cust.item || '-'}</td>
+            <!-- Assigned Worker Column -->
+            <td style="color: var(--accent-color); font-weight: bold;">${workerName}</td>
+            <td style="font-weight: bold; color: var(--success-color);">${CURRENCY_SYMBOL}${safePrice.toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-sm btn-warning" onclick="editCustomer('${cust.id}')">Edit</button>
+                    <button class="btn btn-sm btn-info" onclick="generateCustomerSinglePDF('${cust.id}')">PDF</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteCustomer('${cust.id}')">Delete</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// PDF Profile card generator
+function generateCustomerSinglePDF(id) {
+    const cust = savedCustomersList.find(c => c.id === id);
+    if (!cust) {
+        alert("Record nahi mila!");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 15;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Profile Card", 105, yPos, { align: 'center' }); yPos += 12;
+
+    const profileData = [
+        ['Customer Code:', cust.code || 'N/A'],
+        ['Date Registered:', new Date(cust.date).toLocaleDateString()],
+        ['Customer Name:', cust.name],
+        ['Phone Number:', cust.phone],
+        ['Address:', cust.address || 'N/A'],
+        ['Item Name:', cust.item || 'N/A'],
+        ['Assigned Worker:', cust.worker ? cust.worker.name : 'N/A'], // PDF mein b worker detail shamil kar di hai
+        ['Price Setting:', `${CURRENCY_SYMBOL} ${(cust.price || 0).toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: profileData,
+        theme: 'grid',
+        styles: { fontSize: 11, cellPadding: 4 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } }
+    });
+
+    doc.save(`Customer_Profile_${cust.code || 'Code'}.pdf`);
+}
+
+// Fetching function
+async function dbFetchCustomers() {
+    savedCustomersList = await dbFetchData('customers_list') || [];
+}
+
+// ==========================================
+// FIX: DEMAND WORKERS DROPDOWN (MISSING FUNCTION)
+// ==========================================
+function populateDemandWorkersDropdown() {
+    const select = document.getElementById('d-worker');
+    if (!select) return;
+    
+    // Pehle se mojood list ko saaf karke default option lagayein
+    select.innerHTML = '<option value="">-- Select Worker --</option>';
+    
+    // Agar workers database mein majood hain, tou unhe dropdown mein add karein
+    if (typeof demandWorkers !== 'undefined' && Array.isArray(demandWorkers) && demandWorkers.length > 0) {
+        demandWorkers.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w.id; // Worker ki ID save hogi
+            opt.textContent = `${w.name} (${w.phone})`; // Screen par naam aur number dikhega
+            select.appendChild(opt);
+        });
+    }
 }
 
 </script>
