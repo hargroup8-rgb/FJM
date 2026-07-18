@@ -1271,12 +1271,9 @@ body,
                 <label>Search by Customer:</label>
                 <input type="text" id="dr-search" class="form-control" placeholder="Type customer name..." oninput="renderDemandRecordTable()">
             </div>
-            <div>
+           <div>
                 <label>From Date:</label>
                 <input type="date" id="dr-filter-from" class="form-control" onchange="renderDemandRecordTable()">
-                <th>Received By</th>
-                <td>${rec.receivedBy || '-'}</td>
-
             </div>
             <div>
                 <label>To Date:</label>
@@ -1323,10 +1320,10 @@ body,
 <label>Customer Name:</label>
 <input type="text" id="d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off" onclick="try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}">
             
-            <label>Item Name:</label>
-            <select id="d-item-name" class="form-control">
-                <option value="">-- Select Item --</option>
-            </select>
+           <label>Item Name:</label>
+<select id="d-item-name" class="form-control" disabled style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+    <option value="Alo" selected>Alo</option>
+</select>
 
             <label>Demand (Qty):</label>
 <select id="d-demand" class="form-control">
@@ -1402,56 +1399,6 @@ body,
         </div>
     </div>
 
-
-<!-- START WORKER PERFORMANCE STATS CONTAINER -->
-<div id="worker-stats-container" class="manage-form" style="display: none; margin-top: 30px; border-top: 3px solid var(--accent-color);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-        <h3>Worker Performance: <span id="ws-worker-name" style="color: var(--accent-color);"></span></h3>
-        <button class="btn btn-info" id="btn-download-worker-pdf">Download PDF Report</button>
-    </div>
-    
-    <!-- Stats Cards Grid -->
-    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px;">
-        <div class="dashboard-card">
-            <p class="card-title">Total Clients</p>
-            <h2 id="ws-total-clients" class="card-value info">0</h2>
-        </div>
-        <div class="dashboard-card">
-            <p class="card-title">Paid Clients</p>
-            <h2 id="ws-paid-clients" class="card-value sales">0</h2>
-        </div>
-        <div class="dashboard-card">
-            <p class="card-title">Unpaid Clients</p>
-            <h2 id="ws-unpaid-clients" class="card-value expenses">0</h2>
-        </div>
-        <div class="dashboard-card">
-            <p class="card-title">Outstanding Balance</p>
-            <h2 id="ws-outstanding-balance" class="card-value warning">Rs. 0.00</h2>
-        </div>
-    </div>
-
-    <!-- Worker Clients Table -->
-    <div class="table-container">
-        <h4>Assigned Clients & Demands List</h4>
-        <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Customer Name</th>
-                    <th>Phone</th>
-                    <th>Demand Qty</th>
-                    <th>Total Bill</th>
-                    <th>Net Balance</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="worker-clients-tbody">
-                <!-- Data Javascript se load hoga -->
-            </tbody>
-        </table>
-    </div>
-</div>
-<!-- END WORKER PERFORMANCE STATS CONTAINER -->
 
     <!-- Existing Workers List -->
     <div class="table-container">
@@ -2638,7 +2585,7 @@ body,
 
         <hr style="border-color: var(--border-color); margin: 20px 0;">
 
-        <!-- 2. Customer Selection Area -->
+<!-- 2. Customer Selection Area -->
         <h3>Select Customers</h3>
         <div class="form-grid" style="grid-template-columns: 1fr auto; gap: 15px; align-items: center; margin-bottom: 10px;">
             <div>
@@ -2649,14 +2596,16 @@ body,
             <button class="btn btn-primary" onclick="addClientToGatePassList()" style="margin-top: 15px;">Add Customer</button>
         </div>
 
-        <!-- Selected Customers Table -->
+        <!-- Selected Customers Table (TASWEER JAISE COLUMNS) -->
         <div class="table-container" style="margin-top: 10px; margin-bottom: 20px;">
             <table class="cart-table">
                 <thead>
                     <tr>
-                        <th>S.No</th>
-                        <th>Customer Name</th>
-                        <th>Action</th>
+                        <th>CUSTOMER CODE</th>
+                        <th>CUSTOMER NAME</th>
+                        <th>DEMAND QTY</th>
+                        <th>BAGS QTY</th>
+                        <th>ACTION</th>
                     </tr>
                 </thead>
                 <tbody id="gp-added-clients-tbody">
@@ -2667,37 +2616,32 @@ body,
 
         <hr style="border-color: var(--border-color); margin: 20px 0;">
 
-        <!-- 3. Items Selection Area -->
-        <h3>Select Items</h3>
-        <div class="form-grid" style="grid-template-columns: 1fr 150px auto; gap: 15px; align-items: center; margin-bottom: 10px;">
-            <div>
-                <label>Item Name:</label>
-                <input type="text" id="gatepass-product-search" class="form-control" list="gatepass-product-list" placeholder="Search item...">
-                <datalist id="gatepass-product-list"></datalist>
-            </div>
-            <div>
-                <label>Quantity:</label>
-                <input type="number" id="gatepass-product-quantity" class="form-control" placeholder="0">
-            </div>
-            <button class="btn btn-info" id="btn-add-gatepass-item" style="margin-top: 15px;">Add Item</button>
-        </div>
-
-        <!-- Selected Items Table -->
-        <div class="table-container" style="margin-top: 10px; margin-bottom: 20px;">
+        <!-- Save Button (Items wala hissa hata diya gaya hai) -->
+        <div class="manage-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="btn btn-success" id="btn-save-gatepass" style="flex-grow: 1;">Save & Generate Gate Pass</button>
+            <button class="btn btn-secondary" id="btn-clear-gatepass-list">Clear List</button>
+        </div>    
+    </div> <!-- Closes .manage-form -->      
+    <!-- Naya Section: Open Gate Passes History -->
+        <div class="table-container" style="margin-top: 20px;">
+            <h3>🕒 Active (Open) Gate Passes</h3>
             <table class="cart-table">
-                <thead><tr><th>Image</th><th>Item Name</th><th>Quantity</th><th>Action</th></tr></thead>
-                <tbody id="gatepass-items-tbody"></tbody>
+                <thead>
+                    <tr>
+                        <th>GP ID</th>
+                        <th>Out Time</th>
+                        <th>Rider Name</th>
+                        <th>Vehicle Number</th>
+                        <th>Customer Name</th>
+                        <th>Item Name (e.g., Alo)</th>
+                    </tr>
+                </thead>
+                <tbody id="gp-open-history-tbody">
+                    <!-- Javascript se dynamically populate hoga -->
+                </tbody>
             </table>
-        </div>
-
-        <!-- Save Button (Aakhir mein hai) -->
-<div class="manage-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
-    <button class="btn btn-success" id="btn-save-gatepass" style="flex-grow: 1;">Save & Generate Gate Pass</button>
-    <button class="btn btn-secondary" id="btn-clear-gatepass-list">Clear List</button>
-</div>    </div>
-</div>             
-
-
+        </div>      
+</div> <!-- Closes #GatePass (Yeh tag miss ho gaya tha) -->
 
                 <!-- START GATE PASS HISTORY & REPORTS MODULE -->
 <div id="GatePassHistory" class="module-content">
@@ -3389,17 +3333,16 @@ function renderDemandWorkersTable() {
         const statusColor = worker.status === 'Available' ? '#10b981' : '#f59e0b';
         
         row.innerHTML = `
-            <td><strong>${worker.name}</strong></td>
-            <td>${worker.phone}</td>
-            <td>${worker.address || '-'}</td>
-            <td><span style="color: ${statusColor}; font-weight:bold;">${worker.status}</span></td>
-            <td>
-                <div style="display: flex; gap: 5px;">
-                    <button class="btn btn-sm btn-info" onclick="showWorkerStats('${worker.id}')">Stats</button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteDemandWorker('${worker.id}')">Delete</button>
-                </div>
-            </td>
-        `;
+    <td><strong>${worker.name}</strong></td>
+    <td>${worker.phone}</td>
+    <td>${worker.address || '-'}</td>
+    <td><span style="color: ${statusColor}; font-weight:bold;">${worker.status}</span></td>
+    <td>
+        <div style="display: flex; gap: 5px;">
+            <button class="btn btn-sm btn-danger" onclick="deleteDemandWorker('${worker.id}')">Delete</button>
+        </div>
+    </td>
+`;
         tbody.appendChild(row);
     });
 }
@@ -3628,10 +3571,16 @@ function renderRecentDemands() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
+    // Error se bachne ke liye safe array check lagaya gaya
+    const safeRecords = Array.isArray(demandRecords) ? demandRecords : [];
+
     // Latest demands ko sabse upar dikhane ke liye reverse sort kiya hai
-    [...demandRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
-        const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
+    [...safeRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
         
+        // ---- YEH LINE MISSING THI ----
+        const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
+        // ------------------------------
+
         tbody.innerHTML += `<tr>
             <td>${rec.date ? new Date(rec.date).toLocaleDateString() : '-'}</td>
             <td>${rec.customer || '-'}</td>
@@ -3727,8 +3676,10 @@ function populateGatePassDemandDropdown() {
     if (!datalist) return;
     datalist.innerHTML = '';
     
-    // NAYA BADLAO: Agar materialStatus na ho ya 'In warehouse' ho, dono suraton mein filter karega
-    const warehouseDemands = demandRecords.filter(rec => !rec.materialStatus || rec.materialStatus === 'In warehouse');
+    // Array safety check added
+    const safeDemandRecords = Array.isArray(demandRecords) ? demandRecords : [];
+    
+    const warehouseDemands = safeDemandRecords.filter(rec => !rec.materialStatus || rec.materialStatus === 'In warehouse');
     
     warehouseDemands.forEach(rec => {
         const option = document.createElement('option');
@@ -3801,21 +3752,21 @@ function addClientToGatePassList() {
     }
 }
 
-// 3. Add kiye gaye customers ko table mein dikhana
-// Table mein clients ko dikhane ka function
 function renderAddedClientsTable() {
     const tbody = document.getElementById('gp-added-clients-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
     addedClientsForGatePass.forEach((client, index) => {
+        // AUTOMATIC CALCULATION: Demand ko 5 se divide kar ke bags banaye
+        const bagsQty = client.demand / 5;
+
         const row = document.createElement('tr');
-        
-        // YAHAN THEEK KIYA GAYA HAI:
-        // Pehle <td> mein Serial No aur doosre <td> mein Customer Name
         row.innerHTML = `
             <td>${client.serialNo || '-'}</td>
-            <td>${client.customer}</td>
+            <td><strong>${client.customer}</strong></td>
+            <td style="font-weight: bold; color: var(--info-color);">${client.demand}</td>
+            <td style="font-weight: bold; color: var(--success-color);">${bagsQty}</td>
             <td>
                 <button class="btn btn-danger btn-sm" onclick="removeClientFromGPList('${client.id}')">Hataein</button>
             </td>
@@ -4649,20 +4600,14 @@ function editDemandRecord(id) {
     document.getElementById('edit-d-demand').value = record.demand || '';
 
     // Item Dropdown ko fill karna
-    const itemSelect = document.getElementById('edit-d-item-name');
-    itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-    if (maalPurchases && maalPurchases.length > 0) {
-        const uniqueItems = [...new Set(maalPurchases.map(p => p.item))];
-        uniqueItems.forEach(itemName => {
-            if (itemName) {
-                const opt = document.createElement('option');
-                opt.value = itemName;
-                opt.textContent = itemName;
-                if (itemName === record.itemName) opt.selected = true; // Puraana item select karega
-                itemSelect.appendChild(opt);
+    // Item Dropdown ko fill karna (Strictly locked on Alo)
+            const itemSelect = document.getElementById('edit-d-item-name');
+            if (itemSelect) {
+                itemSelect.innerHTML = '<option value="Alo" selected>Alo</option>';
+                itemSelect.disabled = true;
+                itemSelect.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                itemSelect.style.cursor = 'not-allowed';
             }
-        });
-    }
 
     // Worker Dropdown ko fill karna
     const workerSelect = document.getElementById('edit-d-worker');
@@ -4735,7 +4680,7 @@ function resetDemandInputs() {
 function clearDemandForm() {
     editingDemandId = null;
     document.getElementById('d-customer').value = '';
-    document.getElementById('d-item-name').value = '';
+document.getElementById('d-item-name').value = 'Alo';
     document.getElementById('d-demand').value = '';
     document.getElementById('d-worker').value = '';
 
@@ -5642,6 +5587,7 @@ function refreshAll() {
     renderPurchaserPaymentHistory();
     updateSellReturnSummaryCards(); 
         renderMaalPurchaseTable();
+    renderOpenGatePasses();
 }
 
 // --- NEW DASHBOARD FUNCTIONS ---
@@ -9277,18 +9223,14 @@ function populateGatePassProductSelect() {
 }
 
 function addGatePassItem() {
-    const searchInput = document.getElementById('gatepass-product-search').value.trim().toLowerCase();
+    const itemName = "Alo"; // Item name ab fix kar diya gaya hai
     const quantity = parseInt(document.getElementById('gatepass-product-quantity').value);
 
-    // Ab products ki jagah maalPurchases mein se item check karega
-    const purchaseRecord = maalPurchases.find(p => p.item && p.item.toLowerCase() === searchInput);
-
-    if (!purchaseRecord || isNaN(quantity) || quantity <= 0) {
-        alert("Meharbani karke sahi item select karein aur quantity likhein.");
+    // Sirf quantity check hogi
+    if (isNaN(quantity) || quantity <= 0) {
+        alert("Meharbani karke sahi quantity (taidad) likhein.");
         return;
     }
-
-    const itemName = purchaseRecord.item;
     
     // Check karein ke item pehle se list mein hai ya nahi
     const existingItem = gatePassItems.find(item => item.name === itemName);
@@ -9299,7 +9241,7 @@ function addGatePassItem() {
         gatePassItems.push({ id: 'gp_item_' + Date.now(), name: itemName, quantity: quantity });
     }
 
-    document.getElementById('gatepass-product-search').value = '';
+    // Input fields ko khali (reset) karein
     document.getElementById('gatepass-product-quantity').value = '';
     renderGatePassList();
 }
@@ -9336,10 +9278,6 @@ async function saveAndGenerateGatePass() {
         alert("Meharbani karke kam az kam ek client list mein add karein.");
         return;
     }
-    if (gatePassItems.length === 0) {
-        alert("Maal (Items) add karna lazmi hai.");
-        return;
-    }
 
     const riderName = document.getElementById('gp-rider-name').value.trim();
     const numberPlate = document.getElementById('gp-number-plate').value.trim();
@@ -9350,28 +9288,25 @@ async function saveAndGenerateGatePass() {
         return;
     }
 
-    // Numeric Gate Pass ID Series jo 100 se shuru hoti hai
     const currentGPNum = appSettings.nextGatePassNumber || 100;
 
     const gatePassRecord = {
-        id: currentGPNum, // Sirf digits honge (e.g., 100, 101, 102...)
+        id: currentGPNum, 
         date: new Date().toISOString(),
         clients: [...addedClientsForGatePass], 
         riderName: riderName,
         numberPlate: numberPlate || 'N/A',
         outTime: outTime || 'N/A',
         status: document.getElementById('gp-status').value || 'Open',
-        items: [...gatePassItems]
+        items: [] // <-- Items ka hissa khali kar diya
     };
 
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
 
-        // Series number ko agle gate pass ke liye 1 se barhayein aur save karein
         appSettings.nextGatePassNumber = currentGPNum + 1;
         await saveSettings();
 
-        // Gate Pass log mein entry save karein
         gatePassLog.push(gatePassRecord);
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({
             payload: JSON.stringify(gatePassLog)
@@ -9381,7 +9316,6 @@ async function saveAndGenerateGatePass() {
         
         generateGatePassPDF(gatePassRecord);
         
-        // UI Clean aur reload karein
         addedClientsForGatePass = [];
         renderAddedClientsTable();
         clearGatePassFields();
@@ -9408,8 +9342,8 @@ function clearGatePassFields() {
     const customerSearch = document.getElementById('gp-customer-search');
     if (customerSearch) customerSearch.value = '';
 
-    const productSearch = document.getElementById('gatepass-product-search');
-    if (productSearch) productSearch.value = '';
+    // const productSearch = document.getElementById('gatepass-product-search');
+    // if (productSearch) productSearch.value = '';
 
     const productQty = document.getElementById('gatepass-product-quantity');
     if (productQty) productQty.value = '';
@@ -9442,7 +9376,6 @@ function addClientToGatePassList() {
         return;
     }
 
-    // Tarika 1: Pehle check karein ke kya user ne Datalist (Dropdown) se mukammal option select kiya hai?
     if (datalist && datalist.options) {
         for (let option of datalist.options) {
             if (option.value === searchInput) {
@@ -9452,12 +9385,9 @@ function addClientToGatePassList() {
         }
     }
 
-    // Tarika 2: Agar user ne manually type kiya hai (sirf S.No ya aadha Naam likha hai)
     if (!demandId) {
         const lowerInput = searchInput.toLowerCase();
-        
-        // Sirf un demands mein check karein jo warehouse mein hain
-        const warehouseDemands = demandRecords.filter(rec => rec.materialStatus === 'In warehouse');
+        const warehouseDemands = demandRecords.filter(rec => !rec.materialStatus || rec.materialStatus === 'In warehouse');
         
         const foundRecord = warehouseDemands.find(rec => 
             String(rec.serialNo) === searchInput || 
@@ -9469,30 +9399,28 @@ function addClientToGatePassList() {
         }
     }
 
-    // Agar dono tarikon se koi customer nahi mila
     if (!demandId) {
         alert("Is S.No ya Naam se koi 'In warehouse' customer nahi mila. Meharbani karke sahi detail likhein.");
         return;
     }
 
-    // Duplicate Check: Check karein ke kahin ye customer pehle hi list mein to add nahi?
     if (addedClientsForGatePass.some(c => c.id === demandId)) {
         alert("Ye Customer pehle hi list mein add ho chuka hai.");
         return;
     }
 
-    // Kamyabi se milne par Customer ko table mein shamil karein
     const record = demandRecords.find(r => r.id === demandId);
     if (record) {
         addedClientsForGatePass.push({
             id: record.id,
             serialNo: record.serialNo || '-',
             customer: record.customer,
-            phone: record.phone || 'N/A'
+            phone: record.phone || 'N/A',
+            demand: record.demand || 0 // <-- NAYA: Demand data yahan save ho raha hai
         });
         
-        renderAddedClientsTable(); // Table update karein
-        document.getElementById('gp-customer-search').value = ''; // Input box ko khali kar dein
+        renderAddedClientsTable(); 
+        document.getElementById('gp-customer-search').value = ''; 
     }
 }
 
@@ -9504,80 +9432,113 @@ function removeClientFromGPList(id) {
 
 
 function generateGatePassPDF(gatePassRecord) {
-    if (!gatePassRecord) {
-        alert("Gate Pass ka record nahi mila.");
-        return;
-    }
-
+    if (!gatePassRecord) { alert("Gate Pass ka record nahi mila."); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     
     // Header
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('GATE PASS', 105, 20, { align: 'center' });
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.text('GATE PASS', 105, 20, { align: 'center' });
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     
-    // Top Info Section
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    
-    // Left side info
+    // Metadata Left Column
     doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 20, 35);
     doc.text(`VEHICLE NUM: ${gatePassRecord.numberPlate || 'N/A'}`, 20, 42);
     doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 20, 49);
     
-    // Right side info
-    doc.text(`GATE PAS NUM: ${gatePassRecord.id || '1'}`, 130, 35);
+    // Metadata Right Column
+    doc.text(`GATE PASS NUM: ${gatePassRecord.id || '1'}`, 130, 35);
     doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 130, 42);
     doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 130, 49);
 
-    // Table Data preparation
     const tableData = [];
-    // Hum max rows uthayenge (Client ya Items mein se jo zyada ho)
     const clients = gatePassRecord.clients || [];
-    const items = gatePassRecord.items || [];
-    const rows = Math.max(clients.length, items.length);
+    
+    let totalDemand = 0;
+    let totalBags = 0;
 
-    for (let i = 0; i < rows; i++) {
+    // Decimals ko clean show karne ka helper function
+    const formatBags = (val) => {
+        return val % 1 === 0 ? val.toString() : val.toFixed(1);
+    };
+
+    for (let i = 0; i < clients.length; i++) {
+        const c = clients[i];
+        const bags = c.demand ? (c.demand / 5) : 0;
+        totalDemand += parseFloat(c.demand || 0);
+        totalBags += parseFloat(bags);
+        
         tableData.push([
-            clients[i] ? (clients[i].serialNo || '-') : '',
-            clients[i] ? (clients[i].customer || '') : '',
-            items[i] ? (items[i].name || '') : '',
-            items[i] ? (items[i].quantity || '') : ''
+            c.serialNo || '-', 
+            c.customer || '', 
+            c.demand || '0', 
+            formatBags(bags)
         ]);
     }
 
-    // Table Draw karna
-    doc.autoTable({
-        startY: 60,
-        head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'ITEM NAME', 'QTY']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-        styles: { fontSize: 10, cellPadding: 3 }
-    });
+   doc.autoTable({
+    startY: 60,
+    head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'DEMAND QTY', 'BAGS QTY']],
+    body: tableData,
+    // Yahan se plus (+) aur vertical bar (|) ko hata diya gaya hai
+    foot: [['', 'TOTAL', `${totalDemand}`, `${formatBags(totalBags)}`]],
+    theme: 'grid',
+    headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+    footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 10 },
+    styles: { fontSize: 10, cellPadding: 3 },
+    columnStyles: {
+        0: { halign: 'center' },
+        1: { halign: 'left' },
+        2: { halign: 'center' },
+        3: { halign: 'center' }
+    },
+    didParseCell: function (data) {
+        if (data.row.section === 'foot') {
+            // "TOTAL" text ko left-align rakha hai
+            if (data.column.index === 1) {
+                data.cell.styles.halign = 'left';
+            }
+            // Index 2 (Demand) aur Index 3 (Bags) ko center-align karne ke liye
+            if (data.column.index === 2 || data.column.index === 3) {
+                data.cell.styles.halign = 'center';
+            }
+        }
+    }
+});
 
     doc.save(`GatePass_${gatePassRecord.id}.pdf`);
 }
+
 function renderGatePassHistory() {
     const tbody = document.getElementById('gatepass-history-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    const searchQuery = (document.getElementById('gatepass-history-search')?.value || '').trim().toLowerCase();
-    const fromDate = document.getElementById('gatepass-history-from').value;
-    const toDate = document.getElementById('gatepass-history-to').value;
+    // Safe input elements check taake script crash na ho
+    const searchInput = document.getElementById('gatepass-history-search');
+    const searchQuery = (searchInput?.value || '').trim().toLowerCase();
+    
+    const fromDateInput = document.getElementById('gatepass-history-from');
+    const fromDate = fromDateInput ? fromDateInput.value : '';
+    
+    const toDateInput = document.getElementById('gatepass-history-to');
+    const toDate = toDateInput ? toDateInput.value : '';
 
-    let filteredLog = [...gatePassLog];
+    // Safe array verification
+    let filteredLog = Array.isArray(gatePassLog) ? [...gatePassLog] : [];
 
-    // Date Filters
+    // Date Filters logic
     if (fromDate && toDate) {
-        const startDate = new Date(fromDate + 'T00:00:00');
-        const endDate = new Date(toDate + 'T23:59:59');
-        filteredLog = gatePassLog.filter(gp => {
-            const gpDate = new Date(gp.date);
-            return gpDate >= startDate && gpDate <= endDate;
-        });
+        try {
+            const startDate = new Date(fromDate + 'T00:00:00');
+            const endDate = new Date(toDate + 'T23:59:59');
+            filteredLog = filteredLog.filter(gp => {
+                if (!gp.date) return false;
+                const gpDate = new Date(gp.date);
+                return gpDate >= startDate && gpDate <= endDate;
+            });
+        } catch(e) {
+            console.error("GatePass Date filtering error: ", e);
+        }
     }
 
     // Text Search Filter
@@ -9585,7 +9546,7 @@ function renderGatePassHistory() {
         filteredLog = filteredLog.filter(gp => {
             const matchesId = gp.id && String(gp.id).toLowerCase().includes(searchQuery);
             const matchesRider = gp.riderName && String(gp.riderName).toLowerCase().includes(searchQuery);
-            const matchesClients = gp.clients && gp.clients.some(c => c.customer && String(c.customer).toLowerCase().includes(searchQuery));
+            const matchesClients = gp.clients && Array.isArray(gp.clients) && gp.clients.some(c => c.customer && String(c.customer).toLowerCase().includes(searchQuery));
             return matchesId || matchesRider || matchesClients;
         });
     }
@@ -9595,22 +9556,23 @@ function renderGatePassHistory() {
         return;
     }
 
-    filteredLog.reverse().forEach(gp => {
+    // Newest record ko sab se upar dikhane ke liye reverse loop
+    [...filteredLog].reverse().forEach(gp => {
         const row = document.createElement('tr');
         
-        const clientsText = (gp.clients || []).map(c => `• ${c.customer} (S.No: ${c.serialNo || '-'})`).join('<br>');
-        const itemsList = (gp.items || []).map(item => `• ${item.name} (Qty: ${item.quantity})`).join('<br>');
+        // Clients aur Items list generation with safety checks
+        const clientsText = Array.isArray(gp.clients) ? gp.clients.map(c => `• ${c.customer || 'N/A'} (S.No: ${c.serialNo || '-'})`).join('<br>') : 'N/A';
+        const itemsList = Array.isArray(gp.items) ? gp.items.map(item => `• ${item.name || 'N/A'} (Qty: ${item.quantity || 0})`).join('<br>') : '';
         
-        // --- 100% STRICT STATUS MATCHING FIX ---
+        // Strict Status matching
         const currentStatus = String(gp.status || 'Open').toLowerCase();
         const isClosed = currentStatus.includes('close'); 
         const displayStatus = isClosed ? 'Closed' : 'Open';
-        
-        // Purana ghalat data memory mein theek karna
         gp.status = displayStatus;
 
         const selectColorStyle = isClosed ? 'border: 1px solid var(--success-color); color: var(--success-color);' : 'border: 1px solid var(--warning-color); color: var(--warning-color);';
         
+        // Status Dropdown options
         const statusDropdown = `
             <select id="gp-status-${gp.id}" class="form-control" style="width:110px; padding:5px; font-weight:bold; background-color: var(--surface-color); ${selectColorStyle}" onchange="updateDropdownStyle('${gp.id}')">
                 <option value="Open" ${!isClosed ? 'selected' : ''}>🟢 Open</option>
@@ -9618,12 +9580,14 @@ function renderGatePassHistory() {
             </select>
         `;
 
+        // Rider In-Time Input
         const inTimeInput = `
             <input type="time" id="gp-intime-${gp.id}" class="form-control" style="width:105px; padding:5px; background-color: var(--surface-color);" value="${gp.inTime && gp.inTime !== 'N/A' ? gp.inTime : ''}">
         `;
 
+        // Actions buttons mapping (A4, Thermal, Edit, Save, Delete)
         row.innerHTML = `
-            <td>${new Date(gp.date).toLocaleDateString()}</td>
+            <td>${gp.date ? new Date(gp.date).toLocaleDateString() : 'N/A'}</td>
             <td><strong>${gp.id}</strong></td>
             <td>${clientsText}</td>
             <td>
@@ -9634,7 +9598,7 @@ function renderGatePassHistory() {
             <td>${itemsList}</td>
             <td>${statusDropdown}</td>
             <td>${inTimeInput}</td>
-<td>
+            <td>
                 <div style="display:flex; gap:5px; flex-wrap: wrap;">
                     <button type="button" class="btn btn-info btn-sm" onclick="reprintGatePass('${gp.id}')">A4 PDF</button>
                     <button type="button" class="btn btn-primary btn-sm" onclick="reprintGatePassThermal('${gp.id}')">Thermal PDF</button>
@@ -9699,6 +9663,7 @@ async function saveGatePassStatusAndInTime(event, id) {
         
         // Table ko naye status ke sath refresh karein
         renderGatePassHistory();
+        refreshAll();
     } catch (e) {
         console.error("Save Error:", e);
         alert("Ghalti: Data save nahi ho saka. Error: " + e.message);
@@ -9801,6 +9766,7 @@ async function deleteGatePass(id) {
 
         alert("Gate Pass delete ho gaya!");
         renderGatePassHistory();
+        refreshAll();
     } catch (e) {
         alert("Error deleting Gate Pass: " + e.message);
     }
@@ -9856,87 +9822,84 @@ function reprintGatePassThermal(gatePassId) {
     }
 }
 
-// 80mm Thermal Printer ke size ki PDF Generate karne ka function (Exact A4 Format)
 function generateGatePassThermalPDF(gatePassRecord) {
     if (!gatePassRecord) return;
-
     const { jsPDF } = window.jspdf;
-    // 80mm width (Standard thermal receipt printer) x 297mm length
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [80, 297] });
     
     let yPos = 12;
-    const centerX = 40; // 80mm slip ka center
-
-    // 1. Header (GATE PASS)
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('GATE PASS', centerX, yPos, { align: 'center' });
-    yPos += 10;
-
-    // 2. Top Info Section (Left aur Right side par)
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
+    const centerX = 40; 
     
-    // Line 1: Rider Name aur Gate Pass Num
+    // Title
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('GATE PASS', centerX, yPos, { align: 'center' }); yPos += 10;
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    
+    // Metadata Left & Right
     doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 4, yPos);
-    doc.text(`GATE PAS NUM: ${gatePassRecord.id || 'N/A'}`, 42, yPos);
-    yPos += 6;
+    doc.text(`GATE PAS NUM: ${gatePassRecord.id || 'N/A'}`, 42, yPos); yPos += 6;
     
-    // Line 2: Vehicle Num aur Status
     let vehicle = gatePassRecord.numberPlate || 'N/A';
-    if (vehicle.length > 12) vehicle = vehicle.substring(0, 10) + '..'; // Safety cut for 80mm
+    if (vehicle.length > 12) vehicle = vehicle.substring(0, 10) + '..'; 
     doc.text(`VEHICLE NUM: ${vehicle}`, 4, yPos);
-    doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 42, yPos);
-    yPos += 6;
-
-    // Line 3: Out Time aur In Time
+    doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 42, yPos); yPos += 6;
+    
     doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 4, yPos);
-    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 42, yPos);
-    yPos += 8;
+    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 42, yPos); yPos += 8;
 
-    // 3. Table Data Preparation
     const tableData = [];
     const clients = gatePassRecord.clients || [];
-    const items = gatePassRecord.items || [];
-    const rows = Math.max(clients.length, items.length);
+    
+    let totalDemand = 0;
+    let totalBags = 0;
 
-    for (let i = 0; i < rows; i++) {
+    const formatBags = (val) => {
+        return val % 1 === 0 ? val.toString() : val.toFixed(1);
+    };
+
+    for (let i = 0; i < clients.length; i++) {
+        const c = clients[i];
+        const bags = c.demand ? (c.demand / 5) : 0;
+        totalDemand += parseFloat(c.demand || 0);
+        totalBags += parseFloat(bags);
+        
         tableData.push([
-            clients[i] ? (clients[i].serialNo || '-') : '',
-            clients[i] ? (clients[i].customer || '') : '',
-            items[i] ? (items[i].name || '') : '',
-            items[i] ? (items[i].quantity || '') : ''
+            c.serialNo || '-', 
+            c.customer || '', 
+            c.demand || '0', 
+            formatBags(bags)
         ]);
     }
 
-    // 4. Table Draw karna (Bilkul A4 jaisa Grid Design)
     doc.autoTable({
-        startY: yPos,
-        head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'ITEM NAME', 'QTY']],
-        body: tableData,
-        theme: 'grid', // A4 jaisi lines (borders) ke liye
-        headStyles: { 
-            fillColor: [240, 240, 240], // Light grey background jaisa tasveer mein hai
-            textColor: [0, 0, 0], 
-            fontStyle: 'bold', 
-            fontSize: 7, 
-            halign: 'left' 
-        },
-        bodyStyles: { 
-            fontSize: 7, 
-            textColor: [0, 0, 0], 
-            cellPadding: 2 
-        },
-        columnStyles: {
-            0: { cellWidth: 16 }, // Customer Code
-            1: { cellWidth: 22 }, // Customer Name
-            2: { cellWidth: 22 }, // Item Name
-            3: { cellWidth: 12, halign: 'center' } // QTY
-        },
-        margin: { left: 4, right: 4 }
-    });
+    startY: yPos,
+    head: [['CODE', 'NAME', 'DEMAND', 'BAGS']],
+    body: tableData,
+    // Yahan se bhi signs ko hata diya gaya hai
+    foot: [['', 'TOTAL', `${totalDemand}`, `${formatBags(totalBags)}`]],
+    theme: 'grid', 
+    headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7, halign: 'left' },
+    bodyStyles: { fontSize: 7, textColor: [0, 0, 0], cellPadding: 2 },
+    footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
+    columnStyles: {
+        0: { cellWidth: 12 }, 
+        1: { cellWidth: 26 }, 
+        2: { cellWidth: 14, halign: 'center' }, 
+        3: { cellWidth: 10, halign: 'center' } 
+    },
+    margin: { left: 4, right: 4 },
+    didParseCell: function (data) {
+        if (data.row.section === 'foot') {
+            if (data.column.index === 1) {
+                data.cell.styles.halign = 'left';
+            }
+            // Index 2 aur 3 ke total values ko thermal PDF mein bhi center-align kiya gaya hai
+            if (data.column.index === 2 || data.column.index === 3) {
+                data.cell.styles.halign = 'center';
+            }
+        }
+    }
+});
 
-    // File Download karwana
     doc.save(`GatePass_Thermal_${gatePassRecord.id}.pdf`);
 }
 // ====== NAYA CODE THERMAL PRINTER KE LIYE YAHAN KHATAM HOTA HAI ======
@@ -11747,7 +11710,9 @@ async function openModule(evt, moduleName) {
             try {
                 const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
                 if (doc.exists) {
-                    demandRecords = JSON.parse(doc.data().payload) || [];
+                    const data = doc.data();
+                    const parsed = (data && data.payload) ? JSON.parse(data.payload) : [];
+                    demandRecords = Array.isArray(parsed) ? parsed : [];
                 }
 
                 // NAYA CODE: Riders ka data load karein
@@ -11933,36 +11898,55 @@ async function openModule(evt, moduleName) {
             renderBankAndCash(aajKiDate);
             renderBCManageBanksTable();
         }
-        if (actualModuleName === 'GatePass') {
+       if (actualModuleName === 'GatePass') {
             const userId = loggedInUser.id || loggedInUser.uid;
+            
+            // 1. Demand Records Fetch
             try {
                 const demandDoc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
                 if (demandDoc.exists) {
-                    demandRecords = JSON.parse(demandDoc.data().payload) || [];
+                    const data = demandDoc.data();
+                    const parsed = (data && data.payload) ? JSON.parse(data.payload) : [];
+                    demandRecords = Array.isArray(parsed) ? parsed : [];
                 }
             } catch (e) {
                 console.error("Error loading demand records for gate pass:", e);
             }
-            const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
-            if (doc.exists) {
-                maalPurchases = JSON.parse(doc.data().payload);
-            }
+            
+            await dbFetchMaalPurchases(); 
             await dbFetchProducts();
             await dbFetchDemandWorkers();
+            
             populateGatePassDemandDropdown();
             populateGatePassProductSelect();
-            renderGatePassList();
+            
+            if (typeof renderGatePassList === 'function') {
+                renderGatePassList();
+            }
+            
+            // 2. Riders & Vehicles Fetch
             try {
                 const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
-                if(docRiders.exists) savedRiders = JSON.parse(docRiders.data().payload) || [];
+                if(docRiders.exists) {
+                    const parsedRiders = JSON.parse(docRiders.data().payload);
+                    savedRiders = Array.isArray(parsedRiders) ? parsedRiders : [];
+                }
 
                 const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
-                if(docVehicles.exists) savedVehicles = JSON.parse(docVehicles.data().payload) || [];
+                if(docVehicles.exists) {
+                    const parsedVehicles = JSON.parse(docVehicles.data().payload);
+                    savedVehicles = Array.isArray(parsedVehicles) ? parsedVehicles : [];
+                }
             } catch (e) {
                 console.error("Gate pass riders/vehicles load error:", e);
+                savedRiders = [];
+                savedVehicles = [];
             }
+            
             populateGatePassRiderAndVehicleDropdowns();
+            renderOpenGatePasses();
         }
+        
         if (actualModuleName === 'GatePassHistory') {
             await dbFetchProducts();
             await dbFetchGatePasses();
@@ -11978,21 +11962,18 @@ async function openModule(evt, moduleName) {
             document.getElementById('setting-gatepass-start-number').value = appSettings.nextGatePassNumber || 100;
         }
         if (actualModuleName === 'DemandForm') {
-            const userId = loggedInUser.id || loggedInUser.uid;
-            const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
-            if (doc.exists) {
-                maalPurchases = JSON.parse(doc.data().payload);
-            }
+            await dbFetchMaalPurchases(); // Safe fetch method
             await dbFetchDemandWorkers();
             await dbFetchCustomers();
+            
             populateDemandWorkersDropdown();
             populateCustomerNamesDatalist();
             populateDemandItemDropdown();
-            populateCustomerNamesDatalist();
-
+            
             renderRecentDemands();
             populateDemandQtyDropdown();
         }
+
         if (actualModuleName === 'DemandWorkers') {
             await dbFetchDemandWorkers();
             renderDemandWorkersTable();
@@ -12917,66 +12898,6 @@ function downloadSearchResultPDF() {
     doc.save(`Demand_Statement_${(sampleRec.customer || 'Customer').replace(/\s+/g, '_')}.pdf`);
 }
 
-function showWorkerStats(workerId) {
-    const worker = demandWorkers.find(w => w.id === workerId);
-    if (!worker) return;
-
-    const workerDemands = (demandRecords || []).filter(rec => 
-        rec.worker && rec.worker.name === worker.name && rec.worker.phone === worker.phone
-    );
-
-    // Dynamic helper for accurate status checking
-    const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
-
-    const totalClients = workerDemands.length;
-    const paidClients = workerDemands.filter(rec => getStatus(rec) === 'paid').length;
-    const unpaidClients = workerDemands.filter(rec => getStatus(rec) === 'unpaid').length;
-    const totalOutstanding = workerDemands.reduce((sum, rec) => sum + (Number(rec.netBalance) || 0), 0);
-
-    // UI elements update
-    document.getElementById('ws-worker-name').textContent = worker.name;
-    document.getElementById('ws-total-clients').textContent = totalClients;
-    document.getElementById('ws-paid-clients').textContent = paidClients;
-    document.getElementById('ws-unpaid-clients').textContent = unpaidClients;
-    document.getElementById('ws-outstanding-balance').textContent = `${CURRENCY_SYMBOL}${totalOutstanding.toFixed(2)}`;
-
-    const tbody = document.getElementById('worker-clients-tbody');
-    tbody.innerHTML = '';
-
-    if (workerDemands.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Is worker ko abhi tak koi demand assign nahi ki gayi.</td></tr>';
-    } else {
-        workerDemands.forEach(rec => {
-            const currentStatus = getStatus(rec);
-            const statusHTML = currentStatus === 'paid' ? 
-                '<span style="color:#10b981; font-weight:bold;">✅ PAID</span>' : 
-                '<span style="color:#ef4444; font-weight:bold;">❌ UNPAID</span>';
-
-            const safeNetBalance = Number(rec.netBalance) || 0;
-            const safeBill = Number(rec.bill) || 0; // Safe conversion to avoid crash
-
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${new Date(rec.date).toLocaleDateString()}</td>
-                <td>${rec.customer}</td>
-                <td>${rec.phone || 'N/A'}</td>
-                <td>${rec.demand}</td>
-                <td>${CURRENCY_SYMBOL}${safeBill.toFixed(2)}</td>
-                <td>${CURRENCY_SYMBOL}${safeNetBalance.toFixed(2)}</td>
-                <td>${statusHTML}</td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    document.getElementById('worker-stats-container').style.display = 'block';
-
-    const pdfBtn = document.getElementById('btn-download-worker-pdf');
-    pdfBtn.onclick = () => generateWorkerReportPDF(worker, workerDemands, totalClients, paidClients, unpaidClients, totalOutstanding);
-
-    document.getElementById('worker-stats-container').scrollIntoView({ behavior: 'smooth' });
-}
-
 
 function generateWorkerReportPDF(worker, demands, total, paid, unpaid, balance) {
     const { jsPDF } = window.jspdf;
@@ -13228,22 +13149,10 @@ function populateDemandItemDropdown() {
     const select = document.getElementById('d-item-name');
     if (!select) return;
     
-    select.innerHTML = '<option value="">-- Select Item --</option>';
-    
-    // Check karein agar maalPurchases mein data hai
-    if (maalPurchases && maalPurchases.length > 0) {
-        // Maal Purchase se saare item names nikal kar duplicate khatam karna
-        const uniqueItems = [...new Set(maalPurchases.map(p => p.item))];
-
-        uniqueItems.forEach(itemName => {
-            if(itemName) {
-                const opt = document.createElement('option');
-                opt.value = itemName;
-                opt.textContent = itemName;
-                select.appendChild(opt);
-            }
-        });
-    }
+    select.innerHTML = '<option value="Alo" selected>Alo</option>';
+    select.disabled = true;
+    select.style.backgroundColor = 'rgba(255,255,255,0.05)';
+    select.style.cursor = 'not-allowed';
 }
 
 let maalPurchases = [];
@@ -13361,20 +13270,16 @@ function editDemandRecord(id) {
     document.getElementById('edit-d-demand').value = record.demand || '';
 
     // Item Dropdown ko fill karna
-    const itemSelect = document.getElementById('edit-d-item-name');
-    itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
-    if (typeof maalPurchases !== 'undefined' && maalPurchases.length > 0) {
-        const uniqueItems = [...new Set(maalPurchases.map(p => p.item))];
-        uniqueItems.forEach(itemName => {
-            if (itemName) {
-                const opt = document.createElement('option');
-                opt.value = itemName;
-                opt.textContent = itemName;
-                if (itemName === record.itemName) opt.selected = true; // Puraana item select karega
-                itemSelect.appendChild(opt);
+    // Item Dropdown ko fill karna (Strictly locked on Alo)
+            const itemSelect = document.getElementById('edit-d-item-name');
+            if (itemSelect) {
+                itemSelect.innerHTML = '<option value="Alo" selected>Alo</option>';
+                itemSelect.disabled = true;
+                itemSelect.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                itemSelect.style.cursor = 'not-allowed';
             }
-        });
-    } else {
+    
+    else {
          // Agar item list load na ho to kam az kam purana item dikhaye
          if(record.itemName) {
              const opt = document.createElement('option');
@@ -13490,11 +13395,14 @@ async function dbFetchMaalPurchases() {
         if (doc.exists) {
             const data = doc.data();
             if (data && data.payload) {
-                maalPurchases = JSON.parse(data.payload);
+                const parsed = JSON.parse(data.payload);
+                // Agar corrupt data ho tou [] set karega
+                maalPurchases = Array.isArray(parsed) ? parsed : []; 
             }
         }
     } catch (e) {
         console.error("Error fetching maal_purchases from Firebase:", e);
+        maalPurchases = [];
     }
 }
 
@@ -13789,28 +13697,41 @@ function generateDemandRecordPDF(record) {
     yPos = doc.previousAutoTable.finalY + 12;
 
     // Finance Statement (Yahan naam add kar diya gaya hai)
-    const recoveryLabel = `Recovery Amount Received (By: ${record.receivedBy || 'N/A'})`;
+    // Finance Statement (With updated labels & calculations)
+            const recoveryLabel = `Received (By: ${record.receivedBy || 'N/A'})`;
 
-    const summaryTableData = [
-        ['Total Bill Amount:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
-        ['Old Balance:', `${CURRENCY_SYMBOL} ${(record.oldBalance || 0).toFixed(2)}`],
-        [recoveryLabel, `${CURRENCY_SYMBOL} ${(record.recovery || 0).toFixed(2)}`],
-        ['Outstanding Net Balance:', `${CURRENCY_SYMBOL} ${(record.netBalance || 0).toFixed(2)}`]
-    ];
+            // System variables se values extract karna
+            const prevBal = Number(record.oldBalance || record.PreviousBalance || 0);
+            const totalBillVal = billVal + prevBal;
+            const rcvdVal = Number(record.recovery || 0);
+            const outstandingVal = totalBillVal - rcvdVal;
 
-    doc.autoTable({
-        startY: yPos,
-        body: summaryTableData,
-        theme: 'grid',
-        styles: { fontSize: 11, cellPadding: 3 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
-        didParseCell: function(data) {
-            if (data.row.index === 3) { 
-                data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.textColor = [216, 69, 62]; 
-            }
-        }
-    });
+            const summaryTableData = [
+                ['Current Bill:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
+                ['Previous Balance:', `${CURRENCY_SYMBOL} ${prevBal.toFixed(2)}`],
+                ['Total Bill:', `${CURRENCY_SYMBOL} ${totalBillVal.toFixed(2)}`], 
+                [recoveryLabel, `${CURRENCY_SYMBOL} ${rcvdVal.toFixed(2)}`],
+                ['Current Balance:', `${CURRENCY_SYMBOL} ${outstandingVal.toFixed(2)}`]
+            ];
+
+            doc.autoTable({
+                startY: yPos,
+                body: summaryTableData,
+                theme: 'grid',
+                styles: { fontSize: 11, cellPadding: 3 },
+                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+                didParseCell: function(data) {
+                    // Row index 2 (Total Bill) ko bold karna
+                    if (data.row.index === 2) {
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                    // Row index 4 (Current Balance) ko bold aur RED highlighting dena
+                    if (data.row.index === 4) { 
+                        data.cell.styles.fontStyle = 'bold';
+                        data.cell.styles.textColor = [216, 69, 62]; 
+                    }
+                }
+            });
 
     
 
@@ -14014,9 +13935,13 @@ function populateGatePassRiderAndVehicleDropdowns() {
     const riderSelect = document.getElementById('gp-rider-name');
     const vehicleSelect = document.getElementById('gp-number-plate');
 
+    // Safe check: Agar database se null aaye to usay khali list bana do taake crash na ho
+    const safeRiders = Array.isArray(savedRiders) ? savedRiders : [];
+    const safeVehicles = Array.isArray(savedVehicles) ? savedVehicles : [];
+
     if (riderSelect) {
         riderSelect.innerHTML = '<option value="">-- Select Rider --</option>';
-        savedRiders.forEach(r => {
+        safeRiders.forEach(r => {
             const opt = document.createElement('option');
             opt.value = r.name;
             opt.textContent = r.name;
@@ -14026,7 +13951,7 @@ function populateGatePassRiderAndVehicleDropdowns() {
 
     if (vehicleSelect) {
         vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>';
-        savedVehicles.forEach(v => {
+        safeVehicles.forEach(v => {
             const opt = document.createElement('option');
             opt.value = v.number;
             opt.textContent = v.number;
@@ -14401,29 +14326,170 @@ async function dbFetchCustomers() {
 // ==========================================
 // FIX: DEMAND WORKERS DROPDOWN (MISSING FUNCTION)
 // ==========================================
+
+
+function addClientToGatePassList() {
+    const searchInput = document.getElementById('gp-customer-search').value.trim();
+    const datalist = document.getElementById('gp-demand-list');
+    let demandId = null;
+    if (!searchInput) { alert("Meharbani karke S.No ya Customer ka naam likhein!"); return; }
+    if (datalist && datalist.options) {
+        for (let option of datalist.options) {
+            if (option.value === searchInput) { demandId = option.dataset.id; break; }
+        }
+    }
+    if (!demandId) {
+        const lowerInput = searchInput.toLowerCase();
+        const safeDemandRecords = Array.isArray(demandRecords) ? demandRecords : [];
+        const warehouseDemands = safeDemandRecords.filter(rec => !rec.materialStatus || rec.materialStatus === 'In warehouse');
+        const foundRecord = warehouseDemands.find(rec => String(rec.serialNo) === searchInput || (rec.customer && rec.customer.toLowerCase().includes(lowerInput)));
+        if (foundRecord) demandId = foundRecord.id;
+    }
+    if (!demandId) { alert("Is S.No ya Naam se koi 'In warehouse' customer nahi mila."); return; }
+    if (addedClientsForGatePass.some(c => c.id === demandId)) { alert("Ye Customer pehle hi list mein add ho chuka hai."); return; }
+
+    const record = demandRecords.find(r => r.id === demandId);
+    if (record) {
+        // Yahan humne 'itemName' ko bhi list mein shamil kiya hai
+        addedClientsForGatePass.push({ 
+            id: record.id, 
+            serialNo: record.serialNo || '-', 
+            customer: record.customer, 
+            phone: record.phone || 'N/A', 
+            demand: record.demand || 0,
+            itemName: record.itemName || 'N/A' // <-- NAYA: Item name (alo) save ho raha hai
+        });
+        renderAddedClientsTable(); 
+        document.getElementById('gp-customer-search').value = ''; 
+    }
+}
+
+function renderAddedClientsTable() {
+    const tbody = document.getElementById('gp-added-clients-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    addedClientsForGatePass.forEach((client, index) => {
+        const bagsQty = client.demand ? (client.demand / 5) : 0;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${client.serialNo || '-'}</td>
+            <td><strong>${client.customer}</strong></td>
+            <td style="font-weight: bold; color: var(--info-color);">${client.demand}</td>
+            <td style="font-weight: bold; color: var(--success-color);">${bagsQty}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="removeClientFromGPList('${client.id}')">Hataein</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function removeClientFromGPList(id) {
+    addedClientsForGatePass = addedClientsForGatePass.filter(c => c.id !== id);
+    renderAddedClientsTable();
+}
+
+async function saveAndGenerateGatePass() {
+    if (addedClientsForGatePass.length === 0) { alert("Meharbani karke kam az kam ek client list mein add karein."); return; }
+    const riderName = document.getElementById('gp-rider-name').value.trim();
+    const numberPlate = document.getElementById('gp-number-plate').value.trim();
+    const outTime = document.getElementById('gp-out-time').value;
+    if (!riderName) { alert("Rider ka naam likhna zaruri hai."); return; }
+
+    const currentGPNum = appSettings.nextGatePassNumber || 100;
+    const gatePassRecord = { id: currentGPNum, date: new Date().toISOString(), clients: [...addedClientsForGatePass], riderName: riderName, numberPlate: numberPlate || 'N/A', outTime: outTime || 'N/A', status: document.getElementById('gp-status').value || 'Open', items: [] };
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        appSettings.nextGatePassNumber = currentGPNum + 1;
+        await saveSettings();
+        gatePassLog.push(gatePassRecord);
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({ payload: JSON.stringify(gatePassLog) });
+        alert("Gate Pass kamyabi se save ho gaya!");
+        generateGatePassPDF(gatePassRecord);
+        addedClientsForGatePass = [];
+        renderAddedClientsTable();
+        clearGatePassFields();
+        if(typeof renderGatePassHistory === 'function') renderGatePassHistory();
+    } catch (e) {
+        alert("Ghalti: Gate pass save nahi ho saka. " + e.message);
+    }
+}
+
+function clearGatePassFields() {
+    addedClientsForGatePass = [];
+    if (typeof renderAddedClientsTable === 'function') renderAddedClientsTable();
+    if (document.getElementById('gp-customer-search')) document.getElementById('gp-customer-search').value = '';
+    if (document.getElementById('gp-rider-name')) document.getElementById('gp-rider-name').value = '';
+    if (document.getElementById('gp-number-plate')) document.getElementById('gp-number-plate').value = '';
+    if (document.getElementById('gp-out-time')) document.getElementById('gp-out-time').value = '';
+    if (document.getElementById('gp-status')) document.getElementById('gp-status').value = 'Open';
+}
+
+
+// Prevents crashing from old event listeners
+function populateGatePassProductSelect() {}
+function addGatePassItem() {}
+function removeGatePassItem() {}
+function renderGatePassList() {}
+function clearGatePassList() { clearGatePassFields(); }
+
+// Demand Form ke worker dropdown ko load karne ka function
 function populateDemandWorkersDropdown() {
     const select = document.getElementById('d-worker');
     if (!select) return;
     
-    // Pehle se mojood list ko saaf karke default option lagayein
     select.innerHTML = '<option value="">-- Select Worker --</option>';
     
-    // Agar workers database mein majood hain, tou unhe dropdown mein add karein
-    if (typeof demandWorkers !== 'undefined' && Array.isArray(demandWorkers) && demandWorkers.length > 0) {
+    if (typeof demandWorkers !== 'undefined' && demandWorkers.length > 0) {
         demandWorkers.forEach(w => {
             const opt = document.createElement('option');
-            opt.value = w.id; // Worker ki ID save hogi
-            opt.textContent = `${w.name} (${w.phone})`; // Screen par naam aur number dikhega
+            opt.value = w.id;
+            opt.textContent = `${w.name} (${w.phone})`;
             select.appendChild(opt);
         });
     }
 }
 
+function renderOpenGatePasses() {
+    const tbody = document.getElementById('gp-open-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Sirf woh Gate Passes filter karein jin ka status "Open" hai (ya Closed nahi hai)
+    const openGatePasses = (gatePassLog || []).filter(gp => {
+        const status = String(gp.status || 'Open').toLowerCase();
+        return !status.includes('close'); // "Closed" passes ko nikal dega
+    });
+
+    if (openGatePasses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 15px;">Koi Active (Open) Gate Pass nahi mila.</td></tr>';
+        return;
+    }
+
+    openGatePasses.forEach(gp => {
+        // Tamam customers ke naam ek sath display karne ke liye
+        const clientsText = Array.isArray(gp.clients) 
+            ? gp.clients.map(c => c.customer || 'N/A').join('<br>') 
+            : 'N/A';
+        
+        // Tamam items (jaise alo) ke naam display karne ke liye
+        const itemsText = Array.isArray(gp.clients)
+            ? gp.clients.map(c => c.itemName || 'N/A').join('<br>')
+            : 'N/A';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${gp.id}</strong></td>
+            <td>${formatTimeFriendly(gp.outTime) || 'N/A'}</td>
+            <td>${gp.riderName || 'N/A'}</td>
+            <td>${gp.numberPlate || 'N/A'}</td>
+            <td>${clientsText}</td>
+            <td style="color: var(--accent-color); font-weight: bold;">${itemsText}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
 </script>
-
-
-
-
 <!-- EDIT CASH TRANSACTION MODAL -->
 <div id="edit-cash-modal" class="modal-backdrop">
     <div class="modal-content">
@@ -14492,7 +14558,6 @@ function populateDemandWorkersDropdown() {
     </div>
 </div>
 
-
 <!-- EDIT DEMAND MODAL -->
 <div id="edit-demand-modal" class="modal-backdrop">
     <div class="modal-content">
@@ -14500,22 +14565,16 @@ function populateDemandWorkersDropdown() {
         <input type="hidden" id="edit-demand-id">
         <div class="form-grid">
             <label>Customer Name:</label>
-<input type="text" id="edit-d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off">
+            <input type="text" id="edit-d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off">
 
             <label>Item Name:</label>
-            <select id="edit-d-item-name" class="form-control">
-                <!-- Options JS se aayengi -->
-            </select>
+            <select id="edit-d-item-name" class="form-control"></select>
 
             <label>Demand (Qty):</label>
-<select id="edit-d-demand" class="form-control">
-    <!-- options auto-populate hongi -->
-</select>
+            <select id="edit-d-demand" class="form-control"></select>
 
             <label>Assign Worker:</label>
-            <select id="edit-d-worker" class="form-control">
-                <!-- Options JS se aayengi -->
-            </select>
+            <select id="edit-d-worker" class="form-control"></select>
         </div>
         <div class="manage-buttons" style="margin-top: 20px;">
             <button class="btn btn-success" onclick="saveUpdatedDemand()">Save Update</button>
@@ -14524,7 +14583,7 @@ function populateDemandWorkersDropdown() {
     </div>
 </div>
 
-<!-- Is naye edit modal code se replace karein -->
+<!-- EDIT GATEPASS MODAL -->
 <div id="edit-gatepass-modal" class="modal-backdrop">
     <div class="modal-content">
         <h3 class="panel-title">Edit Gate Pass Details</h3>
@@ -14545,7 +14604,6 @@ function populateDemandWorkersDropdown() {
                 <option value="Closed">⚪ Closed</option>
             </select>
 
-            <!-- NAYA FIELD: Edit modal ke andar In-Time ka option -->
             <label for="edit-gp-in-time">In Time:</label>
             <input type="time" id="edit-gp-in-time" class="form-control">
         </div>
