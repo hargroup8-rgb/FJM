@@ -1268,8 +1268,8 @@ body,
         <h3>🔍 Filter Demand Record History</h3>
         <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
             <div>
-                <label>Search by Customer:</label>
-                <input type="text" id="dr-search" class="form-control" placeholder="Type customer name..." oninput="renderDemandRecordTable()">
+                <label>Search by S.No or Customer:</label>
+                <input type="text" id="dr-search" class="form-control" placeholder="Type serial no or customer name..." oninput="renderDemandRecordTable()">
             </div>
            <div>
                 <label>From Date:</label>
@@ -1319,21 +1319,17 @@ body,
             <!-- Naya Code (Is se replace karein): -->
 <label>Customer Name:</label>
 <input type="text" id="d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off" onclick="try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}">
-            
-           <label>Item Name:</label>
-<select id="d-item-name" class="form-control" disabled style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
-    <option value="Alo" selected>Alo</option>
-</select>
+        
+<!-- YAHAN NAYA FROZEN ITEM ADD KIYA GAYA HAI -->
+<label>Item Name:</label>
+<input type="text" id="d-item-name" class="form-control" value="Alo" readonly style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed; font-weight: bold; color: var(--accent-color);">
 
-            <label>Demand (Qty):</label>
+<label>Demand (Qty):</label>
 <select id="d-demand" class="form-control">
     <!-- options niche diye gaye JavaScript code se automatic generate ho kar add ho jayengi -->
 </select>
 
-            <label>Assign Worker:</label>
-            <select id="d-worker" class="form-control">
-                <option value="">-- Select Worker --</option>
-            </select>
+            
         </div>
 
         <button class="btn btn-success" onclick="submitNewDemand()" style="margin-top:20px; width: 100%;">Save Demand</button>
@@ -1345,9 +1341,7 @@ body,
                 <tr>
                     <th>Date</th>
                     <th>Customer Name</th>
-                    <th>Item Name</th>
                     <th>Demand</th>
-                    <th>Assigned Worker</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -2633,7 +2627,8 @@ body,
                         <th>Rider Name</th>
                         <th>Vehicle Number</th>
                         <th>Customer Name</th>
-                        <th>Item Name (e.g., Alo)</th>
+                        <th>Item Name</th>
+                        <th>Actions</th> <!-- NAYA COLUMN -->
                     </tr>
                 </thead>
                 <tbody id="gp-open-history-tbody">
@@ -3015,8 +3010,8 @@ body,
                 <option value="">-- Select Worker --</option>
             </select>
 
-            <label>Item Name:</label>
-            <input type="text" id="cust-item" class="form-control" placeholder="e.g., Sariya, Cement, Silt, etc.">
+     <label>Item Name:</label>
+<input type="text" id="cust-item" class="form-control" value="Alo" readonly style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed; font-weight: bold; color: var(--accent-color);">
 
             <label>Customer Name:</label>
             <input type="text" id="cust-name" class="form-control" placeholder="Full Name">
@@ -3584,9 +3579,7 @@ function renderRecentDemands() {
         tbody.innerHTML += `<tr>
             <td>${rec.date ? new Date(rec.date).toLocaleDateString() : '-'}</td>
             <td>${rec.customer || '-'}</td>
-            <td>${rec.itemName || '-'}</td>
             <td>${rec.demand || 0}</td>
-            <td>${workerName}</td>
             <td>
                 <div style="display: flex; gap: 5px;">
                     <button class="btn btn-sm btn-info" onclick="generateSingleDemandPDFById('${rec.id}')">PDF</button>
@@ -3658,15 +3651,15 @@ function formatTimeFriendly(timeStr) {
         let hours = parseInt(parts[0], 10);
         let minutes = parts[1].trim();
         if (!isNaN(hours)) {
-            // 24-hour se 12-hour format mein convert karein (e.g. 17 -> 5, 05 -> 5)
+            const ampm = hours >= 12 ? 'PM' : 'AM'; // Add AM/PM logic
             hours = hours % 12;
             hours = hours ? hours : 12; // Agar hour '0' ho to '12' show karega
-            return `${hours}:${minutes}`;
+            const formattedHours = hours < 10 ? '0' + hours : hours; // Leading zero
+            return `${formattedHours}:${minutes} ${ampm}`;
         }
     }
     return timeStr;
 }
-
 
 
 
@@ -4228,11 +4221,13 @@ async function saveNewCustomer() {
     }
 }
 
-// Form clear karne ka function
 function clearCustomerForm() {
     document.getElementById('cust-code').value = '';
     document.getElementById('cust-worker').value = '';
-    document.getElementById('cust-item').value = '';
+    
+    // YAHAN TABDEELI KAREIN: Khaali karne ki bajaye 'Alo' set karein
+    document.getElementById('cust-item').value = 'Alo'; 
+    
     document.getElementById('cust-name').value = '';
     document.getElementById('cust-phone').value = '';
     document.getElementById('cust-address').value = '';
@@ -4254,12 +4249,16 @@ function editCustomer(id) {
     editingCustomerId = id;
     
     document.getElementById('cust-code').value = cust.code || '';
-    document.getElementById('cust-item').value = cust.item || '';
+    
+    // Agar database mein item name nahi hai to 'Alo' dikhaye
+// Item hamesha 'Alo' par freeze rakhein (Edit karte waqt bhi change na ho)
+    document.getElementById('cust-item').value = 'Alo';
+    
     document.getElementById('cust-name').value = cust.name || '';
     document.getElementById('cust-phone').value = cust.phone || '';
     document.getElementById('cust-address').value = cust.address || '';
     document.getElementById('cust-price').value = cust.price || '';
-
+    
     // Dropdown mein selected worker set karna
     const workerSelect = document.getElementById('cust-worker');
     if (workerSelect && cust.worker) {
@@ -4381,59 +4380,99 @@ function runDemandMath() {
 }
 
 async function submitNewDemand() {
-    // 1. Pehle ye check karein ke values mil rahi hain ya nahi
-    const customer = document.getElementById('d-customer').value.trim();
-    const itemName = document.getElementById('d-item-name').value;
-    const demandQty = document.getElementById('d-demand').value;
-    const workerId = document.getElementById('d-worker').value;
+    // 1. Safe Inputs (Agar box HTML mein nahi hoga tou crash nahi hoga, khud handle kar lega)
+    const customerEl = document.getElementById('d-customer');
+    const demandQtyEl = document.getElementById('d-demand');
+    const workerEl = document.getElementById('d-worker');
+    const itemEl = document.getElementById('d-item-name'); 
 
-    console.log("Saving: ", { customer, itemName, demandQty, workerId }); // Console mein check karein
+    const customer = customerEl ? customerEl.value.trim() : '';
+    const demandQty = demandQtyEl ? demandQtyEl.value : '';
+    const workerId = workerEl ? workerEl.value : '';
+    // YAHAN TABDEELI KI GAYI HAI: Default item ab hamesha 'Alo' hi jayega
+    const itemName = itemEl ? itemEl.value : 'Alo';
 
-    if (!customer || !itemName || !demandQty) { 
-        alert("Customer Name, Item aur Demand Qty lazmi likhein!"); 
+    // 2. Validation
+    if (!customer || !demandQty) { 
+        alert("Customer Name aur Demand Qty lazmi likhein!"); 
         return; 
     }
 
-    // 2. Worker ka object sahi nikalna
-    const selectedWorker = demandWorkers.find(w => w.id === workerId);
+    // 3. Worker check (Agar Assign Worker delete ho gaya hai tou automatically null set ho jayega)
+    let selectedWorker = null;
+    if (workerId && typeof demandWorkers !== 'undefined') {
+        selectedWorker = demandWorkers.find(w => w.id === workerId);
+    }
     
-    // 3. Serial Number
+    // --- NAYA CODE: Customer ki baqi details dhoondna ---
+    let custPhone = 'N/A';
+    let custAddress = 'N/A';
+    let custCode = 'N/A';
+    let custPrice = 0;
+    let custWorker = null; // Worker detail nikalne ke liye naya variable
+
+
+    // Customer profile se data nikalna
+    if (typeof savedCustomersList !== 'undefined') {
+        const matchedCust = savedCustomersList.find(c => c.name.toLowerCase() === customer.toLowerCase());
+        if (matchedCust) {
+            custPhone = matchedCust.phone || 'N/A';
+            custAddress = matchedCust.address || 'N/A';
+            custCode = matchedCust.code || 'N/A';
+            custPrice = matchedCust.price || 0;
+        }
+    }
+
+    const demandAmount = parseFloat(demandQty);
+    const calculatedBill = demandAmount * custPrice; // Qty * Customer ki tay shuda price
+
+    // 4. Data tayar karna
     const currentSerial = appSettings.nextSerialNo || 101;
+    const recordData = {
+        id: 'dem' + Date.now(),
+        serialNo: currentSerial,
+        customer: customer,
+        customerCode: custCode, // Nayi detail
+        phone: custPhone,       // Nayi detail
+        address: custAddress,   // Nayi detail
+        price: custPrice,       // Nayi detail
+        bill: calculatedBill,   // Nayi detail
+        itemName: itemName, 
+        demand: demandAmount,
+        worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
+        date: new Date().toISOString(),
+        materialStatus: 'In warehouse',
+        processed: false 
+    };
 
-    // submitNewDemand ke andar is object ko check kar ke update karein:
-const recordData = {
-    id: 'dem' + Date.now(),
-    serialNo: currentSerial,
-    customer: customer,
-    itemName: itemName,
-    demand: parseFloat(demandQty),
-    worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
-    date: new Date().toISOString(),
-    materialStatus: 'In warehouse',
-    processed: false // <-- Yeh line yahan lazmi likhein taake database clean rahe
-};
-
+    // 5. Firebase Cloud mein Save karna
     try {
+        if (!loggedInUser || (!loggedInUser.id && !loggedInUser.uid)) {
+            alert("Aapka session expire ho gaya hai. Barae meharbani page refresh kar ke dobara login karein.");
+            return;
+        }
+        
         const userId = loggedInUser.id || loggedInUser.uid;
         
-        // Settings update (Serial Number)
         appSettings.nextSerialNo = currentSerial + 1;
         await saveSettings(); 
 
-        // Firebase mein save
         demandRecords.push(recordData);
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
-populateCustomerNamesDatalist();
-        alert("Demand kamyabi se save ho gayi!");
-        clearDemandForm();
-        renderDemandRecord(); 
         
-renderRecentDemands(); 
+        if (typeof populateCustomerNamesDatalist === 'function') populateCustomerNamesDatalist();
+        
+        alert("Demand kamyabi se save ho gayi!");
+        
+        // Form saaf karna aur table refresh karna
+        if (typeof clearDemandForm === 'function') clearDemandForm();
+        if (typeof renderDemandRecord === 'function') renderDemandRecord(); 
+        if (typeof renderRecentDemands === 'function') renderRecentDemands(); 
 
     } catch (e) {
-        console.error("Save Error:", e); // Error detail yahan milegi
+        console.error("Save Error:", e); 
         alert("Ghalti: Data save nahi ho saka. Error: " + e.message);
     }
 }
@@ -4481,11 +4520,22 @@ function clearDemandForm() {
     if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
 }
 
-// PDF Generator (Receipt ID ki jagah Serial Number ke sath)
 function generateSingleDemandPDF(record) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     let yPos = 20;
+
+    // --- NAYA LOGIC: Customer Profile se Assigned Worker dhoondna ---
+    let assignedWorkerName = 'N/A';
+    if (typeof savedCustomersList !== 'undefined') {
+        const profile = savedCustomersList.find(c => c.name.toLowerCase() === (record.customer || '').toLowerCase());
+        if (profile && profile.worker) {
+            assignedWorkerName = profile.worker.name;
+        } else if (record.worker) {
+            // Agar profile mein nahi mila toh purane record se backup uthaye
+            assignedWorkerName = record.worker.name;
+        }
+    }
 
     // Header Details
     doc.setFontSize(24); doc.setFont('helvetica', 'bold');
@@ -4497,7 +4547,7 @@ function generateSingleDemandPDF(record) {
 
     doc.setFontSize(18); doc.text("Demand Receipt", 105, yPos, { align: 'center' }); yPos += 10;
 
-    // Customer Details
+    // Customer Details Section
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
     doc.text("Customer Details:", 14, yPos); yPos += 6;
     
@@ -4505,20 +4555,16 @@ function generateSingleDemandPDF(record) {
     doc.text(`Name: ${record.customer || 'N/A'}`, 14, yPos);
     doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 120, yPos); yPos += 6;
     
-    // NAYA BADLAO: record.id ki jagah ab record.serialNo print hoga
-    doc.text(`Receipt ID: ${record.serialNo || 'N/A'}`, 14, yPos); yPos += 12;
-
-    // Assigned Worker Details
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-    doc.text("Assigned Demand Worker:", 14, yPos); yPos += 6;
+    doc.text(`Customer Code: ${record.customerCode || 'N/A'}`, 14, yPos);
+    doc.text(`Receipt Serial: ${record.serialNo || 'N/A'}`, 120, yPos); yPos += 6;
     
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    if (record.worker) {
-        doc.text(`Name: ${record.worker.name || 'N/A'}`, 14, yPos);
-    } else {
-        doc.text("No worker assigned to this demand.", 14, yPos);
-    }
-    yPos += 12;
+    doc.text(`Phone: ${record.phone || 'N/A'}`, 14, yPos);
+    // --- YAHAN ASSIGNED WORKER SHOW HOGA ---
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Assigned Worker: ${assignedWorkerName}`, 120, yPos); 
+    doc.setFont('helvetica', 'normal'); yPos += 6;
+    
+    doc.text(`Address: ${record.address || 'N/A'}`, 14, yPos); yPos += 15;
 
     // Transaction Details Table
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
@@ -4540,12 +4586,12 @@ function generateSingleDemandPDF(record) {
         didParseCell: function(data) {
             if (data.row.index === 3) { 
                 data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.textColor = [216, 69, 62]; // Red highlight for Net Balance Due
+                data.cell.styles.textColor = [216, 69, 62]; 
             }
         }
     });
 
-    doc.save(`Demand_Receipt_${record.customer || 'Customer'}_${record.date ? new Date(record.date).toLocaleDateString() : 'Date'}.pdf`);
+    doc.save(`Demand_Receipt_${record.customer || 'Customer'}.pdf`);
 }
 
 
@@ -4587,66 +4633,7 @@ function renderDemandRecord() {
 
 
 // Popup kholne aur data usme dalne ka function
-function editDemandRecord(id) {
-    const record = demandRecords.find(r => r.id === id);
-    if (!record) {
-        alert("Record nahi mila!");
-        return;
-    }
 
-    // Modal mein ID aur basic text fields bharna
-    document.getElementById('edit-demand-id').value = id;
-    document.getElementById('edit-d-customer').value = record.customer || '';
-    document.getElementById('edit-d-demand').value = record.demand || '';
-
-    // Item Dropdown ko fill karna
-    // Item Dropdown ko fill karna (Strictly locked on Alo)
-            const itemSelect = document.getElementById('edit-d-item-name');
-            if (itemSelect) {
-                itemSelect.innerHTML = '<option value="Alo" selected>Alo</option>';
-                itemSelect.disabled = true;
-                itemSelect.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                itemSelect.style.cursor = 'not-allowed';
-            }
-
-    // Worker Dropdown ko fill karna
-    const workerSelect = document.getElementById('edit-d-worker');
-    workerSelect.innerHTML = '<option value="">-- Select Worker --</option>';
-    demandWorkers.forEach(w => {
-        const option = document.createElement('option');
-        option.value = w.id;
-        option.textContent = `${w.name} (${w.phone})`;
-        // Agar pehle se worker assign tha to usko select karega
-        if (record.worker && w.name === record.worker.name && w.phone === record.worker.phone) {
-            option.selected = true;
-        }
-        workerSelect.appendChild(option);
-    });
-
-    // Modal ko screen par dikhana
-    document.getElementById('edit-demand-modal').style.display = 'flex';
-}
-
-// Client Record ko delete karne ka function
-async function deleteDemandRecord(id) {
-    if (!confirm("Kya aap waqai is client record ko delete karna chahte hain?")) return;
-    
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        demandRecords = demandRecords.filter(r => r.id !== id);
-        
-        // Firebase Cloud DB update
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
-        
-        alert("Record delete ho gaya!");
-        renderDemandRecord();
-        renderRecentDemands();
-    } catch (e) {
-        alert("Delete karne mein error: " + e.message);
-    }
-}
 
 // 4. Clean Reset Logic
 function resetDemandInputs() {
@@ -4676,13 +4663,14 @@ function resetDemandInputs() {
     if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
 }
 
-// 4. Form Clear Function (Resets the Slider too)
 function clearDemandForm() {
     editingDemandId = null;
-    document.getElementById('d-customer').value = '';
-document.getElementById('d-item-name').value = 'Alo';
-    document.getElementById('d-demand').value = '';
-    document.getElementById('d-worker').value = '';
+    
+    // Sirf wahi box clear honge jo form mein mojood hain (Crash se bachane ke liye IF lagaya hai)
+    if (document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if (document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if (document.getElementById('d-worker')) document.getElementById('d-worker').value = '';
+    if (document.getElementById('d-item-name')) document.getElementById('d-item-name').value = 'Alo';
 
     const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
     if (saveBtn) {
@@ -9436,19 +9424,32 @@ function generateGatePassPDF(gatePassRecord) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     
-    // Header
-    doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.text('GATE PASS', 105, 20, { align: 'center' });
+    // Header - GATE PASS Title
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold'); 
+    doc.text('GATE PASS', 105, 20, { align: 'center' });
+    
+   const gpDate = new Date(gatePassRecord.date).toLocaleDateString();
+    // Use professional 12-Hour format instead of raw time
+    const gpTime = new Date(gatePassRecord.date).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+    });
+    
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Date: ${gpDate}   |   Time: ${gpTime}`, 105, 27, { align: 'center' });
     
     // Metadata Left Column
-    doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 20, 35);
-    doc.text(`VEHICLE NUM: ${gatePassRecord.numberPlate || 'N/A'}`, 20, 42);
-    doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 20, 49);
-    
-    // Metadata Right Column
-    doc.text(`GATE PASS NUM: ${gatePassRecord.id || '1'}`, 130, 35);
-    doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 130, 42);
-    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 130, 49);
+    doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 20, 40);
+    doc.text(`VEHICLE NUM: ${gatePassRecord.numberPlate || 'N/A'}`, 20, 47);
+    doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 20, 54);
+
+    // Metadata Right Column 
+    doc.setFont('helvetica', 'bold'); 
+    doc.text(`GATE PASS CODE: ${gatePassRecord.id || 'N/A'}`, 130, 40);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 130, 47);
+    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 130, 54);
 
     const tableData = [];
     const clients = gatePassRecord.clients || [];
@@ -9456,7 +9457,6 @@ function generateGatePassPDF(gatePassRecord) {
     let totalDemand = 0;
     let totalBags = 0;
 
-    // Decimals ko clean show karne ka helper function
     const formatBags = (val) => {
         return val % 1 === 0 ? val.toString() : val.toFixed(1);
     };
@@ -9475,35 +9475,32 @@ function generateGatePassPDF(gatePassRecord) {
         ]);
     }
 
-   doc.autoTable({
-    startY: 60,
-    head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'DEMAND QTY', 'BAGS QTY']],
-    body: tableData,
-    // Yahan se plus (+) aur vertical bar (|) ko hata diya gaya hai
-    foot: [['', 'TOTAL', `${totalDemand}`, `${formatBags(totalBags)}`]],
-    theme: 'grid',
-    headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-    footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 10 },
-    styles: { fontSize: 10, cellPadding: 3 },
-    columnStyles: {
-        0: { halign: 'center' },
-        1: { halign: 'left' },
-        2: { halign: 'center' },
-        3: { halign: 'center' }
-    },
-    didParseCell: function (data) {
-        if (data.row.section === 'foot') {
-            // "TOTAL" text ko left-align rakha hai
-            if (data.column.index === 1) {
-                data.cell.styles.halign = 'left';
-            }
-            // Index 2 (Demand) aur Index 3 (Bags) ko center-align karne ke liye
-            if (data.column.index === 2 || data.column.index === 3) {
-                data.cell.styles.halign = 'center';
+    doc.autoTable({
+        startY: 62, 
+        head: [['CUSTOMER CODE', 'CUSTOMER NAME', 'DEMAND QTY', 'BAGS QTY']],
+        body: tableData,
+        foot: [['', 'TOTAL', `${totalDemand}`, `${formatBags(totalBags)}`]],
+        theme: 'grid',
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+        footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 10 },
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: {
+            0: { halign: 'center' },
+            1: { halign: 'left' },
+            2: { halign: 'center' },
+            3: { halign: 'center' }
+        },
+        didParseCell: function (data) {
+            if (data.row.section === 'foot') {
+                if (data.column.index === 1) {
+                    data.cell.styles.halign = 'left';
+                }
+                if (data.column.index === 2 || data.column.index === 3) {
+                    data.cell.styles.halign = 'center';
+                }
             }
         }
-    }
-});
+    });
 
     doc.save(`GatePass_${gatePassRecord.id}.pdf`);
 }
@@ -9739,6 +9736,8 @@ async function saveUpdatedGatePass() {
         alert("Gate Pass kamyabi se update ho gaya!");
         closeEditGatePassModal();
         renderGatePassHistory();
+        if (typeof renderOpenGatePasses === 'function') renderOpenGatePasses(); // NAYA: Open table bhi refresh hoga
+
     } catch (e) {
         alert("Error: " + e.message);
     }
@@ -9830,21 +9829,37 @@ function generateGatePassThermalPDF(gatePassRecord) {
     let yPos = 12;
     const centerX = 40; 
     
-    // Title
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); doc.text('GATE PASS', centerX, yPos, { align: 'center' }); yPos += 10;
+   const gpDate = new Date(gatePassRecord.date).toLocaleDateString();
+    // Use professional 12-Hour format instead of raw time
+    const gpTime = new Date(gatePassRecord.date).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+    });
+
+    // Title - GATE PASS
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold'); 
+    doc.text('GATE PASS', centerX, yPos, { align: 'center' }); 
+    yPos += 5; // Thora sa neechay
+    
+    // NAYA CODE: Date aur Time bilkul Title ke neechay (Center mein)
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.text(`Date: ${gpDate}   |   Time: ${gpTime}`, centerX, yPos, { align: 'center' });
+    yPos += 8; // Baqi text ke liye space
     
     // Metadata Left & Right
     doc.text(`RIDER NAME: ${gatePassRecord.riderName || 'N/A'}`, 4, yPos);
-    doc.text(`GATE PAS NUM: ${gatePassRecord.id || 'N/A'}`, 42, yPos); yPos += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`PASS CODE: ${gatePassRecord.id || 'N/A'}`, 42, yPos); yPos += 6; 
+    doc.setFont('helvetica', 'normal');
     
     let vehicle = gatePassRecord.numberPlate || 'N/A';
     if (vehicle.length > 12) vehicle = vehicle.substring(0, 10) + '..'; 
-    doc.text(`VEHICLE NUM: ${vehicle}`, 4, yPos);
+    doc.text(`VEHICLE: ${vehicle}`, 4, yPos);
     doc.text(`STATUS: ${gatePassRecord.status || 'OPEN'}`, 42, yPos); yPos += 6;
     
-    doc.text(`OUT TIME: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 4, yPos);
-    doc.text(`IN TIME: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 42, yPos); yPos += 8;
+    doc.text(`OUT: ${formatTimeFriendly(gatePassRecord.outTime) || 'N/A'}`, 4, yPos);
+    doc.text(`IN: ${formatTimeFriendly(gatePassRecord.inTime) || 'N/A'}`, 42, yPos); yPos += 8;
 
     const tableData = [];
     const clients = gatePassRecord.clients || [];
@@ -9871,38 +9886,35 @@ function generateGatePassThermalPDF(gatePassRecord) {
     }
 
     doc.autoTable({
-    startY: yPos,
-    head: [['CODE', 'NAME', 'DEMAND', 'BAGS']],
-    body: tableData,
-    // Yahan se bhi signs ko hata diya gaya hai
-    foot: [['', 'TOTAL', `${totalDemand}`, `${formatBags(totalBags)}`]],
-    theme: 'grid', 
-    headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7, halign: 'left' },
-    bodyStyles: { fontSize: 7, textColor: [0, 0, 0], cellPadding: 2 },
-    footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
-    columnStyles: {
-        0: { cellWidth: 12 }, 
-        1: { cellWidth: 26 }, 
-        2: { cellWidth: 14, halign: 'center' }, 
-        3: { cellWidth: 10, halign: 'center' } 
-    },
-    margin: { left: 4, right: 4 },
-    didParseCell: function (data) {
-        if (data.row.section === 'foot') {
-            if (data.column.index === 1) {
-                data.cell.styles.halign = 'left';
-            }
-            // Index 2 aur 3 ke total values ko thermal PDF mein bhi center-align kiya gaya hai
-            if (data.column.index === 2 || data.column.index === 3) {
-                data.cell.styles.halign = 'center';
+        startY: yPos,
+        head: [['CODE', 'NAME', 'DEMAND', 'BAGS']],
+        body: tableData,
+        foot: [['', 'TOTAL', `${totalDemand}`, `${formatBags(totalBags)}`]],
+        theme: 'grid', 
+        headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7, halign: 'left' },
+        bodyStyles: { fontSize: 7, textColor: [0, 0, 0], cellPadding: 2 },
+        footStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
+        columnStyles: {
+            0: { cellWidth: 12 }, 
+            1: { cellWidth: 26 }, 
+            2: { cellWidth: 14, halign: 'center' }, 
+            3: { cellWidth: 10, halign: 'center' } 
+        },
+        margin: { left: 4, right: 4 },
+        didParseCell: function (data) {
+            if (data.row.section === 'foot') {
+                if (data.column.index === 1) {
+                    data.cell.styles.halign = 'left';
+                }
+                if (data.column.index === 2 || data.column.index === 3) {
+                    data.cell.styles.halign = 'center';
+                }
             }
         }
-    }
-});
+    });
 
     doc.save(`GatePass_Thermal_${gatePassRecord.id}.pdf`);
 }
-// ====== NAYA CODE THERMAL PRINTER KE LIYE YAHAN KHATAM HOTA HAI ======
 
 
 // --- PROFIT & LOSS STATEMENT ---
@@ -12719,79 +12731,6 @@ function deleteCashBookTransaction(id) {
 }
 
 
-
-
-
-// 2. Client/Demand Record ko Edit form mein load karne ka function
-function editDemandRecord(id) {
-    // 1. Pehle records mein se woh entry dhoondhein jis par click kiya gaya hai
-    const record = demandRecords.find(r => r.id === id);
-    if (!record) {
-        alert("Record nahi mila!");
-        return;
-    }
-
-    // 2. Editing ID set karein taake save karte waqt naya record na banay balkay purana update ho
-    editingDemandId = id;
-
-    // 3. Form ke fields mein data bharna (Wapas load karna)
-    document.getElementById('d-customer').value = record.customer || '';
-    document.getElementById('d-item-name').value = record.itemName || '';
-    document.getElementById('d-demand').value = record.demand || '';
-
-    // Worker ko dropdown mein select karna (ID match karke)
-    const workerSelect = document.getElementById('d-worker');
-    if (workerSelect && record.worker) {
-        // Agar aapke pas worker ki ID hai toh woh set karein, warna naam se dhoondhein
-        for (let i = 0; i < workerSelect.options.length; i++) {
-            if (workerSelect.options[i].text.includes(record.worker.name)) {
-                workerSelect.selectedIndex = i;
-                break;
-            }
-        }
-    }
-
-    // 4. Save Button ka text badal dein taake pata chalay ke Update ho raha hai
-    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
-    if (saveBtn) {
-        saveBtn.textContent = "Update Demand";
-        saveBtn.className = "btn btn-warning"; // Rang badal kar orange kar dein
-    }
-
-    // 5. Automatically "Add New Demand" walay Tab par switch karna
-    // Iske liye hum openModule function ka istemal karenge
-    const demandFormTab = document.querySelector('.sub-tab[onclick*="DemandForm"]');
-    if (demandFormTab) {
-        openModule({ currentTarget: demandFormTab }, 'DemandForm');
-    } else {
-        // Agar dropdown ke andar hai toh direct module name se switch karein
-        openModule({ currentTarget: document.createElement('button') }, 'DemandForm');
-    }
-
-    // Page ko thora upar scroll karein taake form nazar aaye
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// 3. Client Record ko delete karne ka function
-async function deleteDemandRecord(id) {
-    if (!confirm("Kya aap waqai is client record ko delete karna chahte hain?")) return;
-    
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        demandRecords = demandRecords.filter(r => r.id !== id);
-        
-        // Cloud Database sync
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
-        
-        alert("Record delete ho gaya!");
-        renderDemandRecord();
-    } catch (e) {
-        alert("Delete karne mein error: " + e.message);
-    }
-}
-
 // NAYA FUNCTION: Search Result Statement PDF Download
 function downloadSearchResultPDF() {
     const { jsPDF } = window.jspdf;
@@ -12974,80 +12913,6 @@ function generateWorkerReportPDF(worker, demands, total, paid, unpaid, balance) 
 
 
 // Client/Demand Record ko Edit form mein load karne ke liye
-function editDemandRecord(id) {
-    const record = demandRecords.find(r => r.id === id);
-    if (!record) {
-        alert("Record nahi mila!");
-        return;
-    }
-    editingDemandId = id;
-
-    // Form fields ko purane data se fill karein
-    document.getElementById('d-customer').value = record.customer || '';
-    document.getElementById('d-phone').value = record.phone || '';
-    
-    // Assigned Worker set karein
-    const workerSelect = document.getElementById('d-worker');
-    if (workerSelect && record.worker) {
-        const worker = demandWorkers.find(w => w.name === record.worker.name && w.phone === record.worker.phone);
-        workerSelect.value = worker ? worker.id : '';
-    } else if (workerSelect) {
-        workerSelect.value = '';
-    }
-
-    document.getElementById('d-demand').value = record.demand || '';
-    document.getElementById('d-price').value = record.price || '';
-    document.getElementById('d-bill').value = (record.bill || 0).toFixed(2);
-    
-    // Recovery payment modes handles
-    const totalRecovery = (record.recovery || 0) + (record.onlineRec || 0);
-    document.getElementById('d-recovery').value = totalRecovery || '';
-    
-    let mode = 'cash';
-    if (record.onlineRec > 0) {
-        mode = 'online';
-    } else if (totalRecovery === 0) {
-        mode = 'unpaid';
-    }
-    toggleDemandRecoveryMode(mode);
-
-    document.getElementById('d-old-balance').value = record.oldBalance || '';
-    document.getElementById('d-balance').value = (record.balance || 0).toFixed(2);
-    document.getElementById('d-net-balance').value = (record.netBalance || 0).toFixed(2);
-
-    // Save Button ka text aur style badlein
-    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
-    if (saveBtn) {
-        saveBtn.textContent = "Update Client Demand";
-        saveBtn.className = "btn btn-warning";
-    }
-
-    // Form wale Tab par redirect karein
-    const demandFormTab = document.querySelector('.sub-tab[onclick*="DemandForm"]');
-    if (demandFormTab) {
-        openModule({ currentTarget: demandFormTab }, 'DemandForm');
-    }
-}
-
-// Client Record delete karne ke liye
-async function deleteDemandRecord(id) {
-    if (!confirm("Kya aap waqai is client record ko delete karna chahte hain?")) return;
-    
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        demandRecords = demandRecords.filter(r => r.id !== id);
-        
-        // Cloud par updated list save karein
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
-        
-        alert("Record delete ho gaya!");
-        renderDemandRecord();
-    } catch (e) {
-        alert("Delete karne mein error: " + e.message);
-    }
-}
 
 function renderDemandList(filter) {
     if (filter !== undefined) {
@@ -13254,139 +13119,6 @@ function renderMaalPurchaseTable() {
     });
 }
 
-// ==========================================
-// POPUP EDIT DEMAND FUNCTIONS (OVERRIDE)
-// ==========================================
-function editDemandRecord(id) {
-    const record = demandRecords.find(r => r.id === id);
-    if (!record) {
-        alert("Record nahi mila!");
-        return;
-    }
-
-    // Modal mein ID aur basic text fields bharna
-    document.getElementById('edit-demand-id').value = id;
-    document.getElementById('edit-d-customer').value = record.customer || '';
-    document.getElementById('edit-d-demand').value = record.demand || '';
-
-    // Item Dropdown ko fill karna
-    // Item Dropdown ko fill karna (Strictly locked on Alo)
-            const itemSelect = document.getElementById('edit-d-item-name');
-            if (itemSelect) {
-                itemSelect.innerHTML = '<option value="Alo" selected>Alo</option>';
-                itemSelect.disabled = true;
-                itemSelect.style.backgroundColor = 'rgba(255,255,255,0.05)';
-                itemSelect.style.cursor = 'not-allowed';
-            }
-    
-    else {
-         // Agar item list load na ho to kam az kam purana item dikhaye
-         if(record.itemName) {
-             const opt = document.createElement('option');
-             opt.value = record.itemName;
-             opt.textContent = record.itemName;
-             opt.selected = true;
-             itemSelect.appendChild(opt);
-         }
-    }
-
-    // Worker Dropdown ko fill karna
-    const workerSelect = document.getElementById('edit-d-worker');
-    workerSelect.innerHTML = '<option value="">-- Select Worker --</option>';
-    if (typeof demandWorkers !== 'undefined') {
-        demandWorkers.forEach(w => {
-            const option = document.createElement('option');
-            option.value = w.id;
-            option.textContent = `${w.name} (${w.phone})`;
-            // Agar pehle se worker assign tha to usko select karega
-            if (record.worker && w.name === record.worker.name && w.phone === record.worker.phone) {
-                option.selected = true;
-            }
-            workerSelect.appendChild(option);
-        });
-    }
-
-    // Modal ko screen par dikhana
-    document.getElementById('edit-demand-modal').style.display = 'flex';
-}
-
-// Modal ko band karne ka function
-function closeEditDemandModal() {
-    document.getElementById('edit-demand-modal').style.display = 'none';
-}
-
-// Updated data ko database mein save karne ka function
-async function saveUpdatedDemand() {
-    const id = document.getElementById('edit-demand-id').value;
-    const customer = document.getElementById('edit-d-customer').value.trim();
-    const itemName = document.getElementById('edit-d-item-name').value;
-    const demandQty = document.getElementById('edit-d-demand').value;
-    const workerId = document.getElementById('edit-d-worker').value;
-
-    if (!customer || !itemName || !demandQty) {
-        alert("Customer Name, Item aur Demand Qty lazmi likhein!");
-        return;
-    }
-
-    const recordIndex = demandRecords.findIndex(r => r.id === id);
-    if (recordIndex === -1) {
-        alert("Ghalti: Demand record database mein nahi mila.");
-        return;
-    }
-
-    const selectedWorker = (typeof demandWorkers !== 'undefined') ? demandWorkers.find(w => w.id === workerId) : null;
-
-    // Purani price nikalna taake naya bill calculate ho sake
-    const oldDemand = demandRecords[recordIndex].demand || 0;
-    const newDemand = parseFloat(demandQty);
-    const price = demandRecords[recordIndex].price || 0; // unit price
-    
-    // Naya Data set karein
-    demandRecords[recordIndex].customer = customer;
-    demandRecords[recordIndex].itemName = itemName;
-    demandRecords[recordIndex].demand = newDemand;
-    demandRecords[recordIndex].worker = selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null;
-    
-    // Agar quantity change hui hai to bill aur net balance update karein
-    if (oldDemand !== newDemand) {
-        const newBill = newDemand * price;
-        const recoveryAmount = (demandRecords[recordIndex].recovery || 0) + (demandRecords[recordIndex].onlineRec || 0);
-        const currentEntryBalance = newBill - recoveryAmount;
-        
-        demandRecords[recordIndex].bill = newBill;
-        demandRecords[recordIndex].balance = currentEntryBalance;
-        demandRecords[recordIndex].netBalance = (demandRecords[recordIndex].oldBalance || 0) + currentEntryBalance;
-        
-        // Status recalculation
-        if (demandRecords[recordIndex].netBalance <= 0.01) {
-            demandRecords[recordIndex].netBalance = 0;
-            demandRecords[recordIndex].status = 'paid';
-        } else {
-            demandRecords[recordIndex].status = 'unpaid';
-        }
-    }
-
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        // Firebase Cloud DB Update karein
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
-
-        alert("Demand kamyabi se update ho gayi!");
-        closeEditDemandModal();
-        
-        // Tables Refresh karein
-        if (typeof renderDemandRecord === 'function') renderDemandRecord();
-        if (typeof renderRecentDemands === 'function') renderRecentDemands();
-        if (typeof renderDemandList === 'function') renderDemandList(typeof activeDemandTrackingFilter !== 'undefined' ? activeDemandTrackingFilter : 'all');
-        
-    } catch (e) {
-        console.error("Update Error:", e);
-        alert("Ghalti: Update save nahi ho saka. Error: " + e.message);
-    }
-}
-
 async function dbFetchMaalPurchases() {
     if (!loggedInUser) return;
     const userId = loggedInUser.id || loggedInUser.uid;
@@ -13425,13 +13157,12 @@ function populatePendingDemandsDropdown() {
         select.appendChild(option);
     });
 }
-// 2. Selected customer ki basic details ko automatic read-only fields mein fill karna
 function handlePendingDemandSelection() {
     const select = document.getElementById('dr-pending-select');
     const selectedId = select.value;
 
     if (!selectedId) {
-        // Clear all fields if nothing is selected
+        // Agar kuch select nahi hai toh sab clear kar do
         document.getElementById('dr-display-date').value = '';
         document.getElementById('dr-display-customer').value = '';
         document.getElementById('dr-display-item').value = '';
@@ -13451,13 +13182,25 @@ function handlePendingDemandSelection() {
         document.getElementById('dr-display-item').value = record.itemName || '';
         document.getElementById('dr-display-qty').value = record.demand || 0;
 
-        // Reset user calculation fields
-        document.getElementById('dr-rate').value = '';
-        document.getElementById('dr-bill').value = '';
+        // --- NEW LOGIC: RATE AUTOMATION ---
+        let autoRate = 0;
+        // Hum 'savedCustomersList' mein jayenge aur customer ke naam se match karenge
+        if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+            const customerProfile = savedCustomersList.find(c => c.name.toLowerCase() === record.customer.toLowerCase());
+            if (customerProfile && customerProfile.price) {
+                autoRate = customerProfile.price; // Add Customer mein jo price di thi wo yahan aa gayi
+            }
+        }
+        
+        // Rate box mein value daalna
+        document.getElementById('dr-rate').value = autoRate;
+        // ----------------------------------
+
+        // Reset other calculation fields
         document.getElementById('dr-old-balance').value = '';
         document.getElementById('dr-recovery').value = '';
-        document.getElementById('dr-net-balance').value = '';
 
+        // calculation ko update karna
         calculateDemandRecordMath();
     }
 }
@@ -13565,12 +13308,17 @@ function renderDemandRecordTable() {
         const fromDateObj = new Date(fromDateVal + 'T00:00:00');
         filtered = filtered.filter(r => new Date(r.date) >= fromDateObj);
     }
-    if (toDateVal) {
+   if (toDateVal) {
         const toDateObj = new Date(toDateVal + 'T23:59:59');
         filtered = filtered.filter(r => new Date(r.date) <= toDateObj);
     }
+    
+    // YAHAN TABDEELI KI GAYI HAI: Ab Name aur Serial Number dono se search hoga
     if (searchQuery) {
-        filtered = filtered.filter(r => r.customer && r.customer.toLowerCase().includes(searchQuery));
+        filtered = filtered.filter(r => 
+            (r.customer && r.customer.toLowerCase().includes(searchQuery)) ||
+            (r.serialNo && String(r.serialNo).toLowerCase().includes(searchQuery))
+        );
     }
 
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
@@ -13656,6 +13404,16 @@ function generateDemandRecordPDF(record) {
     const doc = new jsPDF('p', 'mm', 'a4');
     let yPos = 20;
 
+    // --- NAYA CODE: Customer Profile se Worker dhoondna ---
+    let currentWorkerName = record.worker ? record.worker.name : 'N/A';
+    if (typeof savedCustomersList !== 'undefined') {
+        const matchedCust = savedCustomersList.find(c => c.name.toLowerCase() === (record.customer || '').toLowerCase());
+        if (matchedCust && matchedCust.worker && matchedCust.worker.name) {
+            currentWorkerName = matchedCust.worker.name;
+        }
+    }
+    // ------------------------------------------------------
+
     // Header Details
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
     doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
@@ -13675,9 +13433,8 @@ function generateDemandRecordPDF(record) {
     doc.text(`Customer Name: ${record.customer || 'N/A'}`, 14, yPos);
     doc.text(`Invoice ID: Serial #${record.serialNo || 'N/A'}`, 120, yPos); yPos += 5;
     
-    // Yahan top se Received From hata diya gaya hai
     doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 14, yPos);
-    doc.text(`Assigned Worker: ${record.worker ? record.worker.name : 'N/A'}`, 120, yPos); yPos += 15;
+    doc.text(`Assigned Worker: ${currentWorkerName}`, 120, yPos); yPos += 15; // <-- YAHAN ASSIGNED WORKER AAYEGA
 
     // Item Table
     const billVal = record.bill !== undefined ? record.bill : (record.demand * (record.rate || 0));
@@ -13696,48 +13453,40 @@ function generateDemandRecordPDF(record) {
     
     yPos = doc.previousAutoTable.finalY + 12;
 
-    // Finance Statement (Yahan naam add kar diya gaya hai)
-    // Finance Statement (With updated labels & calculations)
-            const recoveryLabel = `Received (By: ${record.receivedBy || 'N/A'})`;
+    // Finance Statement
+    const recoveryLabel = `Received (By: ${record.receivedBy || 'N/A'})`;
+    const prevBal = Number(record.oldBalance || record.PreviousBalance || 0);
+    const totalBillVal = billVal + prevBal;
+    const rcvdVal = Number(record.recovery || 0);
+    const outstandingVal = totalBillVal - rcvdVal;
 
-            // System variables se values extract karna
-            const prevBal = Number(record.oldBalance || record.PreviousBalance || 0);
-            const totalBillVal = billVal + prevBal;
-            const rcvdVal = Number(record.recovery || 0);
-            const outstandingVal = totalBillVal - rcvdVal;
+    const summaryTableData = [
+        ['Current Bill:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
+        ['Previous Balance:', `${CURRENCY_SYMBOL} ${prevBal.toFixed(2)}`],
+        ['Total Bill:', `${CURRENCY_SYMBOL} ${totalBillVal.toFixed(2)}`], 
+        [recoveryLabel, `${CURRENCY_SYMBOL} ${rcvdVal.toFixed(2)}`],
+        ['Current Balance:', `${CURRENCY_SYMBOL} ${outstandingVal.toFixed(2)}`]
+    ];
 
-            const summaryTableData = [
-                ['Current Bill:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
-                ['Previous Balance:', `${CURRENCY_SYMBOL} ${prevBal.toFixed(2)}`],
-                ['Total Bill:', `${CURRENCY_SYMBOL} ${totalBillVal.toFixed(2)}`], 
-                [recoveryLabel, `${CURRENCY_SYMBOL} ${rcvdVal.toFixed(2)}`],
-                ['Current Balance:', `${CURRENCY_SYMBOL} ${outstandingVal.toFixed(2)}`]
-            ];
-
-            doc.autoTable({
-                startY: yPos,
-                body: summaryTableData,
-                theme: 'grid',
-                styles: { fontSize: 11, cellPadding: 3 },
-                columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
-                didParseCell: function(data) {
-                    // Row index 2 (Total Bill) ko bold karna
-                    if (data.row.index === 2) {
-                        data.cell.styles.fontStyle = 'bold';
-                    }
-                    // Row index 4 (Current Balance) ko bold aur RED highlighting dena
-                    if (data.row.index === 4) { 
-                        data.cell.styles.fontStyle = 'bold';
-                        data.cell.styles.textColor = [216, 69, 62]; 
-                    }
-                }
-            });
-
-    
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 11, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        didParseCell: function(data) {
+            if (data.row.index === 2) {
+                data.cell.styles.fontStyle = 'bold';
+            }
+            if (data.row.index === 4) { 
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62]; 
+            }
+        }
+    });
 
     doc.save(`Demand_Invoice_${(record.customer || 'Customer').replace(/\s+/g, '_')}_Serial_${record.serialNo}.pdf`);
 }
-
 
 
 async function saveLaborAdvance() {
@@ -14394,11 +14143,24 @@ async function saveAndGenerateGatePass() {
     const outTime = document.getElementById('gp-out-time').value;
     if (!riderName) { alert("Rider ka naam likhna zaruri hai."); return; }
 
-    const currentGPNum = appSettings.nextGatePassNumber || 100;
-    const gatePassRecord = { id: currentGPNum, date: new Date().toISOString(), clients: [...addedClientsForGatePass], riderName: riderName, numberPlate: numberPlate || 'N/A', outTime: outTime || 'N/A', status: document.getElementById('gp-status').value || 'Open', items: [] };
+    // 1. Pehle counter se current number uthayein
+    let currentGPNum = appSettings.nextGatePassNumber || 100;
+
+    // 2. DUPLICATE CHECK LOGIC: 
+    // Jab tak ye number 'gatePassLog' mein milta rahega, ye ek number plus (+) karta rahega
+    while (gatePassLog.some(gp => String(gp.id) === String(currentGPNum))) {
+        currentGPNum++;
+    }
+
+    // 3. Ab jo 'currentGPNum' milega wo 100% unique hoga
+    const gatePassRecord = {
+        id: currentGPNum, 
+        date: new Date().toISOString(),
+    clients: [...addedClientsForGatePass], riderName: riderName, numberPlate: numberPlate || 'N/A', outTime: outTime || 'N/A', status: document.getElementById('gp-status').value || 'Open', items: [] };
 
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
+        // Agla number hamesha current unique number se ek bara hona chahiye
         appSettings.nextGatePassNumber = currentGPNum + 1;
         await saveSettings();
         gatePassLog.push(gatePassRecord);
@@ -14461,11 +14223,12 @@ function renderOpenGatePasses() {
     });
 
     if (openGatePasses.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 15px;">Koi Active (Open) Gate Pass nahi mila.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 15px;">Koi Active (Open) Gate Pass nahi mila.</td></tr>';
         return;
     }
 
-    openGatePasses.forEach(gp => {
+    // Latest (Naye) records ko upar dikhane ke liye reverse() lagaya hai
+    [...openGatePasses].reverse().forEach(gp => {
         // Tamam customers ke naam ek sath display karne ke liye
         const clientsText = Array.isArray(gp.clients) 
             ? gp.clients.map(c => c.customer || 'N/A').join('<br>') 
@@ -14484,10 +14247,117 @@ function renderOpenGatePasses() {
             <td>${gp.numberPlate || 'N/A'}</td>
             <td>${clientsText}</td>
             <td style="color: var(--accent-color); font-weight: bold;">${itemsText}</td>
+            <td>
+                <!-- NAYE ACTIONS BUTTONS -->
+                <div style="display:flex; gap:5px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-info btn-sm" onclick="reprintGatePass('${gp.id}')">A4 PDF</button>
+                    <button type="button" class="btn btn-primary btn-sm" onclick="reprintGatePassThermal('${gp.id}')">Thermal PDF</button>
+                    <button type="button" class="btn btn-warning btn-sm" onclick="editGatePass('${gp.id}')">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteGatePass('${gp.id}')">Delete</button>
+                </div>
+            </td>
         `;
         tbody.appendChild(row);
     });
 }
+
+
+// =========================================================
+// MASTER EDIT DEMAND LOGIC (Unified Version)
+// =========================================================
+
+// 1. Modal Kholne aur Data bharne ka function
+function editDemandRecord(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) {
+        alert("Record nahi mila!");
+        return;
+    }
+
+    // Modal ke fields ko fill karna
+    const idField = document.getElementById('edit-demand-id');
+    const custField = document.getElementById('edit-d-customer');
+    const demandField = document.getElementById('edit-d-demand');
+    const itemField = document.getElementById('edit-d-item-name');
+
+    if(idField) idField.value = id;
+    if(custField) custField.value = record.customer || '';
+
+    // Qty Dropdown ko populate karna takay list nazar aaye
+    populateDemandQtyDropdown(); 
+    if(demandField) demandField.value = record.demand || "";
+
+    // Item strictly "Alo"
+    if (itemField) {
+        itemField.innerHTML = '<option value="Alo" selected>Alo</option>';
+        itemField.disabled = true;
+    }
+
+    // Modal ko show karna
+    const modal = document.getElementById('edit-demand-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        console.error("Edit Modal 'edit-demand-modal' not found in HTML!");
+    }
+}
+
+// 2. Data Save karne ka function (With Automatic Worker Lookup)
+async function saveUpdatedDemand() {
+    const id = document.getElementById('edit-demand-id').value;
+    const customerName = document.getElementById('edit-d-customer').value.trim();
+    const demandQty = parseFloat(document.getElementById('edit-d-demand').value);
+
+    if (!customerName || isNaN(demandQty)) {
+        alert("Customer Name aur Demand Qty lazmi darj karein!");
+        return;
+    }
+
+    const recordIndex = demandRecords.findIndex(r => r.id === id);
+    if (recordIndex === -1) {
+        alert("Record database mein nahi mila.");
+        return;
+    }
+
+    // --- AUTOMATIC WORKER LOOKUP ---
+    // Customer list mein se check karna ke is bande ka worker kaun hai
+    let matchedWorker = null;
+    if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+        const customerProfile = savedCustomersList.find(c => c.name.toLowerCase() === customerName.toLowerCase());
+        if (customerProfile && customerProfile.worker) {
+            matchedWorker = customerProfile.worker; 
+        }
+    }
+
+    // Array update karein
+    demandRecords[recordIndex].customer = customerName;
+    demandRecords[recordIndex].demand = demandQty;
+    demandRecords[recordIndex].worker = matchedWorker; // Auto-assigned from profile
+
+    // Calculations update karein (Price lookup)
+    const price = demandRecords[recordIndex].price || 0;
+    demandRecords[recordIndex].bill = demandQty * price;
+    demandRecords[recordIndex].netBalance = (demandRecords[recordIndex].bill + (demandRecords[recordIndex].oldBalance || 0)) - (demandRecords[recordIndex].recovery || 0);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        alert("Demand Record kamyabi se update ho gaya!");
+        closeEditDemandModal();
+        
+        // Dono tables ko refresh karein
+        if(typeof renderDemandRecord === 'function') renderDemandRecord();
+        if(typeof renderRecentDemands === 'function') renderRecentDemands();
+        if(typeof renderDemandRecordTable === 'function') renderDemandRecordTable();
+
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
 
 </script>
 <!-- EDIT CASH TRANSACTION MODAL -->
@@ -14572,9 +14442,8 @@ function renderOpenGatePasses() {
 
             <label>Demand (Qty):</label>
             <select id="edit-d-demand" class="form-control"></select>
-
-            <label>Assign Worker:</label>
-            <select id="edit-d-worker" class="form-control"></select>
+            
+            <!-- Assign Worker option yahan se hata diya gaya hai -->
         </div>
         <div class="manage-buttons" style="margin-top: 20px;">
             <button class="btn btn-success" onclick="saveUpdatedDemand()">Save Update</button>
