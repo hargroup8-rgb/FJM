@@ -1543,6 +1543,8 @@ body,
             <!-- Naya Code (Is se replace karein): -->
 <label>Customer Name:</label>
 <input type="text" id="d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off" onclick="try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}">
+<!-- YEH NEECHE WAALI LINE ADD KAREIN -->
+<datalist id="customer-names-list"></datalist>
         
 <!-- YAHAN NAYA FROZEN ITEM ADD KIYA GAYA HAI -->
 <label>Item Name:</label>
@@ -4430,7 +4432,6 @@ function populateCustomerWorkerDropdown() {
     }
 }
 
-// Customer ko save ya update karne ka function (with Try-Catch Error tracking)
 async function saveNewCustomer() {
     try {
         const workerId = document.getElementById('cust-worker').value;
@@ -4450,7 +4451,7 @@ async function saveNewCustomer() {
         if (editingCustomerId) {
             const index = savedCustomersList.findIndex(c => c.id === editingCustomerId);
             if (index !== -1) {
-                savedCustomersList[index].item = "Alo"; // Force to Alo
+                savedCustomersList[index].item = "Alo";
                 savedCustomersList[index].name = name;
                 savedCustomersList[index].phone = phone;
                 savedCustomersList[index].address = address;
@@ -4462,7 +4463,7 @@ async function saveNewCustomer() {
             const newCust = {
                 id: 'cust_' + Date.now(),
                 code: "CUST-" + appSettings.nextCustomerCode,
-                item: "Alo", // Force to Alo
+                item: "Alo",
                 name: name,
                 phone: phone,
                 address: address || 'N/A',
@@ -4476,6 +4477,12 @@ async function saveNewCustomer() {
         }
 
         await saveData(getUserSpecificKey('customers_list'), savedCustomersList);
+        
+        // Demand module ki dropdown list ko foran update karein
+        if (typeof populateCustomerNamesDatalist === 'function') {
+            populateCustomerNamesDatalist();
+        }
+
         alert("Customer data kamyabi se save ho gaya!");
         clearCustomerForm();
         renderCustomerTable();
@@ -14783,10 +14790,20 @@ function populatePendingDemandsDropdown() {
 }
 function handlePendingDemandSelection() {
     const select = document.getElementById('dr-pending-select');
-    const selectedId = select.value;
+    const selectedId = select ? select.value : '';
 
     if (!selectedId) {
-        // (Baaki code wesa hi rahe...)
+        // Clear all form input fields if no customer is selected
+        if (document.getElementById('dr-display-date')) document.getElementById('dr-display-date').value = '';
+        if (document.getElementById('dr-display-customer')) document.getElementById('dr-display-customer').value = '';
+        if (document.getElementById('dr-display-item')) document.getElementById('dr-display-item').value = '';
+        if (document.getElementById('dr-display-qty')) document.getElementById('dr-display-qty').value = '';
+        if (document.getElementById('dr-rate')) document.getElementById('dr-rate').value = '';
+        if (document.getElementById('dr-bill')) document.getElementById('dr-bill').value = '';
+        if (document.getElementById('dr-old-balance')) document.getElementById('dr-old-balance').value = '';
+        if (document.getElementById('dr-recovery')) document.getElementById('dr-recovery').value = '';
+        if (document.getElementById('dr-received-by')) document.getElementById('dr-received-by').value = '';
+        if (document.getElementById('dr-net-balance')) document.getElementById('dr-net-balance').value = '';
         return;
     }
 
@@ -14797,21 +14814,15 @@ function handlePendingDemandSelection() {
         document.getElementById('dr-display-item').value = record.itemName || '';
         document.getElementById('dr-display-qty').value = record.demand || 0;
 
-        // --- YEH NAYA CODE ADD KAREIN ---
         let autoRate = 0;
-        
-        // savedCustomersList se price dhoondna
         if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
-            const customerProfile = savedCustomersList.find(c => c.name.toLowerCase() === record.customer.toLowerCase());
+            const customerProfile = savedCustomersList.find(c => c.name.toLowerCase() === (record.customer || '').toLowerCase());
             if (customerProfile && customerProfile.price) {
                 autoRate = customerProfile.price; 
             }
         }
         
-        // Rate field mein value set karna
         document.getElementById('dr-rate').value = autoRate.toFixed(2);
-        
-        // Calculations ko trigger karna
         calculateDemandRecordMath();
     }
 }
@@ -14840,8 +14851,6 @@ async function submitDemandRecord() {
         return;
     }
 
-
-    
     const rate = parseFloat(document.getElementById('dr-rate').value) || 0;
     const bill = parseFloat(document.getElementById('dr-bill').value) || 0;
     const oldBalance = parseFloat(document.getElementById('dr-old-balance').value) || 0;
@@ -14859,7 +14868,6 @@ async function submitDemandRecord() {
         return;
     }
 
-    // Original entry ko financial maths aur processed state ke sath update karna
     const record = demandRecords[recordIndex];
     record.rate = rate;
     record.bill = bill;
@@ -14867,33 +14875,31 @@ async function submitDemandRecord() {
     record.recovery = recovery;
     record.netBalance = netBalance;
     record.receivedBy = document.getElementById('dr-received-by').value.trim() || 'N/A'; 
-record.processed = true;
-record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
-    record.processed = true; // process confirm mark
+    record.processed = true;
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
 
-        // Firebase Cloud DB par updated demand Records sync karna
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
 
-        // Agar recovery shamil hai to cash book (Cash In) mein entry lagana
         if (recovery > 0) {
             addTransactionToCashBook(`Recovery Rcvd (S.No #${record.serialNo}) - ${record.customer}`, 'in', recovery, record.date, 'cb_dem_rec_' + record.id);
         }
 
         alert("Demand Record kamyabi se save ho gaya!");
 
-        // === AUTOMATIC PDF INVOICE DOWNLOAD ===
+        // Auto download PDF
         generateDemandRecordPDF(record);
 
-        // UI Forms aur Tables ko reload karna
+        // Populate dropdowns & clear form inputs
         populatePendingDemandsDropdown();
-        handlePendingDemandSelection(); // reset input fields
+        resetDemandRecordForm(); // <--- THIS CLEARS ALL FIELDS AUTOMATICALLY
         renderDemandRecordTable();
+        resetDemandRecordForm(); 
+
 
         refreshAll();
     } catch (e) {
@@ -17275,7 +17281,16 @@ function generateStockHistoryPDF(reportType) {
     doc.save(`Stock_Report_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
+function resetDemandRecordForm() {
+    // 1. Find the top "Select Customer" dropdown box
+    const select = document.getElementById('dr-pending-select');
 
+    // 2. Unselect the customer (set dropdown back to blank)
+    if (select) select.value = '';
+
+    // 3. Trigger Step 1's function so it clears all text boxes
+    handlePendingDemandSelection();
+}
 
 
 </script>
