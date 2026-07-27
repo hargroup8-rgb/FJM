@@ -1068,17 +1068,20 @@ body,
 
 
                     <!-- EXPENSE MODULE START -->
-<!-- Navigation Menu -->
 <div class="nav-item-dropdown" id="expense-nav-item">
     <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('expense-nav-item')">
         💸 Stock Management <span class="arrow">▼</span>
     </button>
     <div class="sub-tabs">
-        <button class="tab-link sub-tab" onclick="openModule(event, 'AddStock')">Add Stock</button> <!-- Name Changed -->
-        <button class="tab-link sub-tab" onclick="openModule(event, 'ExpenseHistory')">Stock History</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'AddStock')">Add Stock</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'AddedStockHistory')">Stock History</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'UsedStock')">Used Stock</button> <!-- Naya Button -->
+
+        
     </div>
 </div>
-<!-- EXPENSE MODULE END -->
+
+
 
                     <!-- GATE PASS DROPDOWN START -->
                     <div class="nav-item-dropdown" id="gate-pass-nav-item">
@@ -1121,7 +1124,16 @@ body,
 <button class="tab-link" onclick="openModule(event, 'RecoverySheet')">📄 Recovery Sheet</button>
 
 
-<button class="tab-link" onclick="openModule(event, 'MaalPurchase')">🛒 Purchase Maal</button>
+<!-- PURCHASE MAAL DROPDOWN MENU -->
+<div class="nav-item-dropdown" id="maal-purchase-nav-item">
+    <button class="tab-link dropdown-toggle" onclick="toggleSubMenu('maal-purchase-nav-item')">
+        🛒 Purchase Maal <span class="arrow">▼</span>
+    </button>
+    <div class="sub-tabs">
+        <button class="tab-link sub-tab" onclick="openModule(event, 'MaalPurchase')">Purchase Maal Entry</button>
+        <button class="tab-link sub-tab" onclick="openModule(event, 'StockOutModule')">📉 Stock Out</button>
+    </div>
+</div>
                     <button class="tab-link" onclick="openModule(event, 'Settings')">⚙️ Settings</button>
                     <button class="tab-link admin-only" onclick="openModule(event, 'AdminDashboard')">👑 Admin Dashboard</button>
                 </div>
@@ -1166,7 +1178,8 @@ body,
 
                 
 <!-- START NAYA RIDER MODULE 1: SIRF RIDER DETAILS -->
-<div id="RiderDetailsModule" class="module-content" style="display:none !important;">
+<div id="RiderDetailsModule" class="module-content">
+
     <h2 class="panel-title">🏍️ Rider Details</h2>
     <div class="manage-form">
         <h3>Add New Rider</h3>
@@ -1186,9 +1199,219 @@ body,
     </div>
 </div>
 <!-- END NAYA RIDER MODULE 1 -->
+<!-- START NEW MODULE: USED STOCK -->
+<div id="UsedStock" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">📉 Used Stock Management</h2>
+    
+    <div class="manage-form">
+        <h3>Record Used Stock (Stock Use Karein)</h3>
+        <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px; align-items: center;">
+            
+            <!-- Custom Searchable Dropdown with Search Bar -->
+            <label for="us-stock-search">Select Stock Item:</label>
+            <div class="custom-select-wrapper" style="position: relative; width: 100%; grid-column: 2 / 5;">
+                <!-- Visible Search Input acting as combobox -->
+                <input type="text" id="us-stock-search" class="form-control" placeholder="-- Select Available Stock --" onclick="toggleCustomSelect()" oninput="filterCustomSelect()" autocomplete="off" style="border: 1.5px solid var(--accent-color) !important; cursor: pointer; padding-right: 30px !important;">
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.7; font-size: 0.8rem;">▼</span>
+                
+                <!-- Hidden input to store actual values (With default attributes to avoid undefined errors) -->
+                <input type="hidden" id="us-stock-item" value="" data-remaining="0" data-category="">
+
+                <!-- Options List Container -->
+                <div id="us-stock-options-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    <!-- Options will be populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Assigned Worker Dropdown Selection -->
+            <label for="us-worker-select">Assigned Worker:</label>
+            <select id="us-worker-select" class="form-control">
+                <option value="">-- Select Worker --</option>
+            </select>
+
+            <!-- Naya Code (Yeh Paste Karein): -->
+<label for="us-vehicle-select">Vehicle Number:</label>
+<select id="us-vehicle-select" class="form-control">
+    <option value="">-- Select Vehicle Number --</option>
+</select>
+
+            <!-- Quantity Taken -->
+            <label for="us-quantity">Quantity Taken:</label>
+            <input type="number" id="us-quantity" class="form-control" placeholder="0" oninput="calculateUsedStockTotal()">
+
+            <!-- Unit Price -->
+            <label for="us-unit-price">Unit Price (Rs.):</label>
+            <input type="number" id="us-unit-price" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+
+            <!-- Total Price calculated automatically -->
+            <label>Total Value (Rs.):</label>
+            <input type="text" id="us-total-value" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; font-weight: bold; color: var(--success-color); cursor: not-allowed;">
+
+            <!-- Date -->
+            <label for="us-date">Date:</label>
+            <input type="date" id="us-date" class="form-control" style="grid-column: 2 / 5;">
+        </div>
+        
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button type="button" class="btn btn-success" onclick="saveUsedStock()" style="width: 100%;">Record Used Stock & Deduct</button>
+        </div>
+    </div>
+
+    <!-- Used Stock History Table -->
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>🕒 Used Stock History Log</h3>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <thead>
+    <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Product Name</th>
+        <th>Worker</th>
+<th>Vehicle Number</th>
+        <th>Qty Used</th>
+        <th style="color: #3B82F6;">Remaining Qty</th> <!-- YE NAYI HEADING HAI -->
+        <th>Unit Price</th>
+        <th>Total Value</th>
+        <th>Action</th>
+    </tr>
+</thead>
+                </tr>
+            </thead>
+            <tbody id="used-stock-history-tbody">
+                <!-- Data will load dynamically -->
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- END NEW MODULE: USED STOCK -->
+
+<!-- START MODULE: GATE PASS OPEN -->
+<div id="GatePass" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">📤 Gate Pass Open</h2>
+    
+    <div class="manage-form">
+        <h3>Add Clients to Gate Pass</h3>
+        <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: end;">
+            <div>
+                <label>Search Customer / S.No (In Warehouse):</label>
+                <input type="text" id="gp-customer-search" class="form-control" list="gp-demand-list" placeholder="Customer S.No ya Naam likhein...">
+                <datalist id="gp-demand-list"></datalist>
+            </div>
+            <button class="btn btn-primary" onclick="addClientToGatePassList()">Add Client</button>
+        </div>
+        
+        <div class="table-container" style="margin-top: 15px;">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        <th>Customer Name</th>
+                        <th>Demand Qty</th>
+                        <th>Bags Qty</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="gp-added-clients-tbody"></tbody>
+            </table>
+        </div>
+
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
+        
+        <h3>Gate Pass Details</h3>
+        <div class="form-grid">
+            <label>Select Rider:</label>
+            <select id="gp-rider-name" class="form-control"></select>
+            
+            <label>Vehicle Number:</label>
+            <select id="gp-number-plate" class="form-control"></select>
+            
+            <label>Out Time:</label>
+            <input type="time" id="gp-out-time" class="form-control">
+            
+            <label>Status:</label>
+            <select id="gp-status" class="form-control">
+                <option value="Open">🟢 Open</option>
+                <option value="Closed">⚪ Closed</option>
+            </select>
+        </div>
+        
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button id="btn-save-gatepass" class="btn btn-success" style="width: 100%;">Save & Generate Gate Pass</button>
+            <button id="btn-clear-gatepass-list" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">Clear Form</button>
+        </div>
+    </div>
+
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>Active (Open) Gate Passes</h3>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>GP #</th>
+                    <th>Out Time</th>
+                    <th>Rider</th>
+                    <th>Vehicle</th>
+                    <th>Clients</th>
+                    <th>Items</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="gp-open-history-tbody"></tbody>
+        </table>
+    </div>
+</div>
+<!-- END MODULE: GATE PASS OPEN -->
+
+<!-- START MODULE: GATE PASS HISTORY (CLOSE) -->
+<div id="GatePassHistory" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">🗄️ Gate Pass History</h2>
+    <div class="manage-form">
+        <h3>Filter Gate Pass Records</h3>
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto; align-items: end;">
+            <div>
+                <label>Search:</label>
+                <input type="text" id="gatepass-history-search" class="form-control" placeholder="GP #, Rider ya Client search karein...">
+            </div>
+            <div>
+                <label>From Date:</label>
+                <input type="date" id="gatepass-history-from" class="form-control">
+            </div>
+            <div>
+                <label>To Date:</label>
+                <input type="date" id="gatepass-history-to" class="form-control">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="btn-filter-gatepass-history" class="btn btn-primary">Search</button>
+                <button onclick="resetGatePassHistoryFilters()" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="table-container" style="margin-top: 20px;">
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>GP #</th>
+                    <th>Clients</th>
+                    <th>Dispatch Info</th>
+                    <th>Items</th>
+                    <th>Status</th>
+                    <th>In-Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="gatepass-history-tbody"></tbody>
+        </table>
+    </div>
+</div>
+<!-- END MODULE: GATE PASS HISTORY -->
+
 
 <!-- START NAYA VEHICLE MODULE 2: SIRF VEHICLE NUMBER -->
-<div id="VehicleDetailsModule" class="module-content" style="display:none !important;">
+<div id="VehicleDetailsModule" class="module-content">
+
     <h2 class="panel-title">🚛 Add Vehicle Number</h2>
     <div class="manage-form">
         <h3>Register New Vehicle</h3>
@@ -2542,208 +2765,132 @@ body,
 </div>
 <!-- END NEW MODULE: EXPENSE STOCK MODULE -->
 
-                <!-- START NEW MODULE: Expenses -->
-                <div id="AddStock" class="module-content">
-    <h2 class="panel-title">📦 Add New Stock</h2>
+            <!-- START NEW MODULE: ADD STOCK -->
+<div id="AddStock" class="module-content">
+    <h2 class="panel-title">📦 Add / Dispatch Stock (IN / OUT)</h2>
     <div class="manage-form">
-        <h3 id="stock-form-title">Add Stock Details</h3>
+        <h3 id="stock-form-title">Stock Transaction Details</h3>
         <div class="form-grid">
             <label for="stock-category">Category:</label>
             <div style="display: flex; gap: 10px;">
                 <select id="stock-category" class="form-control" style="flex-grow: 1;"></select>
-                <button id="btn-manage-categories" class="btn btn-info">Manage</button>
+                <button type="button" id="btn-manage-categories" class="btn btn-info" onclick="openCategoryModal()">Manage</button>
             </div>
             
-            <label for="stock-product-name">Product Name:</label>
-            <input type="text" id="stock-product-name" class="form-control" placeholder="E.g., HP Laptop">
+            <label for="stock-product-name">Product / Part Name:</label>
+            <input type="text" id="stock-product-name" class="form-control" placeholder="E.g., Tire, Battery">
+
+            <!-- Stock Type Fix: Hamesha Stock IN (Receive) hoga -->
+<input type="hidden" id="stock-type" value="in">
 
             <label for="stock-quantity">Quantity:</label>
-            <input type="number" id="stock-quantity" class="form-control" placeholder="0">
+            <input type="number" id="stock-quantity" class="form-control" placeholder="0" oninput="calculateStockValue()">
+            
+            <label for="stock-price">Price Per Unit (Rs.):</label>
+            <input type="number" id="stock-price" class="form-control" placeholder="0.00" oninput="calculateStockValue()">
+
+            <label>Total Value:</label>
+            <input type="text" id="stock-total-value" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; font-weight:bold; color:var(--success-color);">
 
             <label for="stock-date">Date:</label>
             <input type="date" id="stock-date" class="form-control">
         </div>
-        <div class="manage-buttons">
-            <button id="btn-add-stock" class="btn btn-primary" onclick="addNewStock()">Add Stock</button>
-        <label for="stock-price">Price Per Unit (Rs.):</label>
-<input type="number" id="stock-price" class="form-control" placeholder="0.00" oninput="calculateStockValue()">
-
-<label>Total Value:</label>
-<input type="text" id="stock-total-value" class="form-control" readonly style="background: rgba(0,0,0,0.2);">
-        
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button type="button" id="btn-add-stock" class="btn btn-success" onclick="addNewStock()" style="width: 100%;">Save Stock Entry</button>
         </div>
     </div>
 </div>
-                <div id="ExpenseHistory" class="module-content">
-                    <h2 class="panel-title">Expense History & Reports</h2>
-                    
-                    <!-- EXPENSE FILTERS (Category & Date Range) -->
-                    <div class="manage-form" style="margin-bottom: 20px;">
-                        <div class="form-grid" style="grid-template-columns: auto 1fr auto 1fr auto 1fr; gap: 10px; align-items: center;"> 
-                            <label for="expense-history-category-filter">Category:</label>
-                            <select id="expense-history-category-filter" class="form-control" onchange="renderExpensesList()">
-                                <option value="All">All Categories</option>
-                                <!-- Categories will be populated by JS -->
-                            </select>
 
-                            <label for="expense-history-from-date">From:</label>
-                            <input type="date" id="expense-history-from-date" class="form-control" onchange="renderExpensesList()">
-
-                            <label for="expense-history-to-date">To:</label>
-                            <input type="date" id="expense-history-to-date" class="form-control" onchange="renderExpensesList()">
-                        </div>
-                        <!-- Area to show total of filtered category -->
-                        <div style="margin-top: 10px; font-weight: bold; font-size: 1.1rem; color: var(--info-color);">
-                            Total <span id="expense-filter-name">Expenses</span>: <span id="expense-filter-total">Rs. 0.00</span>
-                        </div>
-                    </div>
-
-                    <div class="report-buttons">
-                        <button id="btn-daily-expense-report" class="btn btn-primary">Daily Report</button>
-                        <button id="btn-weekly-expense-report" class="btn btn-primary">Weekly Report</button>
-                        <button id="btn-monthly-expense-report" class="btn btn-primary">Monthly Report</button>
-                    </div>
-                    <div class="table-container">
-                        <table class="cart-table">
-                            <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
-                            <tbody id="expense-history-table-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <!-- END NEW MODULE: Expenses -->
-
- <!-- Simple Gate Pass Module -->
-<div id="GatePass" class="module-content">
-    <h2 class="panel-title">📤 Gate Pass Open</h2>
-
-    <div class="manage-form">
-        
-        <!-- 1. Rider Details (Ab sab se upar hai) -->
-        <h3>Rider Details</h3>
-        <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-            <div>
-                <label>Rider Name:</label>
-                <select id="gp-rider-name" class="form-control">
-                    <option value="">-- Select Rider --</option>
-                </select>
-            </div>
-            <div>
-                <label>Vehicle Number:</label>
-                <select id="gp-number-plate" class="form-control">
-                    <option value="">-- Select Vehicle --</option>
-                </select>
-            </div>
-            <div>
-                <label>Out Time:</label>
-                <input type="time" id="gp-out-time" class="form-control">
-            </div>
-            <div>
-    <label>Status:</label>
-    <!-- Disabled lagane se ye locked ho jayega aur sirf Open rahega -->
-    <select id="gp-status" class="form-control" disabled style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;">
-        <option value="Open">🟢 Open</option>
-    </select>
-</div>
-        </div>
-
-        <hr style="border-color: var(--border-color); margin: 20px 0;">
-
-<!-- 2. Customer Selection Area -->
-        <h3>Select Customers</h3>
-        <div class="form-grid" style="grid-template-columns: 1fr auto; gap: 15px; align-items: center; margin-bottom: 10px;">
-            <div>
-                <label>Search Customer (S.No or Name):</label>
-                <input type="text" id="gp-customer-search" class="form-control" list="gp-demand-list" placeholder="S.No ya Naam likh kar search karein...">
-                <datalist id="gp-demand-list"></datalist>
-            </div>
-            <button class="btn btn-primary" onclick="addClientToGatePassList()" style="margin-top: 15px;">Add Customer</button>
-        </div>
-
-        <!-- Selected Customers Table (TASWEER JAISE COLUMNS) -->
-        <div class="table-container" style="margin-top: 10px; margin-bottom: 20px;">
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th>CUSTOMER CODE</th>
-                        <th>CUSTOMER NAME</th>
-                        <th>DEMAND QTY</th>
-                        <th>BAGS QTY</th>
-                        <th>ACTION</th>
-                    </tr>
-                </thead>
-                <tbody id="gp-added-clients-tbody">
-                    <!-- Add kiye gaye customers yahan show honge -->
-                </tbody>
-            </table>
-        </div>
-
-        <hr style="border-color: var(--border-color); margin: 20px 0;">
-
-        <!-- Save Button (Items wala hissa hata diya gaya hai) -->
-        <div class="manage-buttons" style="margin-top: 20px; display: flex; gap: 10px;">
-            <button class="btn btn-success" id="btn-save-gatepass" style="flex-grow: 1;">Save & Generate Gate Pass</button>
-            <button class="btn btn-secondary" id="btn-clear-gatepass-list">Clear List</button>
-        </div>    
-    </div> <!-- Closes .manage-form -->      
-    <!-- Naya Section: Open Gate Passes History -->
-        <div class="table-container" style="margin-top: 20px;">
-            <h3>🕒 Active (Open) Gate Passes</h3>
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th>GP ID</th>
-                        <th>Out Time</th>
-                        <th>Rider Name</th>
-                        <th>Vehicle Number</th>
-                        <th>Customer Name</th>
-                        <th>Item Name</th>
-                        <th>Actions</th> <!-- NAYA COLUMN -->
-                    </tr>
-                </thead>
-                <tbody id="gp-open-history-tbody">
-                    <!-- Javascript se dynamically populate hoga -->
-                </tbody>
-            </table>
-        </div>      
-</div> <!-- Closes #GatePass (Yeh tag miss ho gaya tha) -->
-
-                <!-- START GATE PASS HISTORY & REPORTS MODULE -->
-<div id="GatePassHistory" class="module-content">
-<h2 class="panel-title">Gate Pass Close</h2>
+<!-- START NEW MODULE: ADDED STOCK HISTORY -->
+<div id="AddedStockHistory" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">🕒 Stock History & Ledger</h2>
     
-    <!-- Search and Date Filter Controls -->
-    <div class="manage-form">
-        <div class="form-grid" style="grid-template-columns: 2fr 1fr 1fr auto auto; gap: 10px; align-items: center;">
-            <input type="text" id="gatepass-history-search" class="form-control" placeholder="Search by Client Name, Rider, or Gate Pass ID...">
-            <input type="date" id="gatepass-history-from" class="form-control">
-            <input type="date" id="gatepass-history-to" class="form-control">
-            <button id="btn-filter-gatepass-history" class="btn btn-primary" onclick="renderGatePassHistory()">Search / Filter</button>
-            <button class="btn btn-secondary" onclick="resetGatePassHistoryFilters()">Reset</button>
+    <div class="manage-form" style="margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
+        <!-- Category Dropdown -->
+        <div class="form-grid" style="grid-template-columns: 1fr;">
+            <label>🔍 Select Category to View Ledger:</label>
+            <select id="added-stock-search-select" class="form-control" onchange="renderAddedStockHistoryTable()" style="border: 2px solid var(--accent-color);">
+                <option value="">-- View All Categories (Sab Dekhein) --</option>
+            </select>
+        </div>
+
+        <!-- NAYE PDF REPORT BUTTONS AUR DATE FILTERS -->
+        <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <h4 style="margin-top:0; color:var(--text-light);">📄 Generate Stock Ledger PDF Reports</h4>
+            
+            <!-- Daily, Weekly, Monthly Buttons -->
+            <div class="report-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                <button type="button" class="btn btn-outline" onclick="generateStockHistoryPDF('daily')">📅 Daily PDF</button>
+                <button type="button" class="btn btn-outline" onclick="generateStockHistoryPDF('weekly')">📆 Weekly PDF</button>
+                <button type="button" class="btn btn-outline" onclick="generateStockHistoryPDF('monthly')">🗓️ Monthly PDF</button>
+            </div>
+
+            <!-- Custom Date Selection -->
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: flex-end;">
+                <div>
+                    <label>From Date:</label>
+                    <input type="date" id="ash-from-date" class="form-control">
+                </div>
+                <div>
+                    <label>To Date:</label>
+                    <input type="date" id="ash-to-date" class="form-control">
+                </div>
+                <div>
+                    <button type="button" class="btn btn-info" onclick="generateStockHistoryPDF('custom')">🔍 Date-Wise PDF Report</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div id="added-stock-summary" class="dashboard-grid" style="margin-top: 15px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); display: none;">
+            <div class="dashboard-card" style="padding: 15px; text-align: center;">
+                <p class="card-title">Total Stock IN</p>
+                <h2 id="ash-total-in" class="card-value success">0</h2>
+            </div>
+            <div class="dashboard-card" style="padding: 15px; text-align: center;">
+                <p class="card-title">Sold Stock (OUT)</p>
+                <h2 id="ash-total-out" class="card-value danger">0</h2>
+            </div>
+            <div class="dashboard-card" style="padding: 15px; text-align: center;">
+                <p class="card-title">Available Stock</p>
+                <h2 id="ash-remaining" class="card-value info">0</h2>
+            </div>
+            <div class="dashboard-card" style="padding: 15px; text-align: center;">
+                <p class="card-title">Total Value (IN)</p>
+                <h2 id="ash-total-val" class="card-value warning">Rs. 0.00</h2>
+            </div>
         </div>
     </div>
 
-    <!-- Gate Pass History Table -->
-    <div class="table-container" style="flex-grow: 1; overflow-y: auto;">
+    <!-- DETAILED HISTORY TABLE -->
+
+    <div class="table-container">
         <table class="cart-table">
-           <thead>
+            <thead>
+                <tr>
+        <thead>
     <tr>
         <th>Date</th>
-        <th>Gate Pass ID</th>
-        <th>Client(s)</th>
-        <th>Rider Details</th>
-        <th>Items</th>
-        <th>Status</th>
-        <th>In-Time</th> <!-- NAYA COLUMN -->
-        <th>Actions</th>
+                    <th>Category</th>
+                    <th>Product Name</th>
+                    <th>Worker</th>
+                    <th>Vehicle Number</th>
+                    <th>QTY</th>
+                    <th style="color: var(--info-color);">Stock Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total Value</th>
+                    <th>Action</th>
+                </tr>
     </tr>
 </thead>
-            <tbody id="gatepass-history-tbody">
-                <!-- Data dynamically populated by JS -->
+                </tr>
+            </thead>
+            <tbody id="added-stock-history-tbody">
+                <!-- History yahan load hogi -->
             </tbody>
         </table>
     </div>
 </div>
-<!-- END GATE PASS HISTORY & REPORTS MODULE -->
 
 <!-- START LABOR MANAGEMENT MODULES -->
 <div id="AddLabor" class="module-content">
@@ -3020,6 +3167,7 @@ body,
         </div>
     </div>
 </div>
+<!-- START MODULE: PURCHASE MAAL ENTRY -->
 <div id="MaalPurchase" class="module-content">
     <h2 class="panel-title">🛒 Purchase Maal Entry</h2>
     <div class="manage-form">
@@ -3027,7 +3175,6 @@ body,
             <div>
                 <label>Select Item:</label>
                 <input type="text" id="pc-item" class="form-control" placeholder="Item ka naam likhein (e.g. Sariya)">
-
             </div>
             <div>
                 <label>Purchaser Name:</label>
@@ -3035,7 +3182,7 @@ body,
             </div>
             <div>
                 <label>Bags:</label>
-                <input type="number" id="pc-bags" class="form-control" placeholder="0">
+                <input type="number" id="pc-bags" class="form-control" oninput="calculatePurchaseBill()" placeholder="0">
             </div>
             <div>
                 <label>Total Weight (Kg):</label>
@@ -3046,42 +3193,243 @@ body,
                 <input type="number" id="pc-rate" class="form-control" oninput="calculatePurchaseBill()" placeholder="40">
             </div>
             <div>
-                <label>Total Bill:</label>
-                <input type="number" id="pc-bill" class="form-control" readonly>
+                <label>Labor (Per Bag):</label>
+                <input type="number" id="pc-labor" class="form-control" oninput="calculatePurchaseBill()" value="15" placeholder="15">
             </div>
             <div>
-                <label>Pay:</label>
+                <label>Transport (Per Bag):</label>
+                <input type="number" id="pc-transport" class="form-control" oninput="calculatePurchaseBill()" value="100" placeholder="100">
+            </div>
+            <div>
+                <label>Total Bill:</label>
+                <input type="number" id="pc-bill" class="form-control" readonly style="font-weight:bold; color:var(--text-light);">
+            </div>
+            <div>
+                <label>Payment Method:</label>
+                <select id="pc-pay-mode" class="form-control">
+                    <option value="Cash">💵 Cash</option>
+                    <option value="Online">💳 Online (Bank/Wallet)</option>
+                </select>
+            </div>
+            <div>
+                <label>Pay Amount:</label>
                 <input type="number" id="pc-pay" class="form-control" oninput="calculatePurchaseBill()" placeholder="0">
             </div>
             <div>
                 <label>Balance:</label>
-                <input type="number" id="pc-balance" class="form-control" readonly>
+                <input type="number" id="pc-balance" class="form-control" readonly style="font-weight:bold; color:var(--danger-color);">
             </div>
         </div>
-        <button class="btn btn-success" onclick="saveMaalPurchase()" style="margin-top:20px; width:100%;">Save Record</button>
+        <button class="btn btn-success" onclick="saveMaalPurchase()" style="margin-top:20px; width:100%;">Save Purchase Record</button>
     </div>
-    <!-- Record Table (Updated with Item Name) -->
+
     <div class="table-container" style="margin-top: 20px;">
-        <h3>Purchase History</h3>
-        <table class="cart-table">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+        <h3 style="margin: 0;">Purchase History</h3>
+        <!-- Search Bar aur PDF Report Button -->
+        <div style="display: flex; gap: 10px; flex-grow: 1; max-width: 550px;">
+            <input type="text" id="pc-search-input" class="form-control" placeholder="🔍 Search by Purchaser Name or Item..." oninput="renderMaalPurchaseTable()">
+            <button class="btn btn-info" onclick="generatePurchaserMaalReportPDF()" style="white-space: nowrap;">📄 Purchaser PDF Report</button>
+        </div>
+    </div>
+
+    <table class="cart-table">
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Item</th> <!-- Naya Column -->
+                    <th>Item</th>
                     <th>Purchaser</th>
                     <th>Bags</th>
-                    <th>Weight (Kg)</th>
+                    <th>Weight</th>
                     <th>Rate</th>
+                    <th>Labor</th>
+                    <th>Transport</th>
                     <th>Total Bill</th>
                     <th>Paid</th>
                     <th>Balance</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="maal-purchase-body"></tbody>
         </table>
     </div>
 </div>
+
+<!-- MODAL 1: ADD PAYMENT MODAL -->
+<div id="maal-payment-modal" class="modal-backdrop">
+    <div class="modal-content">
+        <h3 class="panel-title">💰 Add Payment to Supplier</h3>
+        <input type="hidden" id="mp-pay-id">
+        <div class="form-grid" style="grid-template-columns: 140px 1fr; gap: 15px;">
+            <label>Purchaser Name:</label>
+            <span id="mp-pay-name" style="font-weight: bold; color: var(--accent-color);"></span>
+
+            <label>Current Balance:</label>
+            <span id="mp-pay-current-bal" style="font-weight: bold; color: var(--danger-color); font-size: 1.1rem;"></span>
+
+            <label for="mp-pay-amount">Payment Amount:</label>
+            <input type="number" id="mp-pay-amount" class="form-control" placeholder="Enter amount">
+
+            <label for="mp-pay-method">Payment Method:</label>
+            <select id="mp-pay-method" class="form-control">
+                <option value="Cash">💵 Cash</option>
+                <option value="Online">💳 Online (Bank/Wallet)</option>
+            </select>
+
+            <label for="mp-pay-date">Payment Date:</label>
+            <input type="date" id="mp-pay-date" class="form-control">
+        </div>
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button class="btn btn-success" onclick="submitMaalPayment()">Save Payment & Auto-Download PDF</button>
+            <button class="btn btn-secondary" onclick="closeMaalPaymentModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: EDIT PURCHASE RECORD MODAL -->
+<div id="edit-maal-purchase-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 700px;">
+        <h3 class="panel-title">✏️ Edit Purchase Record</h3>
+        <input type="hidden" id="edit-mp-id">
+        <div class="form-grid" style="grid-template-columns: 140px 1fr 140px 1fr; gap: 12px;">
+            <label>Select Item:</label>
+            <input type="text" id="edit-mp-item" class="form-control">
+
+            <label>Purchaser Name:</label>
+            <input type="text" id="edit-mp-name" class="form-control">
+
+            <label>Bags:</label>
+            <input type="number" id="edit-mp-bags" class="form-control" oninput="calcEditMaalMath()">
+
+            <label>Total Weight (Kg):</label>
+            <input type="number" id="edit-mp-weight" class="form-control" oninput="calcEditMaalMath()">
+
+            <label>Rate (Per Kg):</label>
+            <input type="number" id="edit-mp-rate" class="form-control" oninput="calcEditMaalMath()">
+
+            <label>Labor (Per Bag):</label>
+            <input type="number" id="edit-mp-labor" class="form-control" oninput="calcEditMaalMath()">
+
+            <label>Transport (Per Bag):</label>
+            <input type="number" id="edit-mp-transport" class="form-control" oninput="calcEditMaalMath()">
+
+            <label>Total Bill:</label>
+            <input type="number" id="edit-mp-bill" class="form-control" readonly style="font-weight:bold;">
+
+            <label>Paid Amount:</label>
+            <input type="number" id="edit-mp-pay" class="form-control" oninput="calcEditMaalMath()">
+
+            <label>Balance:</label>
+            <input type="number" id="edit-mp-balance" class="form-control" readonly style="font-weight:bold; color:var(--danger-color);">
+        </div>
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button class="btn btn-success" onclick="saveEditedMaalPurchase()">Save Update Changes</button>
+            <button class="btn btn-secondary" onclick="closeEditMaalModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+<!-- END MODULE: PURCHASE MAAL ENTRY -->
+
+
+<!-- ========================================================= -->
+<!-- START NEW MODULE: STOCK OUT MODULE                         -->
+<!-- ========================================================= -->
+<div id="StockOutModule" class="module-content" style="display:none !important;">
+    <h2 class="panel-title">📉 Stock Out Management</h2>
+
+    <div class="manage-form" style="border-left: 5px solid var(--danger-color);">
+        <h3>Record Stock Out (Dispatched Maal)</h3>
+        <div class="form-grid" style="display: grid; grid-template-columns: 140px 1fr 140px 1fr; gap: 12px; align-items: center;">
+            <label>Stock Out ID:</label>
+            <input type="text" id="so-display-id" class="form-control" readonly placeholder="Auto-Generated" style="background: rgba(255,255,255,0.05); font-weight: bold; color: var(--accent-color); cursor: not-allowed;">
+
+            <label>Customer Name:</label>
+            <input type="text" id="so-customer-name" class="form-control" placeholder="Customer / Recipient Name">
+
+            <label>Select Item:</label>
+            <select id="so-item-select" class="form-control" onchange="calculateStockOutMath()">
+                <option value="">-- Select Available Item --</option>
+            </select>
+
+            <label>Bags Out (Quantity):</label>
+            <input type="number" id="so-bags-out" class="form-control" placeholder="0" oninput="calculateStockOutMath()">
+
+            <label>Rate Per Bag (Rs):</label>
+            <input type="number" id="so-rate-per-bag" class="form-control" placeholder="0.00" oninput="calculateStockOutMath()">
+
+            <label>Remaining Bags:</label>
+            <input type="text" id="so-remaining-bags" class="form-control" readonly placeholder="0" style="background: rgba(255,255,255,0.05); font-weight: bold; color: var(--info-color); cursor: not-allowed;">
+
+            <label>Dispatched Amount:</label>
+            <input type="text" id="so-dispatched-amount" class="form-control" readonly placeholder="Rs. 0.00" style="background: rgba(255,255,255,0.05); font-weight: bold; color: var(--danger-color); cursor: not-allowed;">
+
+            <label>Total All Bags Amount:</label>
+            <input type="text" id="so-total-all-bags-amount" class="form-control" readonly placeholder="Rs. 0.00" style="background: rgba(255,255,255,0.05); font-weight: bold; color: var(--success-color); cursor: not-allowed;">
+
+            <label>Date:</label>
+            <input type="date" id="so-date" class="form-control" style="grid-column: 2 / 5;">
+        </div>
+
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button class="btn btn-danger" onclick="saveStockOutRecord()" style="width:100%;">Record Stock Out & Download PDF</button>
+        </div>
+    </div>
+
+    <!-- Stock Out History Table -->
+    <div class="table-container" style="margin-top: 20px;">
+        <h3>📉 Stock Out History Log</h3>
+        <table class="cart-table">
+            <thead>
+                <tr>
+                    <th>Stock Out ID</th>
+                    <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Item Name</th>
+                    <th>Bags Out</th>
+                    <th style="color: var(--info-color);">Remaining Bags</th>
+                    <th>Dispatched Amount</th>
+                    <th>Total All Bags Amount</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="so-history-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- MODAL: EDIT STOCK OUT RECORD -->
+<div id="edit-stock-out-modal" class="modal-backdrop">
+    <div class="modal-content">
+        <h3 class="panel-title">✏️ Edit Stock Out Record</h3>
+        <input type="hidden" id="edit-so-id">
+        <div class="form-grid" style="grid-template-columns: 140px 1fr; gap: 12px;">
+            <label>Stock Out ID:</label>
+            <input type="text" id="edit-so-display-id" class="form-control" readonly style="background: rgba(255,255,255,0.05);">
+
+            <label>Customer Name:</label>
+            <input type="text" id="edit-so-customer" class="form-control">
+
+            <label>Bags Out:</label>
+            <input type="number" id="edit-so-bags" class="form-control" oninput="calcEditStockOutMath()">
+
+            <label>Rate Per Bag:</label>
+            <input type="number" id="edit-so-rate" class="form-control" oninput="calcEditStockOutMath()">
+
+            <label>Dispatched Amount:</label>
+            <input type="text" id="edit-so-dispatched-amount" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight: bold; color: var(--danger-color);">
+
+            <label>Date:</label>
+            <input type="date" id="edit-so-date" class="form-control">
+        </div>
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button class="btn btn-success" onclick="saveEditedStockOut()">Save Changes</button>
+            <button class="btn btn-secondary" onclick="closeEditStockOutModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+
 <!-- START UPDATED MODULE: AUTOMATIC CODE, ITEM, ASSIGNED WORKER & PRICE -->
 <div id="AddCustomer" class="module-content" style="display:none !important;">
     <h2 class="panel-title">👥 Add / Manage Customers</h2>
@@ -3323,7 +3671,7 @@ body,
         <!-- Form to add a new category -->
         <div class="form-grid" style="grid-template-columns: 1fr auto; margin-bottom: 20px;">
             <input type="text" id="new-category-name" class="form-control" placeholder="Enter new category name...">
-            <button id="btn-add-category" class="btn btn-success">Add Category</button>
+<button type="button" id="btn-add-category" class="btn btn-success" onclick="addCategory()">Add Category</button>
         </div>
 
         <!-- List of existing categories -->
@@ -3341,19 +3689,19 @@ body,
         </div>
 
         <div class="manage-buttons">
-            <button id="btn-close-category-modal" class="btn btn-secondary">Close</button>
+<button type="button" id="btn-close-category-modal" class="btn btn-secondary" onclick="closeCategoryModal()">Close</button>
         </div>
     </div>
 </div>
 
 <script>
 
-
+let currentStockReportType = 'daily'; // Default filter state
 // ==========================================
 // DEMAND WORKERS MISSING FUNCTIONS FIX
 // ==========================================
 
-// 1. Naya worker save karne ka function
+// 1. Updated Worker Save Function (Triggers Used Stock dropdown instantly)
 async function saveDemandWorker() {
     const name = document.getElementById('worker-name').value.trim();
     const phone = document.getElementById('worker-phone').value.trim();
@@ -3378,7 +3726,6 @@ async function saveDemandWorker() {
 
     try {
         const userId = loggedInUser.id || loggedInUser.uid;
-        // Firebase Firestore mein user ki specific key ke sath save karna
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
             payload: JSON.stringify(demandWorkers)
         });
@@ -3386,9 +3733,37 @@ async function saveDemandWorker() {
         alert("Worker kamyabi se save ho gaya!");
         clearWorkerForm();
         renderDemandWorkersTable(); // Table ko update karein
+        
+        // Instant dropdown sync triggers (Updates Used Stock/Toolstock)
+        if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
+        if (typeof populateCustomerWorkerDropdown === 'function') populateCustomerWorkerDropdown();
+        if (typeof populateDemandWorkersDropdown === 'function') populateDemandWorkersDropdown();
+        if (typeof populateRecoveryWorkerDropdown === 'function') populateRecoveryWorkerDropdown();
     } catch (e) {
         console.error(e);
         alert("Error saving worker: " + e.message);
+    }
+}
+
+// 2. Updated Worker Delete Function
+async function deleteDemandWorker(id) {
+    if (!confirm("Kya aap waqai is worker ko delete karna chahte hain?")) return;
+    demandWorkers = demandWorkers.filter(w => w.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
+            payload: JSON.stringify(demandWorkers)
+        });
+        renderDemandWorkersTable();
+        alert("Worker delete ho gaya!");
+        
+        // Instant dropdown sync triggers (Updates Used Stock/Toolstock)
+        if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
+        if (typeof populateCustomerWorkerDropdown === 'function') populateCustomerWorkerDropdown();
+        if (typeof populateDemandWorkersDropdown === 'function') populateDemandWorkersDropdown();
+        if (typeof populateRecoveryWorkerDropdown === 'function') populateRecoveryWorkerDropdown();
+    } catch(e) {
+        alert("Error deleting worker: " + e.message);
     }
 }
 
@@ -5033,6 +5408,7 @@ const defaultProducts =[];
 let appSettings = {}, products = [], salesLog = [], demandRecords = [], users = [], sessions = [], notifications =[], expenses =[], expenseCategories = [], partialPaymentInvoices =[], purchasers = [], purchaseLog = [], cashBookLog =[], gatePassLog =[], sellReturnsLog =[], stockUpdatesLog =[], selectedCategory = "All", selectedProductIdToManage = null, selectedInvoiceId = null, currentImageBase64 = null, loggedInUser = null;
 let expenseStockInventory = []; // Live available stock track karne ke liye
 let expenseStockLog = [];       // Dispatched stock history ke liye
+let addedStockHistory = [];
 
 const { jsPDF } = window.jspdf;
 
@@ -7244,15 +7620,22 @@ function generateReturnReceiptPDF(returnId) {
     doc.save(`Return_Receipt_${returnLogEntry.id}.pdf`);
 }
 
-// --- EXPENSE FUNCTIONS ---
+// Expense Category Management Modal kholne ka function
+// Modal kholne ke liye
 function openCategoryModal() {
-    renderCategoryList();
-    document.getElementById('category-modal').style.display = 'flex';
+    renderCategoryList(); // Categories ki list load karega
+    const modal = document.getElementById('category-modal');
+    if (modal) {
+        modal.style.display = 'flex'; // Modal dikhaye ga
+    }
 }
 
+// Modal band karne ke liye
 function closeCategoryModal() {
-    document.getElementById('new-category-name').value = '';
-    document.getElementById('category-modal').style.display = 'none';
+    const modal = document.getElementById('category-modal');
+    if (modal) {
+        modal.style.display = 'none'; // Modal chupa dega
+    }
 }
 
 function renderCategoryList() {
@@ -7299,19 +7682,29 @@ function deleteCategory(categoryName) {
 function populateExpenseCategoryDropdowns() {
     const categorySelect = document.getElementById('expense-category');
     const historyFilterSelect = document.getElementById('expense-history-category-filter');
+    const stockCategorySelect = document.getElementById('stock-category'); 
+    const addedStockSearchSelect = document.getElementById('added-stock-search-select'); // <-- Naya Dropdown
     
-    categorySelect.innerHTML = '';
-    historyFilterSelect.innerHTML = '<option value="All">All Categories</option>';
+    if (categorySelect) categorySelect.innerHTML = '';
+    if (historyFilterSelect) historyFilterSelect.innerHTML = '<option value="All">All Categories</option>';
+    if (stockCategorySelect) stockCategorySelect.innerHTML = ''; 
+    
+    // Naye dropdown mein default option set karna
+    if (addedStockSearchSelect) addedStockSearchSelect.innerHTML = '<option value="">-- View All Categories --</option>'; 
 
     expenseCategories.forEach(category => {
         const option = document.createElement('option');
         option.value = category;
         option.textContent = category;
-        categorySelect.appendChild(option);
-        historyFilterSelect.appendChild(option.cloneNode(true));
+        
+        if (categorySelect) categorySelect.appendChild(option.cloneNode(true));
+        if (historyFilterSelect) historyFilterSelect.appendChild(option.cloneNode(true));
+        if (stockCategorySelect) stockCategorySelect.appendChild(option.cloneNode(true));
+        
+        // Naye dropdown mein bhi category add ho jayegi
+        if (addedStockSearchSelect) addedStockSearchSelect.appendChild(option.cloneNode(true)); 
     });
 }
-
 
 function generateExpenseVoucherPDF(expense) {
     if (!expense) return;
@@ -7492,6 +7885,10 @@ function saveExpenseChanges() {
 
 function renderExpensesList() {
     const tbody = document.getElementById('expense-history-table-body');
+    
+    // یہ لائن شامل کریں (Null Check)
+    if (!tbody) return; 
+    
     const filterSelect = document.getElementById('expense-history-category-filter');
     const categoryFilter = filterSelect ? filterSelect.value : 'All';
     
@@ -7550,7 +7947,7 @@ function renderExpensesList() {
         tbody.appendChild(row);
     });
 
-    if (filterNameDisplay) {
+    if (filterNameDisplay && totalDisplay) {
         let text = "Expenses";
         if (categoryFilter !== 'All') text = categoryFilter + " Expenses";
         totalDisplay.textContent = `${CURRENCY_SYMBOL}${totalAmount.toFixed(2)}`;
@@ -10618,6 +11015,9 @@ async function handleLogin() {
             
         }
 
+
+
+
     } catch(e) {
         console.error("Login Error:", e);
         alert("Ghalti: Username ya Password sahi nahi hai.");
@@ -11033,6 +11433,9 @@ async function editSaleInvoice(invoiceId) {  // <-- Yahan async lagaya hai
     document.getElementById('btn-add-partial-invoice').style.display = 'none';
     document.getElementById('btn-save-sale-changes').style.display = 'inline-flex';
 }
+
+
+
 
 function saveSaleInvoiceChanges() {
     if (!editingInvoiceId) return;
@@ -11564,6 +11967,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+document.getElementById('stk-btn-generate-pdf')?.addEventListener('click', () => generateProductStockPDF(currentStockReportType));
+
+// Apne initializeApp() function ke andar ya DOMContentLoaded event listener mein ye add karein:
+document.getElementById('btn-manage-categories')?.addEventListener('click', openCategoryModal);
+
+
 document.getElementById('reset-password-button').addEventListener('click', handlePasswordUpdateAndLogin);
 
 async function initializeApp() {
@@ -11577,12 +11986,15 @@ async function initializeApp() {
     // Dropdowns ko bina kisi network delay ke furan generate karein
     populateDemandQtyDropdown();
     populateCustomerNamesDatalist();
-
+// initializeApp() ke end mein, jahan data fetch ho raha hai:
+    await dbFetchAddedStockHistory();
+    await dbFetchUsedStock();
+    // Baki elements ko refresh karne se pehle ye lazmi load ho jayein
     // 3. Admin permissions set karein
     if (!appSettings.permissions) {
         appSettings.permissions = {
-            admin: ['all'], 
-            client: ['Dashboard', 'Products', 'PartialPayments', 'SellReturn'] 
+            admin: ['all'],
+            client: ['Dashboard', 'Products', 'PartialPayments', 'SellReturn']
         };
         await saveSettings();
     }
@@ -11593,9 +12005,6 @@ async function initializeApp() {
 
     document.getElementById('user-session-info').innerHTML = `Welcome, <strong>${loggedInUser.name}</strong>! <button class="btn btn-danger btn-sm" onclick="handleLogout()">Logout</button>`;
 
-
-// initializeApp() function ke andar:
-    
     // Demand records load karein
     const userId = loggedInUser.id || loggedInUser.uid;
     try {
@@ -11603,8 +12012,7 @@ async function initializeApp() {
         if (doc.exists) {
             demandRecords = JSON.parse(doc.data().payload);
             renderDemandRecord(); 
-            populateCustomerNamesDatalist(); // <--- YE CALL YAHAN SHAMIL KAREIN
-
+            populateCustomerNamesDatalist();
         }
     } catch (e) {
         console.error("Demand data load nahi hua:", e);
@@ -11612,11 +12020,7 @@ async function initializeApp() {
 
     await dbFetchCategories();
 
-
-
-
     // 4. Default categories and payment UI setup
-    await dbFetchCategories();
     populatePaymentMethods();
     populateExpenseCategoryDropdowns();
 
@@ -11684,10 +12088,7 @@ async function initializeApp() {
 
     document.getElementById('btn-add-gatepass-item')?.addEventListener('click', addGatePassItem);
     document.getElementById('btn-save-gatepass')?.addEventListener('click', saveAndGenerateGatePass);
-    
-    // safe syntax '?.' ka use kiya gaya hai takay crash na ho
     document.getElementById('btn-clear-gatepass-list')?.addEventListener('click', clearGatePassList);
-
     document.getElementById('btn-filter-gatepass-history')?.addEventListener('click', renderGatePassHistory);
 
     document.getElementById('btn-close-stock-modal')?.addEventListener('click', closeStockUpdateModal);
@@ -11710,7 +12111,6 @@ async function initializeApp() {
     document.getElementById('btn-monthly-cash-report').addEventListener('click', () => generateCashBookReport('monthly'));
     document.getElementById('btn-custom-cash-report').addEventListener('click', () => generateCashBookReport('custom'));
 
-    // FIX: Active session me POS dropdown details na khulne ka bug yahan fix kiya
     const partialMethodEl = document.getElementById('partial-payment-method');
     if (partialMethodEl) {
         partialMethodEl.addEventListener('change', (e) => handlePaymentMethodChange(e.target, document.getElementById('partial-payment-details-container')));
@@ -11720,25 +12120,60 @@ async function initializeApp() {
     togglePaymentMode('cash');
     initializeProductStockReport();
 
-    // 6. Trial Validity check dhoondh kar chalaein
+    // 5. Trial Validity check dhoondh kar chalaein
     isTrialValid();
 
     updateUserNav();
     
-   // 7. Dashboard aur tamam logs ka data seedha Firebase se load karein (Data loss se bachne ke liye)
-await dbFetchInvoices();
-await dbFetchExpenses();
-await dbFetchPurchaseLog();
-await dbFetchProducts();
-await dbFetchPurchasers();
-await dbFetchCashBook();
-await dbFetchGatePasses();
-await dbFetchStockUpdates();
-await dbFetchSellReturns();
-await dbFetchMaalPurchases(); 
-await dbFetchExpenseStockInventory();
-await dbFetchExpenseStockLog();
-refreshAll();
+    // 6. Dashboard aur tamam logs ka data seedha Firebase se load karein
+    await dbFetchInvoices();
+    await dbFetchExpenses();
+    await dbFetchPurchaseLog();
+    await dbFetchProducts();
+    await dbFetchPurchasers();
+    await dbFetchCashBook();
+    await dbFetchGatePasses();
+    await dbFetchStockUpdates();
+    await dbFetchSellReturns();
+    await dbFetchMaalPurchases(); 
+    await dbFetchExpenseStockInventory();
+    await dbFetchExpenseStockLog();
+
+    // ========================================================
+    // DETAILED CLOUD SYNCING FOR WORKERS & RIDERS ON STARTUP
+    // ========================================================
+    
+    // A. Workers database se load karein
+    await dbFetchDemandWorkers();
+
+    // B. Riders aur Vehicles database se load karein (UPDATED)
+    try {
+        const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
+        if (docRiders.exists) {
+            savedRiders = JSON.parse(docRiders.data().payload) || [];
+        }
+
+        // ✅ NAYA: App start hote hi Vehicles list bhi cloud se fetch karein
+        const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
+        if (docVehicles.exists) {
+            savedVehicles = JSON.parse(docVehicles.data().payload) || [];
+        }
+    } catch(e) {
+        console.error("initializeApp: Riders/Vehicles load error: ", e);
+        savedRiders = [];
+        savedVehicles = [];
+    }
+
+    // C. Tamam dropdowns ko automatically dynamic data se fill karein
+    if (typeof populateGatePassRiderAndVehicleDropdowns === 'function') populateGatePassRiderAndVehicleDropdowns();
+    if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
+    if (typeof populateDemandRecordRiderDropdown === 'function') populateDemandRecordRiderDropdown();
+    if (typeof populateDemandWorkersDropdown === 'function') populateDemandWorkersDropdown();
+    if (typeof populateRecoveryWorkerDropdown === 'function') populateRecoveryWorkerDropdown();
+    if (typeof populateCustomerWorkerDropdown === 'function') populateCustomerWorkerDropdown();
+
+    // UI elements ko final refresh dena
+    refreshAll();
 }
 
 function toggleSubMenu(elementId) {
@@ -11763,6 +12198,9 @@ async function openModule(evt, moduleName) {
         return;
     }
 
+
+
+
     const userRole = loggedInUser.role;
     if (userRole !== 'admin') {
         const userPermissions = (loggedInUser.permissions && loggedInUser.permissions.length > 0)
@@ -11774,6 +12212,33 @@ async function openModule(evt, moduleName) {
             return;
         }
     }
+
+if (actualModuleName === 'RiderDetailsModule') {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            try {
+                const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
+                if (docRiders.exists) {
+                    savedRiders = JSON.parse(docRiders.data().payload) || [];
+                }
+            } catch(e) {
+                console.error("Riders load error: ", e);
+            }
+            renderOnlyRiderTable();
+        }
+
+        if (actualModuleName === 'VehicleDetailsModule') {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            try {
+                const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
+                if (docVehicles.exists) {
+                    savedVehicles = JSON.parse(docVehicles.data().payload) || [];
+                }
+            } catch(e) {
+                console.error("Vehicles load error: ", e);
+            }
+            renderOnlyVehicleTable();
+        }
+
 
     // Safe button loading element resolution:
     let button = null;
@@ -11938,6 +12403,13 @@ async function openModule(evt, moduleName) {
             await dbFetchPurchasers();
             await dbFetchPurchaseLog();
             renderPurchaserReportTable();
+       
+       if (actualModuleName === 'AddedStockHistory') {
+            await dbFetchAddedStockHistory();
+            renderAddedStockHistoryTable();
+        }
+       
+       
         }
         if (actualModuleName === 'AddExpense') {
             await dbFetchCategories();
@@ -11953,13 +12425,28 @@ async function openModule(evt, moduleName) {
     populateExpenseCategoryDropdowns();
     renderExpensesList();
 }
-if (actualModuleName === 'ExpenseStock') {
+if (actualModuleName === 'ExpenseStock' || actualModuleName === 'UsedStock') {
+    const userId = loggedInUser.id || loggedInUser.uid;
+    
+    // ✅ Firebase Cloud se fresh Vehicles List load karein
+    try {
+        const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
+        if (docVehicles.exists) {
+            savedVehicles = JSON.parse(docVehicles.data().payload) || [];
+        }
+    } catch(e) {
+        console.error("Vehicles load error in UsedStock:", e);
+    }
+
     await dbFetchExpenseStockInventory();
     await dbFetchExpenseStockLog();
-    populateExpenseStockInventoryDropdown();
+    await dbFetchAddedStockHistory();
+    await dbFetchUsedStock();
+    populateUsedStockDropdowns(); // Ab yeh savedVehicles ko sahi load karega
     document.getElementById('es-date').value = getLocalDateString(getCloudDate());
     renderExpenseStockInventoryTable();
     renderExpenseStockTable();
+    renderUsedStockTable();
 }
         if (actualModuleName === 'CashBook') {
             await dbFetchPurchaseLog();
@@ -12073,6 +12560,13 @@ if (actualModuleName === 'ExpenseStock') {
             await dbFetchMaalPurchases();
             renderMaalPurchaseTable();
         }
+
+if (actualModuleName === 'StockOutModule') {
+    await dbFetchMaalPurchases();
+    await dbFetchMaalStockOut();
+    setupStockOutModuleUI();
+}
+
 
     } catch (e) {
         console.error("Online lazy load failed: ", e);
@@ -12194,7 +12688,9 @@ function initializeProductStockReport() {
 }
 
 function renderProductStockReport(filterType) {
-    let now = new Date();
+    currentStockReportType = filterType || 'daily'; // Active filter record karein
+
+    let now = (typeof getCloudDate === 'function') ? getCloudDate() : new Date();
     let from, to;
     
     if (filterType === 'daily') {
@@ -12208,25 +12704,25 @@ function renderProductStockReport(filterType) {
         to.setHours(23,59,59,999);
     } else if (filterType === 'monthly') {
         from = new Date(now.getFullYear(), now.getMonth(), 1);
-        to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        to.setHours(23,59,59,999);
+        to = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
     } else if (filterType === 'custom') {
-        const fromStr = document.getElementById('stk-from-date').value;
-        const toStr = document.getElementById('stk-to-date').value;
-        if(!fromStr || !toStr) { alert("Please select both dates."); return; }
+        const fromStr = document.getElementById('stk-from-date')?.value;
+        const toStr = document.getElementById('stk-to-date')?.value;
+        if(!fromStr || !toStr) { alert("Meharbani karke dono dates select karein."); return; }
         from = new Date(fromStr + 'T00:00:00');
         to = new Date(toStr + 'T23:59:59');
     }
 
     document.querySelectorAll('#ProductStockReport .report-buttons .btn').forEach(btn => btn.classList.remove('active'));
-    if(filterType !== 'custom') document.getElementById(`stk-btn-${filterType}`).classList.add('active');
+    if(filterType !== 'custom' && document.getElementById(`stk-btn-${filterType}`)) {
+        document.getElementById(`stk-btn-${filterType}`).classList.add('active');
+    }
 
     const tbody = document.getElementById('stk-detail-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
+    
     const searchInput = document.getElementById('stk-detail-search-input');
-    if (searchInput) {
-        searchInput.oninput = () => renderProductStockReport(filterType);
-    }
     const query = (searchInput ? searchInput.value : '').toLowerCase();
 
     let totalSoldQty = 0;
@@ -12234,16 +12730,16 @@ function renderProductStockReport(filterType) {
     let totalRemainingQty = 0;
     let totalRemainingAmount = 0;
 
-    products.forEach(p => {
+    (products || []).forEach(p => {
         if (query && !p.name.toLowerCase().includes(query)) return;
 
         let soldQty = 0;
         let soldAmt = 0;
 
-        partialPaymentInvoices.forEach(inv => {
+        (partialPaymentInvoices || []).forEach(inv => {
             const invDate = new Date(inv.createdAt);
             if (invDate >= from && invDate <= to) {
-                inv.invoiceItems.forEach(item => {
+                (inv.invoiceItems || []).forEach(item => {
                     if (item.id === p.id) {
                         soldQty += item.quantity;
                         soldAmt += item.quantity * item.price;
@@ -12255,15 +12751,15 @@ function renderProductStockReport(filterType) {
         totalSoldQty += soldQty;
         totalSoldAmount += soldAmt;
 
-        const remainingQty = p.quantity;
-        const remainingAmt = p.quantity * p.price;
+        const remainingQty = p.quantity || 0;
+        const remainingAmt = (p.quantity || 0) * (p.price || 0);
         totalRemainingQty += remainingQty;
         totalRemainingAmount += remainingAmt;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${p.name}</td>
-            <td>${CURRENCY_SYMBOL}${p.price.toFixed(2)}</td>
+            <td>${CURRENCY_SYMBOL}${(p.price || 0).toFixed(2)}</td>
             <td style="color:var(--info-color); font-weight:bold;">${soldQty}</td>
             <td style="color:var(--success-color); font-weight:bold;">${CURRENCY_SYMBOL}${soldAmt.toFixed(2)}</td>
             <td style="color:var(--warning-color); font-weight:bold;">${remainingQty}</td>
@@ -12272,72 +12768,132 @@ function renderProductStockReport(filterType) {
         tbody.appendChild(tr);
     });
 
-    document.getElementById('stk-total-sold-count').textContent = totalSoldQty;
-    document.getElementById('stk-total-sold-amount').textContent = `${CURRENCY_SYMBOL}${totalSoldAmount.toFixed(2)}`;
-    document.getElementById('stk-total-remaining-count').textContent = totalRemainingQty;
-    document.getElementById('stk-total-remaining-amount').textContent = `${CURRENCY_SYMBOL}${totalRemainingAmount.toFixed(2)}`;
-
-    const updatesTbody = document.getElementById('stk-updates-tbody');
-    updatesTbody.innerHTML = '';
-    stockUpdatesLog.filter(su => {
-        const suDate = new Date(su.date);
-        return suDate >= from && suDate <= to;
-    }).sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(su => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${new Date(su.date).toLocaleDateString()}</td>
-            <td>${su.productName}</td>
-            <td style="color:${su.action === 'add' ? 'var(--success-color)' : 'var(--danger-color)'}; font-weight:bold;">${su.action.toUpperCase()}</td>
-            <td>${su.quantity}</td>
-            <td>${su.reason}</td>
-        `;
-        updatesTbody.appendChild(tr);
-    });
+    if (document.getElementById('stk-total-sold-count')) document.getElementById('stk-total-sold-count').textContent = totalSoldQty;
+    if (document.getElementById('stk-total-sold-amount')) document.getElementById('stk-total-sold-amount').textContent = `${CURRENCY_SYMBOL}${totalSoldAmount.toFixed(2)}`;
+    if (document.getElementById('stk-total-remaining-count')) document.getElementById('stk-total-remaining-count').textContent = totalRemainingQty;
+    if (document.getElementById('stk-total-remaining-amount')) document.getElementById('stk-total-remaining-amount').textContent = `${CURRENCY_SYMBOL}${totalRemainingAmount.toFixed(2)}`;
 }
 
-function generateProductStockPDF() {
+function generateProductStockPDF(reportType) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
+        return;
+    }
+
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
 
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Product Stock Report', 105, 20, { align: 'center' });
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 30, { align: 'center' });
+    const activeFilter = reportType || currentStockReportType || 'daily';
+    let now = (typeof getCloudDate === 'function') ? getCloudDate() : new Date();
+    let from, to, reportTitle;
 
-    const soldQtyTotal = document.getElementById('stk-total-sold-count').textContent;
-    const soldAmtTotal = document.getElementById('stk-total-sold-amount').textContent;
-    const remQtyTotal = document.getElementById('stk-total-remaining-count').textContent;
-    const remAmtTotal = document.getElementById('stk-total-remaining-amount').textContent;
+    if (activeFilter === 'daily') {
+        reportTitle = "Daily Product Stock Report";
+        from = new Date(now.setHours(0,0,0,0));
+        to = new Date(new Date().setHours(23,59,59,999));
+    } else if (activeFilter === 'weekly') {
+        reportTitle = "Weekly Product Stock Report";
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        from = new Date(new Date(now.setDate(diff)).setHours(0,0,0,0));
+        to = new Date(new Date(from).setDate(from.getDate() + 6));
+        to.setHours(23,59,59,999);
+    } else if (activeFilter === 'monthly') {
+        reportTitle = "Monthly Product Stock Report";
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+        to = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    } else if (activeFilter === 'custom') {
+        const fromStr = document.getElementById('stk-from-date')?.value;
+        const toStr = document.getElementById('stk-to-date')?.value;
+        if(!fromStr || !toStr) { alert("Meharbani karke From Date aur To Date select karein."); return; }
+        from = new Date(fromStr + 'T00:00:00');
+        to = new Date(toStr + 'T23:59:59');
+        reportTitle = `Product Stock Report (${fromStr} to ${toStr})`;
+    }
 
-   doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    // Pehli line par Sold Stock
-    doc.text(`Sold Stock: ${soldQtyTotal} Items (Amount: ${soldAmtTotal})`, 15, 45);
-    // Uske theek neeche wali line par Remaining Stock
-    doc.text(`Remaining Stock: ${remQtyTotal} Items (Amount: ${remAmtTotal})`, 15, 52);
+    let yPos = 15;
+
+    // Report Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 7;
+
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+    doc.text(reportTitle, 105, yPos, { align: 'center' }); yPos += 6;
+
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, yPos, { align: 'center' }); yPos += 10;
+
+    let totalSoldQty = 0;
+    let totalSoldAmount = 0;
+    let totalRemainingQty = 0;
+    let totalRemainingAmount = 0;
 
     const tableData = [];
-    const tableRows = document.querySelectorAll('#stk-detail-tbody tr');
-    tableRows.forEach(row => {
-        const cols = row.querySelectorAll('td');
-        const rowData = [];
-        cols.forEach(col => rowData.push(col.innerText));
-        tableData.push(rowData);
+
+    (products || []).forEach(p => {
+        let soldQty = 0;
+        let soldAmt = 0;
+
+        (partialPaymentInvoices || []).forEach(inv => {
+            const invDate = new Date(inv.createdAt);
+            if (invDate >= from && invDate <= to) {
+                (inv.invoiceItems || []).forEach(item => {
+                    if (item.id === p.id) {
+                        soldQty += item.quantity;
+                        soldAmt += item.quantity * item.price;
+                    }
+                });
+            }
+        });
+
+        totalSoldQty += soldQty;
+        totalSoldAmount += soldAmt;
+
+        const remainingQty = p.quantity || 0;
+        const remainingAmt = (p.quantity || 0) * (p.price || 0);
+
+        totalRemainingQty += remainingQty;
+        totalRemainingAmount += remainingAmt;
+
+        // Exactly 6 Columns Data
+        tableData.push([
+            p.name || '-',
+            `${CURRENCY_SYMBOL}${(p.price || 0).toFixed(2)}`,
+            soldQty,
+            `${CURRENCY_SYMBOL}${soldAmt.toFixed(2)}`,
+            remainingQty,
+            `${CURRENCY_SYMBOL}${remainingAmt.toFixed(2)}`
+        ]);
     });
 
+    // Summary Totals Heading
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text(`Total Sold Stock: ${totalSoldQty} Items  |  Amount: ${CURRENCY_SYMBOL}${totalSoldAmount.toFixed(2)}`, 14, yPos); yPos += 6;
+    doc.text(`Total Remaining Stock: ${totalRemainingQty} Items  |  Amount: ${CURRENCY_SYMBOL}${totalRemainingAmount.toFixed(2)}`, 14, yPos); yPos += 8;
+
+    // AutoTable PDF Renderer
     doc.autoTable({
-        startY: 62,
-        head: [['Item Name', 'Unit Price', 'Sold Qty', 'Sold Total', 'Rem Qty', 'Rem Total']],
+        startY: yPos,
+        head: [['Item Name', 'Unit Price', 'Sold Qty', 'Sold Total', 'Remaining Qty', 'Remaining Total']],
         body: tableData,
+        foot: [[
+            'TOTAL',
+            '',
+            totalSoldQty,
+            `${CURRENCY_SYMBOL}${totalSoldAmount.toFixed(2)}`,
+            totalRemainingQty,
+            `${CURRENCY_SYMBOL}${totalRemainingAmount.toFixed(2)}`
+        ]],
         theme: 'grid',
-        headStyles: { fillColor: [42, 105, 185], textColor: 255 },
-        styles: { fontSize: 10 }
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold' },
+        footStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+        columnStyles: {
+            0: { halign: 'left', fontStyle: 'bold' }
+        }
     });
 
-    doc.save(`Stock_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`Stock_Report_${activeFilter}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 // ==========================================
@@ -13100,103 +13656,717 @@ function populateDemandItemDropdown() {
 
 let maalPurchases = [];
 
-// Calculation: Bill = Weight * Rate
-function calculatePurchaseBill() {
-    const weight = parseFloat(document.getElementById('pc-perkg').value) || 0;
-    const rate = parseFloat(document.getElementById('pc-rate').value) || 0;
-    const pay = parseFloat(document.getElementById('pc-pay').value) || 0;
+// =========================================================
+// MAAL PURCHASE MODULE (COMPLETE & UPDATED CODE)
+// =========================================================
 
-    const totalBill = weight * rate; 
+// 1. Bill Calculation Function (Bags * 15 Labor & Bags * 100 Transport)
+// =========================================================
+// UPGRADED MAAL PURCHASE MODULE (PAYMENTS, EDIT & AUTO PDF)
+// =========================================================
+
+// 1. Live Form Bill Calculation
+function calculatePurchaseBill() {
+    const bags = parseFloat(document.getElementById('pc-bags')?.value) || 0;
+    const weight = parseFloat(document.getElementById('pc-perkg')?.value) || 0;
+    const rate = parseFloat(document.getElementById('pc-rate')?.value) || 0;
+    const pay = parseFloat(document.getElementById('pc-pay')?.value) || 0;
+
+    const laborInput = document.getElementById('pc-labor')?.value;
+    const laborPerBag = (laborInput === '' || laborInput === undefined || isNaN(parseFloat(laborInput))) ? 0 : parseFloat(laborInput);
+
+    const transportInput = document.getElementById('pc-transport')?.value;
+    const transportPerBag = (transportInput === '' || transportInput === undefined || isNaN(parseFloat(transportInput))) ? 0 : parseFloat(transportInput);
+
+    const materialCost = weight * rate;
+    const totalLabor = bags * laborPerBag;
+    const totalTransport = bags * transportPerBag;
+
+    const totalBill = materialCost + totalLabor + totalTransport;
     const netBalance = totalBill - pay;
 
-    document.getElementById('pc-bill').value = totalBill.toFixed(2);
-    document.getElementById('pc-balance').value = netBalance.toFixed(2);
+    if (document.getElementById('pc-bill')) document.getElementById('pc-bill').value = totalBill.toFixed(2);
+    if (document.getElementById('pc-balance')) document.getElementById('pc-balance').value = netBalance.toFixed(2);
 }
 
-
-async function deleteMaalPurchase(id) {
-    if (!confirm("Kya aap waqai is purchase record ko delete karna chahte hain?")) return;
-    maalPurchases = maalPurchases.filter(item => item.id !== id);
-    try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
-            payload: JSON.stringify(maalPurchases)
-        });
-        alert("Record delete ho gaya!");
-        renderMaalPurchaseTable();
-    } catch(e) {
-        alert("Delete karne mein error aaya: " + e.message);
-    }
-}
-
-// Save Function (Item name ke sath)
+// 2. Save New Purchase Record
 async function saveMaalPurchase() {
-    const item = document.getElementById('pc-item').value; // Item Name
-    const name = document.getElementById('pc-name').value;
-    const bags = document.getElementById('pc-bags').value || 0;
-    const weight = document.getElementById('pc-perkg').value;
-    const rate = document.getElementById('pc-rate').value;
-    const bill = document.getElementById('pc-bill').value;
-    const pay = document.getElementById('pc-pay').value || 0;
-    const balance = document.getElementById('pc-balance').value;
+    const item = document.getElementById('pc-item')?.value.trim() || '';
+    const name = document.getElementById('pc-name')?.value.trim() || '';
+    const bags = parseFloat(document.getElementById('pc-bags')?.value) || 0;
+    const weight = parseFloat(document.getElementById('pc-perkg')?.value) || 0;
+    const rate = parseFloat(document.getElementById('pc-rate')?.value) || 0;
 
-    if (!item || !name || !weight || !rate) {
-        alert("Item Name, Purchaser, Weight aur Rate likhna zaruri hai!");
+    const laborInput = document.getElementById('pc-labor')?.value;
+    const labor = (laborInput === '' || isNaN(parseFloat(laborInput))) ? 0 : parseFloat(laborInput);
+
+    const transportInput = document.getElementById('pc-transport')?.value;
+    const transport = (transportInput === '' || isNaN(parseFloat(transportInput))) ? 0 : parseFloat(transportInput);
+
+    const bill = parseFloat(document.getElementById('pc-bill')?.value) || 0;
+    const pay = parseFloat(document.getElementById('pc-pay')?.value) || 0;
+    const balance = parseFloat(document.getElementById('pc-balance')?.value) || 0;
+    const payMode = document.getElementById('pc-pay-mode')?.value || 'Cash';
+
+    if (!item || !name || weight <= 0 || rate <= 0) {
+        alert("Item Name, Purchaser, Weight aur Rate darj karna zaruri hai!");
         return;
     }
 
+    const recId = 'mp' + Date.now();
+    const initialPayments = [];
+    if (pay > 0) {
+        initialPayments.push({
+            paymentId: 'mpp' + Date.now(),
+            amount: pay,
+            mode: payMode,
+            date: new Date().toISOString(),
+            notes: 'Initial Payment'
+        });
+    }
+
     const entry = {
-        id: 'mp' + Date.now(),
+        id: recId,
         date: new Date().toISOString(),
-        item, name, bags, weight, rate, bill, pay, balance
+        item: item,
+        name: name,
+        bags: bags,
+        weight: weight,
+        rate: rate,
+        labor: labor,
+        transport: transport,
+        bill: bill,
+        pay: pay,
+        balance: balance,
+        paymentMode: payMode,
+        payments: initialPayments
     };
 
+    if (!Array.isArray(maalPurchases)) maalPurchases = [];
     maalPurchases.push(entry);
-    
+
+    renderMaalPurchaseTable();
+
+    // Reset Form
+    document.getElementById('pc-item').value = '';
+    document.getElementById('pc-name').value = '';
+    document.getElementById('pc-bags').value = '';
+    document.getElementById('pc-perkg').value = '';
+    document.getElementById('pc-rate').value = '';
+    document.getElementById('pc-labor').value = '15';
+    document.getElementById('pc-transport').value = '100';
+    document.getElementById('pc-pay').value = '';
+    calculatePurchaseBill();
+
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
-            payload: JSON.stringify(maalPurchases)
-        });
+        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
+                payload: JSON.stringify(maalPurchases)
+            });
+        }
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
         alert("Purchase Record Save ho gaya!");
-        renderMaalPurchaseTable();
-        
-        // Form Reset
-        document.getElementById('pc-item').value = '';
-        document.getElementById('pc-name').value = '';
-        document.getElementById('pc-bags').value = '';
-        document.getElementById('pc-perkg').value = '';
-        document.getElementById('pc-rate').value = '';
-        document.getElementById('pc-pay').value = '';
-        calculatePurchaseBill();
     } catch(e) {
-        alert("Error: " + e.message);
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+        alert("Record Local Memory mein Save ho gaya!");
     }
 }
 
-// Table Render (Item name dikhane ke liye)
+// 3. Render History Table (With Pay, Edit, PDF, Delete Buttons)
 function renderMaalPurchaseTable() {
     const tbody = document.getElementById('maal-purchase-body');
-    if(!tbody) return;
+    if (!tbody) return;
     tbody.innerHTML = '';
-    
-    // Reverse loop taake naya record sab se upar aaye
-    [...maalPurchases].reverse().forEach(item => {
-        tbody.innerHTML += `<tr>
-            <td>${new Date(item.date).toLocaleDateString()}</td>
-            <td style="font-weight:bold; color:#14b8a6;">${item.item}</td> <!-- Item Name -->
-            <td>${item.name}</td>
-            <td>${item.bags}</td>
-            <td>${item.weight}</td>
-            <td>${item.rate}</td>
-            <td>${item.bill}</td>
-            <td style="color: #10b981;">${item.pay}</td>
-            <td style="color: #ef4444; font-weight:bold;">${item.balance}</td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteMaalPurchase('${item.id}')">Delete</button></td>
-        </tr>`;
+
+    const searchQuery = (document.getElementById('pc-search-input')?.value || '').trim().toLowerCase();
+    let records = Array.isArray(maalPurchases) ? maalPurchases : [];
+
+    // Filter by Purchaser Name or Item Name
+    if (searchQuery) {
+        records = records.filter(item =>
+            (item.name && item.name.toLowerCase().includes(searchQuery)) ||
+            (item.item && item.item.toLowerCase().includes(searchQuery))
+        );
+    }
+
+    if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; padding: 15px;">${
+            searchQuery ? 'Is purchaser/item se koi matching record nahi mila.' : 'Koi purchase history record nahi mila.'
+        }</td></tr>`;
+        return;
+    }
+
+    [...records].reverse().forEach(item => {
+        const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '-';
+        const bagsVal = item.bags !== undefined ? item.bags : 0;
+        const weightVal = item.weight !== undefined ? item.weight : 0;
+        const rateVal = item.rate !== undefined ? Number(item.rate).toFixed(2) : '0.00';
+        const laborVal = item.labor !== undefined ? Number(item.labor).toFixed(2) : '0.00';
+        const transportVal = item.transport !== undefined ? Number(item.transport).toFixed(2) : '0.00';
+        const billVal = item.bill !== undefined ? Number(item.bill).toFixed(2) : '0.00';
+        const payVal = item.pay !== undefined ? Number(item.pay).toFixed(2) : '0.00';
+        const balVal = item.balance !== undefined ? Number(item.balance).toFixed(2) : '0.00';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${dateStr}</td>
+            <td style="font-weight:bold; color:#14b8a6;">${item.item || '-'}</td>
+            <td><strong>${item.name || '-'}</strong></td>
+            <td>${bagsVal}</td>
+            <td>${weightVal}</td>
+            <td>${CURRENCY_SYMBOL}${rateVal}</td>
+            <td>${CURRENCY_SYMBOL}${laborVal}</td>
+            <td>${CURRENCY_SYMBOL}${transportVal}</td>
+            <td style="font-weight:bold; color:var(--text-light);">${CURRENCY_SYMBOL}${billVal}</td>
+            <td style="color: #10b981; font-weight:bold;">${CURRENCY_SYMBOL}${payVal}</td>
+            <td style="color: #ef4444; font-weight:bold;">${CURRENCY_SYMBOL}${balVal}</td>
+            <td>
+                <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                    ${Number(balVal) > 0.01 
+                        ? `<button class="btn btn-success btn-sm" onclick="openMaalPaymentModal('${item.id}')">Pay</button>` 
+                        : `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Paid</button>`}
+                    <button class="btn btn-warning btn-sm" onclick="openEditMaalModal('${item.id}')">Edit</button>
+                    <button class="btn btn-info btn-sm" onclick="generateMaalPurchasePDF('${item.id}')">PDF</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteMaalPurchase('${item.id}')">Delete</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
     });
 }
 
+function generatePurchaserMaalReportPDF() {
+    const searchQuery = (document.getElementById('pc-search-input')?.value || '').trim();
+
+    if (!searchQuery) {
+        alert("Meharbani karke pehle search bar mein Purchaser ka Naam likhein!");
+        return;
+    }
+
+    const matchingRecords = (maalPurchases || []).filter(item =>
+        item.name && item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    if (matchingRecords.length === 0) {
+        alert(`"${searchQuery}" naam se koi purchase records nahi mile!`);
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    const primaryColor = [20, 184, 166];
+    const darkColor = [15, 23, 42];
+
+    // 1. Header Banner
+    doc.setFillColor(...darkColor);
+    doc.rect(0, 0, 210, 35, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP SOLUTION", 14, 16);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(203, 213, 225);
+    doc.text(appSettings.restaurantAddress || "Main Commercial Market, Pakistan", 14, 23);
+    doc.text(`Phone: ${appSettings.restaurantPhone || "N/A"}`, 14, 28);
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(20, 184, 166);
+    doc.text("PURCHASER STATEMENT REPORT", 196, 18, { align: 'right' });
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 196, 25, { align: 'right' });
+
+    // 2. Purchaser Details Box
+    let yPos = 45;
+    const sampleName = matchingRecords[0]?.name || searchQuery;
+
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(14, yPos, 182, 20, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(14, yPos, 182, 20, 2, 2, 'D');
+
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("PURCHASER / SUPPLIER NAME", 18, yPos + 6);
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(11);
+    doc.text(sampleName, 18, yPos + 14);
+
+    yPos += 26;
+
+    // 3. Transactions Table
+    const tableHead = [['Date', 'Item', 'Bags', 'Weight', 'Rate', 'Labor', 'Transport', 'Total Bill', 'Paid', 'Balance']];
+    const tableBody = matchingRecords.map(rec => [
+        rec.date ? new Date(rec.date).toLocaleDateString() : 'N/A',
+        rec.item || '-',
+        rec.bags || 0,
+        `${rec.weight || 0} Kg`,
+        `${CURRENCY_SYMBOL}${(Number(rec.rate) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.labor) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.transport) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.bill) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.pay) || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${(Number(rec.balance) || 0).toFixed(2)}`
+    ]);
+
+    doc.autoTable({
+        startY: yPos,
+        head: tableHead,
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8, halign: 'center' },
+        bodyStyles: { fontSize: 8, cellPadding: 3, halign: 'center' },
+        margin: { left: 14, right: 14 }
+    });
+
+    yPos = doc.previousAutoTable.finalY + 8;
+
+    // 4. Overall Purchaser Totals
+    const totalBill = matchingRecords.reduce((s, r) => s + (Number(r.bill) || 0), 0);
+    const totalPaid = matchingRecords.reduce((s, r) => s + (Number(r.pay) || 0), 0);
+    const totalBalance = matchingRecords.reduce((s, r) => s + (Number(r.balance) || 0), 0);
+
+    const summaryData = [
+        ['Total Purchased Amount:', `${CURRENCY_SYMBOL} ${totalBill.toFixed(2)}`],
+        ['Total Amount Paid:', `${CURRENCY_SYMBOL} ${totalPaid.toFixed(2)}`],
+        ['Net Outstanding Balance Due:', `${CURRENCY_SYMBOL} ${totalBalance.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryData,
+        theme: 'plain',
+        styles: { fontSize: 9.5, cellPadding: 2 },
+        columnStyles: {
+            0: { fontStyle: 'bold', halign: 'right', cellWidth: 120 },
+            1: { fontStyle: 'bold', halign: 'right', cellWidth: 62 }
+        },
+        margin: { left: 14, right: 14 },
+        didParseCell: function(data) {
+            if (data.row.index === 1) data.cell.styles.textColor = [16, 185, 129];
+            if (data.row.index === 2) {
+                data.cell.styles.fontSize = 10.5;
+                data.cell.styles.textColor = [239, 68, 68];
+            }
+        }
+    });
+
+    doc.save(`Purchaser_Report_${sampleName.replace(/\s+/g, '_')}.pdf`);
+}
+
+// 4. Open Payment Modal
+function openMaalPaymentModal(id) {
+    const item = (maalPurchases || []).find(p => p.id === id);
+    if (!item) return;
+
+    document.getElementById('mp-pay-id').value = item.id;
+    document.getElementById('mp-pay-name').textContent = `${item.name} (${item.item})`;
+    document.getElementById('mp-pay-current-bal').textContent = `${CURRENCY_SYMBOL} ${(Number(item.balance) || 0).toFixed(2)}`;
+    document.getElementById('mp-pay-amount').value = '';
+    document.getElementById('mp-pay-method').value = 'Cash';
+    document.getElementById('mp-pay-date').value = new Date().toISOString().split('T')[0];
+
+    document.getElementById('maal-payment-modal').style.display = 'flex';
+}
+
+function closeMaalPaymentModal() {
+    document.getElementById('maal-payment-modal').style.display = 'none';
+}
+
+// 5. Submit New Payment & Auto-Download PDF
+async function submitMaalPayment() {
+    const id = document.getElementById('mp-pay-id').value;
+    const amount = parseFloat(document.getElementById('mp-pay-amount').value) || 0;
+    const mode = document.getElementById('mp-pay-method').value;
+    const payDate = document.getElementById('mp-pay-date').value;
+
+    if (amount <= 0) {
+        alert("Sahi payment amount darj karein!");
+        return;
+    }
+
+    const itemIndex = maalPurchases.findIndex(p => p.id === id);
+    if (itemIndex === -1) return;
+
+    const item = maalPurchases[itemIndex];
+    if (amount > item.balance + 0.01) {
+        alert(`Payment amount baqaya balance (${CURRENCY_SYMBOL} ${item.balance.toFixed(2)}) se zyada nahi ho sakti!`);
+        return;
+    }
+
+    // Update Totals
+    item.pay = (Number(item.pay) || 0) + amount;
+    item.balance = (Number(item.bill) || 0) - item.pay;
+    if (item.balance < 0) item.balance = 0;
+
+    if (!Array.isArray(item.payments)) item.payments = [];
+    item.payments.push({
+        paymentId: 'mpp' + Date.now(),
+        amount: amount,
+        mode: mode,
+        date: payDate ? new Date(payDate).toISOString() : new Date().toISOString(),
+        notes: 'Subsequent Payment'
+    });
+
+    closeMaalPaymentModal();
+    renderMaalPurchaseTable();
+
+    // Save to DB
+    try {
+        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
+                payload: JSON.stringify(maalPurchases)
+            });
+        }
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+    } catch(e) {
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+    }
+
+    alert(`Raqam ${CURRENCY_SYMBOL} ${amount.toFixed(2)} (${mode}) kamyabi se record ho gayi hai! Updated PDF ab download ho raha hai...`);
+
+    // ★ AUTOMATIC PDF DOWNLOAD ★
+    generateMaalPurchasePDF(id);
+}
+
+// 6. Open Edit Purchase Record Modal
+function openEditMaalModal(id) {
+    const item = (maalPurchases || []).find(p => p.id === id);
+    if (!item) return;
+
+    document.getElementById('edit-mp-id').value = item.id;
+    document.getElementById('edit-mp-item').value = item.item || '';
+    document.getElementById('edit-mp-name').value = item.name || '';
+    document.getElementById('edit-mp-bags').value = item.bags || 0;
+    document.getElementById('edit-mp-weight').value = item.weight || 0;
+    document.getElementById('edit-mp-rate').value = item.rate || 0;
+    document.getElementById('edit-mp-labor').value = item.labor !== undefined ? item.labor : 15;
+    document.getElementById('edit-mp-transport').value = item.transport !== undefined ? item.transport : 100;
+    document.getElementById('edit-mp-pay').value = item.pay || 0;
+
+    calcEditMaalMath();
+    document.getElementById('edit-maal-purchase-modal').style.display = 'flex';
+}
+
+function closeEditMaalModal() {
+    document.getElementById('edit-maal-purchase-modal').style.display = 'none';
+}
+
+function calcEditMaalMath() {
+    const bags = parseFloat(document.getElementById('edit-mp-bags')?.value) || 0;
+    const weight = parseFloat(document.getElementById('edit-mp-weight')?.value) || 0;
+    const rate = parseFloat(document.getElementById('edit-mp-rate')?.value) || 0;
+    const labor = parseFloat(document.getElementById('edit-mp-labor')?.value) || 0;
+    const transport = parseFloat(document.getElementById('edit-mp-transport')?.value) || 0;
+    const pay = parseFloat(document.getElementById('edit-mp-pay')?.value) || 0;
+
+    const totalBill = (weight * rate) + (bags * labor) + (bags * transport);
+    const balance = totalBill - pay;
+
+    document.getElementById('edit-mp-bill').value = totalBill.toFixed(2);
+    document.getElementById('edit-mp-balance').value = balance.toFixed(2);
+}
+
+// 7. Save Edited Purchase Record
+async function saveEditedMaalPurchase() {
+    const id = document.getElementById('edit-mp-id').value;
+    const itemIndex = maalPurchases.findIndex(p => p.id === id);
+    if (itemIndex === -1) return;
+
+    const item = document.getElementById('edit-mp-item').value.trim();
+    const name = document.getElementById('edit-mp-name').value.trim();
+    const bags = parseFloat(document.getElementById('edit-mp-bags').value) || 0;
+    const weight = parseFloat(document.getElementById('edit-mp-weight').value) || 0;
+    const rate = parseFloat(document.getElementById('edit-mp-rate').value) || 0;
+    const labor = parseFloat(document.getElementById('edit-mp-labor').value) || 0;
+    const transport = parseFloat(document.getElementById('edit-mp-transport').value) || 0;
+    const bill = parseFloat(document.getElementById('edit-mp-bill').value) || 0;
+    const pay = parseFloat(document.getElementById('edit-mp-pay').value) || 0;
+    const balance = parseFloat(document.getElementById('edit-mp-balance').value) || 0;
+
+    if (!item || !name || weight <= 0 || rate <= 0) {
+        alert("Sahi Item, Name, Weight aur Rate darj karein.");
+        return;
+    }
+
+    maalPurchases[itemIndex].item = item;
+    maalPurchases[itemIndex].name = name;
+    maalPurchases[itemIndex].bags = bags;
+    maalPurchases[itemIndex].weight = weight;
+    maalPurchases[itemIndex].rate = rate;
+    maalPurchases[itemIndex].labor = labor;
+    maalPurchases[itemIndex].transport = transport;
+    maalPurchases[itemIndex].bill = bill;
+    maalPurchases[itemIndex].pay = pay;
+    maalPurchases[itemIndex].balance = balance;
+
+    closeEditMaalModal();
+    renderMaalPurchaseTable();
+
+    try {
+        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
+                payload: JSON.stringify(maalPurchases)
+            });
+        }
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+        alert("Record Update ho gaya!");
+    } catch(e) {
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+        alert("Record Local Storage mein Update ho gaya!");
+    }
+}
+
+// 8. Enhanced PDF Receipt Generator with Payment History & Modes
+function generateMaalPurchasePDF(id) {
+    const item = (maalPurchases || []).find(p => p.id === id);
+    if (!item) {
+        alert("Record nahi mila!");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+
+    const primaryColor = [20, 184, 166];  // Teal (#14b8a6)
+    const darkColor = [15, 23, 42];      // Dark Slate (#0f172a)
+
+    // Top Header Banner
+    doc.setFillColor(...darkColor);
+    doc.rect(0, 0, 210, 35, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP SOLUTION", 14, 16);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(203, 213, 225);
+    doc.text(appSettings.restaurantAddress || "Main Commercial Market, Pakistan", 14, 23);
+    doc.text(`Phone: ${appSettings.restaurantPhone || "N/A"}`, 14, 28);
+
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(20, 184, 166);
+    doc.text("PURCHASE RECEIPT", 196, 18, { align: 'right' });
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(255, 255, 255);
+    doc.text(`Receipt ID: #${item.id || 'N/A'}`, 196, 25, { align: 'right' });
+
+    // Info Cards
+    let yPos = 45;
+
+    // Supplier Info Card
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(14, yPos, 88, 28, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(14, yPos, 88, 28, 2, 2, 'D');
+
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("SUPPLIER / PURCHASER DETAILS", 18, yPos + 6);
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(11);
+    doc.text(item.name || "N/A", 18, yPos + 13);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Item Purchased: ${item.item || 'N/A'}`, 18, yPos + 20);
+
+    // Transaction Details Card
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(108, yPos, 88, 28, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(108, yPos, 88, 28, 2, 2, 'D');
+
+    const dateStr = item.date ? new Date(item.date).toLocaleDateString() : 'N/A';
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("TRANSACTION DETAILS", 112, yPos + 6);
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Purchase Date: ${dateStr}`, 112, yPos + 14);
+
+    const balVal = Number(item.balance) || 0;
+    const statusText = balVal <= 0.01 ? "FULLY PAID" : "PENDING BALANCE";
+    const statusColor = balVal <= 0.01 ? [16, 185, 129] : [239, 68, 68];
+
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...statusColor);
+    doc.text(`Status: ${statusText}`, 112, yPos + 21);
+
+    yPos += 35;
+
+    // Particulars Table
+    const bags = Number(item.bags) || 0;
+    const weight = Number(item.weight) || 0;
+    const rate = Number(item.rate) || 0;
+    const labor = Number(item.labor) || 0;
+    const transport = Number(item.transport) || 0;
+    const matCost = weight * rate;
+    const totalLabor = bags * labor;
+    const totalTrans = bags * transport;
+    const billVal = Number(item.bill) || 0;
+    const payVal = Number(item.pay) || 0;
+
+    const tableHead = [['Item Description', 'Bags', 'Weight (Kg)', 'Rate/Kg', 'Labor/Bag', 'Transport/Bag', 'Subtotal']];
+    const tableBody = [[
+        item.item || 'N/A',
+        bags,
+        `${weight} Kg`,
+        `${CURRENCY_SYMBOL} ${rate.toFixed(2)}`,
+        `${CURRENCY_SYMBOL} ${labor.toFixed(2)}`,
+        `${CURRENCY_SYMBOL} ${transport.toFixed(2)}`,
+        `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`
+    ]];
+
+    doc.autoTable({
+        startY: yPos,
+        head: tableHead,
+        body: tableBody,
+        theme: 'grid',
+        headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+        bodyStyles: { fontSize: 9, cellPadding: 5, halign: 'center' },
+        columnStyles: {
+            0: { halign: 'left', fontStyle: 'bold', cellWidth: 38 },
+            1: { cellWidth: 18 },
+            2: { cellWidth: 25 },
+            3: { cellWidth: 25 },
+            4: { cellWidth: 25 },
+            5: { cellWidth: 25 },
+            6: { cellWidth: 26, fontStyle: 'bold' }
+        },
+        margin: { left: 14, right: 14 }
+    });
+
+    yPos = doc.previousAutoTable.finalY + 8;
+
+    // Financial Breakdown
+    const breakdownData = [
+        ['Material Base Cost (Weight x Rate):', `${CURRENCY_SYMBOL} ${matCost.toFixed(2)}`],
+        [`Total Labor Charges (${bags} bags x ${CURRENCY_SYMBOL}${labor.toFixed(2)}):`, `${CURRENCY_SYMBOL} ${totalLabor.toFixed(2)}`],
+        [`Total Transport Charges (${bags} bags x ${CURRENCY_SYMBOL}${transport.toFixed(2)}):`, `${CURRENCY_SYMBOL} ${totalTrans.toFixed(2)}`],
+        ['GRAND TOTAL BILL:', `${CURRENCY_SYMBOL} ${billVal.toFixed(2)}`],
+        ['TOTAL PAID AMOUNT:', `${CURRENCY_SYMBOL} ${payVal.toFixed(2)}`],
+        ['REMAINING BALANCE DUE:', `${CURRENCY_SYMBOL} ${balVal.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: breakdownData,
+        theme: 'plain',
+        styles: { fontSize: 9, cellPadding: 2 },
+        columnStyles: {
+            0: { fontStyle: 'bold', halign: 'right', cellWidth: 130 },
+            1: { fontStyle: 'bold', halign: 'right', cellWidth: 52 }
+        },
+        margin: { left: 14, right: 14 },
+        didParseCell: function(data) {
+            if (data.row.index === 3) {
+                data.cell.styles.fontSize = 10.5;
+                data.cell.styles.textColor = [15, 23, 42];
+            }
+            if (data.row.index === 4) {
+                data.cell.styles.textColor = [16, 185, 129];
+            }
+            if (data.row.index === 5) {
+                data.cell.styles.fontSize = 10.5;
+                data.cell.styles.textColor = [239, 68, 68];
+            }
+        }
+    });
+
+    yPos = doc.previousAutoTable.finalY + 8;
+
+    // Payments History Breakdown in PDF (If payments exist)
+    if (Array.isArray(item.payments) && item.payments.length > 0) {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text("PAYMENT HISTORY BREAKDOWN:", 14, yPos);
+        yPos += 4;
+
+        const pHead = [['Date', 'Payment Mode', 'Notes', 'Amount Paid']];
+        const pBody = item.payments.map(p => [
+            p.date ? new Date(p.date).toLocaleDateString() : 'N/A',
+            p.mode || 'Cash',
+            p.notes || 'Payment',
+            `${CURRENCY_SYMBOL} ${(Number(p.amount) || 0).toFixed(2)}`
+        ]);
+
+        doc.autoTable({
+            startY: yPos,
+            head: pHead,
+            body: pBody,
+            theme: 'striped',
+            headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontSize: 8 },
+            bodyStyles: { fontSize: 8, cellPadding: 2.5, halign: 'center' },
+            columnStyles: {
+                0: { cellWidth: 35 },
+                1: { cellWidth: 40, fontStyle: 'bold' },
+                2: { cellWidth: 60, halign: 'left' },
+                3: { cellWidth: 47, fontStyle: 'bold', halign: 'right' }
+            },
+            margin: { left: 14, right: 14 }
+        });
+
+        yPos = doc.previousAutoTable.finalY + 8;
+    }
+
+    // Footer Watermark Note
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(148, 163, 184);
+    doc.text("Computer Generated Invoice - Valid Without Physical Signature", 105, 285, { align: 'center' });
+
+    doc.save(`Purchase_Receipt_${(item.name || 'Supplier').replace(/\s+/g, '_')}_${item.id}.pdf`);
+}
+
+// 9. Delete Record Function
+async function deleteMaalPurchase(id) {
+    if (!confirm("Kya aap waqai is purchase record ko delete karna chahte hain?")) return;
+
+    maalPurchases = (maalPurchases || []).filter(item => item.id !== id);
+
+    renderMaalPurchaseTable();
+
+    try {
+        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
+                payload: JSON.stringify(maalPurchases)
+            });
+        }
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+        alert("Record delete ho gaya!");
+    } catch(e) {
+        localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
+        alert("Record delete ho gaya!");
+    }
+}
+
+// 10. Fetch Function
 async function dbFetchMaalPurchases() {
     if (!loggedInUser) return;
     const userId = loggedInUser.id || loggedInUser.uid;
@@ -13206,19 +14376,395 @@ async function dbFetchMaalPurchases() {
             const data = doc.data();
             if (data && data.payload) {
                 const parsed = JSON.parse(data.payload);
-                // Agar corrupt data ho tou [] set karega
-                maalPurchases = Array.isArray(parsed) ? parsed : []; 
+                maalPurchases = Array.isArray(parsed) ? parsed : [];
             }
+        } else {
+            const local = localStorage.getItem('maal_purchases_backup');
+            if (local) maalPurchases = JSON.parse(local) || [];
         }
     } catch (e) {
-        console.error("Error fetching maal_purchases from Firebase:", e);
-        maalPurchases = [];
+        const local = localStorage.getItem('maal_purchases_backup');
+        if (local) maalPurchases = JSON.parse(local) || [];
+    }
+    renderMaalPurchaseTable();
+}
+
+// =========================================================
+// STOCK OUT MODULE LOGIC
+// =========================================================
+
+let maalStockOutLog = [];
+
+async function dbFetchMaalStockOut() {
+    if (!loggedInUser) return;
+    const userId = loggedInUser.id || loggedInUser.uid;
+    try {
+        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_stock_out_log').get();
+        if (doc.exists && doc.data()?.payload) {
+            maalStockOutLog = JSON.parse(doc.data().payload) || [];
+        } else {
+            const local = localStorage.getItem('maal_stock_out_backup');
+            if (local) maalStockOutLog = JSON.parse(local) || [];
+        }
+    } catch (e) {
+        const local = localStorage.getItem('maal_stock_out_backup');
+        if (local) maalStockOutLog = JSON.parse(local) || [];
+    }
+    setupStockOutModuleUI();
+}
+
+function setupStockOutModuleUI() {
+    if (!appSettings.nextStockOutId) appSettings.nextStockOutId = 1001;
+    
+    const idInput = document.getElementById('so-display-id');
+    if (idInput) idInput.value = `SO-${appSettings.nextStockOutId}`;
+
+    const dateInput = document.getElementById('so-date');
+    if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+
+    populateStockOutItemDropdown();
+    renderStockOutTable();
+}
+
+function populateStockOutItemDropdown() {
+    const select = document.getElementById('so-item-select');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Select Available Item --</option>';
+
+    const itemTotals = {};
+
+    (maalPurchases || []).forEach(p => {
+        if (!p.item) return;
+        const key = p.item.trim();
+        if (!itemTotals[key]) {
+            itemTotals[key] = {
+                name: key,
+                totalInBags: 0,
+                totalOutBags: 0,
+                totalPurchasedVal: 0,
+                lastRatePerBag: 0
+            };
+        }
+        const bags = Number(p.bags) || 0;
+        const bill = Number(p.bill) || 0;
+        itemTotals[key].totalInBags += bags;
+        itemTotals[key].totalPurchasedVal += bill;
+        if (bags > 0 && bill > 0) {
+            itemTotals[key].lastRatePerBag = bill / bags;
+        }
+    });
+
+    (maalStockOutLog || []).forEach(so => {
+        if (!so.item) return;
+        const key = so.item.trim();
+        if (itemTotals[key]) {
+            itemTotals[key].totalOutBags += (Number(so.bagsOut) || 0);
+        }
+    });
+
+    Object.values(itemTotals).forEach(i => {
+        const avail = i.totalInBags - i.totalOutBags;
+        if (avail > 0) {
+            const opt = document.createElement('option');
+            opt.value = i.name;
+            opt.dataset.available = avail;
+            opt.dataset.totalVal = i.totalPurchasedVal;
+            opt.dataset.ratePerBag = i.lastRatePerBag;
+            opt.textContent = `${i.name} (Available: ${avail} Bags)`;
+            select.appendChild(opt);
+        }
+    });
+}
+
+function calculateStockOutMath() {
+    const select = document.getElementById('so-item-select');
+    const selectedOpt = select?.options[select.selectedIndex];
+
+    const availableBags = parseFloat(selectedOpt?.dataset.available) || 0;
+    const totalAllBagsVal = parseFloat(selectedOpt?.dataset.totalVal) || 0;
+    const defaultRate = parseFloat(selectedOpt?.dataset.ratePerBag) || 0;
+
+    const rateInput = document.getElementById('so-rate-per-bag');
+    if (rateInput && (!rateInput.value || rateInput.value == 0) && defaultRate > 0) {
+        rateInput.value = defaultRate.toFixed(2);
+    }
+
+    const bagsOut = parseFloat(document.getElementById('so-bags-out')?.value) || 0;
+    const ratePerBag = parseFloat(document.getElementById('so-rate-per-bag')?.value) || 0;
+
+    const remainingBags = availableBags - bagsOut;
+    const dispatchedAmount = bagsOut * ratePerBag;
+
+    if (document.getElementById('so-remaining-bags')) document.getElementById('so-remaining-bags').value = `${remainingBags >= 0 ? remainingBags : 0} Bags`;
+    if (document.getElementById('so-dispatched-amount')) document.getElementById('so-dispatched-amount').value = `${CURRENCY_SYMBOL} ${dispatchedAmount.toFixed(2)}`;
+    if (document.getElementById('so-total-all-bags-amount')) document.getElementById('so-total-all-bags-amount').value = `${CURRENCY_SYMBOL} ${totalAllBagsVal.toFixed(2)}`;
+}
+
+async function saveStockOutRecord() {
+    const customer = document.getElementById('so-customer-name')?.value.trim() || '';
+    const item = document.getElementById('so-item-select')?.value || '';
+    const bagsOut = parseFloat(document.getElementById('so-bags-out')?.value) || 0;
+    const ratePerBag = parseFloat(document.getElementById('so-rate-per-bag')?.value) || 0;
+    const dateVal = document.getElementById('so-date')?.value || new Date().toISOString().split('T')[0];
+
+    const select = document.getElementById('so-item-select');
+    const selectedOpt = select?.options[select.selectedIndex];
+    const availableBags = parseFloat(selectedOpt?.dataset.available) || 0;
+    const totalAllBagsVal = parseFloat(selectedOpt?.dataset.totalVal) || 0;
+
+    if (!customer || !item || bagsOut <= 0) {
+        alert("Meharbani karke Customer Name, Item aur Bags Out ki taidad darj karein!");
+        return;
+    }
+
+    if (bagsOut > availableBags) {
+        alert(`Ghalti: Aap ke paas is waqt sirf ${availableBags} Bags available hain!`);
+        return;
+    }
+
+    const currentCode = `SO-${appSettings.nextStockOutId || 1001}`;
+    const dispatchedAmount = bagsOut * ratePerBag;
+    const remainingBags = availableBags - bagsOut;
+
+    const entry = {
+        id: currentCode,
+        date: dateVal,
+        customer: customer,
+        item: item,
+        bagsOut: bagsOut,
+        ratePerBag: ratePerBag,
+        dispatchedAmount: dispatchedAmount,
+        totalAllBagsVal: totalAllBagsVal,
+        remainingBags: remainingBags
+    };
+
+    if (!Array.isArray(maalStockOutLog)) maalStockOutLog = [];
+    maalStockOutLog.push(entry);
+
+    appSettings.nextStockOutId = (appSettings.nextStockOutId || 1001) + 1;
+    saveSettings();
+
+    setupStockOutModuleUI();
+
+    document.getElementById('so-customer-name').value = '';
+    document.getElementById('so-bags-out').value = '';
+    document.getElementById('so-rate-per-bag').value = '';
+    document.getElementById('so-remaining-bags').value = '';
+    document.getElementById('so-dispatched-amount').value = '';
+    document.getElementById('so-total-all-bags-amount').value = '';
+
+    try {
+        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            await db.collection('appData').doc(userId).collection('datasets').doc('maal_stock_out_log').set({
+                payload: JSON.stringify(maalStockOutLog)
+            });
+        }
+        localStorage.setItem('maal_stock_out_backup', JSON.stringify(maalStockOutLog));
+        alert("Stock Out Record Save Ho Gaya!");
+    } catch(e) {
+        localStorage.setItem('maal_stock_out_backup', JSON.stringify(maalStockOutLog));
+    }
+
+    generateStockOutVoucherPDF(entry.id);
+}
+
+function renderStockOutTable() {
+    const tbody = document.getElementById('so-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const records = Array.isArray(maalStockOutLog) ? maalStockOutLog : [];
+
+    if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 15px;">Stock Out ka koi record nahi mila.</td></tr>';
+        return;
+    }
+
+    [...records].reverse().forEach(item => {
+        const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '-';
+        const dispAmt = Number(item.dispatchedAmount) || 0;
+        const totalVal = Number(item.totalAllBagsVal) || 0;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${item.id}</strong></td>
+            <td>${dateStr}</td>
+            <td><strong>${item.customer || '-'}</strong></td>
+            <td style="font-weight:bold; color:#14b8a6;">${item.item || '-'}</td>
+            <td style="color:#ef4444; font-weight:bold;">-${item.bagsOut || 0} Bags</td>
+            <td style="color:#3b82f6; font-weight:bold;">${item.remainingBags !== undefined ? item.remainingBags : 0} Bags</td>
+            <td style="color:#ef4444; font-weight:bold;">${CURRENCY_SYMBOL} ${dispAmt.toFixed(2)}</td>
+            <td style="color:#10b981; font-weight:bold;">${CURRENCY_SYMBOL} ${totalVal.toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn btn-info btn-sm" onclick="generateStockOutVoucherPDF('${item.id}')">PDF</button>
+                    <button class="btn btn-warning btn-sm" onclick="openEditStockOutModal('${item.id}')">Edit</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function openEditStockOutModal(id) {
+    const item = (maalStockOutLog || []).find(p => p.id === id);
+    if (!item) return;
+
+    document.getElementById('edit-so-id').value = item.id;
+    document.getElementById('edit-so-display-id').value = item.id;
+    document.getElementById('edit-so-customer').value = item.customer || '';
+    document.getElementById('edit-so-bags').value = item.bagsOut || 0;
+    document.getElementById('edit-so-rate').value = item.ratePerBag || 0;
+    document.getElementById('edit-so-date').value = item.date || new Date().toISOString().split('T')[0];
+
+    calcEditStockOutMath();
+    document.getElementById('edit-stock-out-modal').style.display = 'flex';
+}
+
+function closeEditStockOutModal() {
+    document.getElementById('edit-stock-out-modal').style.display = 'none';
+}
+
+function calcEditStockOutMath() {
+    const bags = parseFloat(document.getElementById('edit-so-bags')?.value) || 0;
+    const rate = parseFloat(document.getElementById('edit-so-rate')?.value) || 0;
+    const total = bags * rate;
+    if (document.getElementById('edit-so-dispatched-amount')) document.getElementById('edit-so-dispatched-amount').value = `${CURRENCY_SYMBOL} ${total.toFixed(2)}`;
+}
+
+async function saveEditedStockOut() {
+    const id = document.getElementById('edit-so-id').value;
+    const itemIndex = maalStockOutLog.findIndex(p => p.id === id);
+    if (itemIndex === -1) return;
+
+    const customer = document.getElementById('edit-so-customer').value.trim();
+    const bagsOut = parseFloat(document.getElementById('edit-so-bags').value) || 0;
+    const ratePerBag = parseFloat(document.getElementById('edit-so-rate').value) || 0;
+    const dateVal = document.getElementById('edit-so-date').value;
+
+    if (!customer || bagsOut <= 0) {
+        alert("Sahi Customer Name aur Bags Out taidad darj karein.");
+        return;
+    }
+
+    maalStockOutLog[itemIndex].customer = customer;
+    maalStockOutLog[itemIndex].bagsOut = bagsOut;
+    maalStockOutLog[itemIndex].ratePerBag = ratePerBag;
+    maalStockOutLog[itemIndex].dispatchedAmount = bagsOut * ratePerBag;
+    maalStockOutLog[itemIndex].date = dateVal;
+
+    closeEditStockOutModal();
+    setupStockOutModuleUI();
+
+    try {
+        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
+            const userId = loggedInUser.id || loggedInUser.uid;
+            await db.collection('appData').doc(userId).collection('datasets').doc('maal_stock_out_log').set({
+                payload: JSON.stringify(maalStockOutLog)
+            });
+        }
+        localStorage.setItem('maal_stock_out_backup', JSON.stringify(maalStockOutLog));
+        alert("Stock Out Record Update ho gaya!");
+    } catch(e) {
+        localStorage.setItem('maal_stock_out_backup', JSON.stringify(maalStockOutLog));
     }
 }
 
-// =========================================================================
-// AUTOMATED DEMAND RECORD SYSTEM & CALCULATIONS (CORE FUNCTIONS)
-// =========================================================================
+function generateStockOutVoucherPDF(id) {
+    const item = (maalStockOutLog || []).find(p => p.id === id);
+    if (!item) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const darkColor = [15, 23, 42];
+    const redColor = [239, 68, 68];
+
+    doc.setFillColor(...darkColor);
+    doc.rect(0, 0, 210, 35, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP SOLUTION", 14, 16);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(203, 213, 225);
+    doc.text(appSettings.restaurantAddress || "Main Commercial Market", 14, 23);
+    doc.text(`Phone: ${appSettings.restaurantPhone || "N/A"}`, 14, 28);
+
+    doc.setFontSize(15);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...redColor);
+    doc.text("STOCK OUT VOUCHER", 196, 18, { align: 'right' });
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(255, 255, 255);
+    doc.text(`ID: #${item.id}`, 196, 25, { align: 'right' });
+
+    let yPos = 45;
+
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(14, yPos, 88, 24, 2, 2, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(14, yPos, 88, 24, 2, 2, 'D');
+
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("CUSTOMER / RECIPIENT", 18, yPos + 6);
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(11);
+    doc.text(item.customer || "N/A", 18, yPos + 14);
+
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(108, yPos, 88, 24, 2, 2, 'F');
+    doc.roundedRect(108, yPos, 88, 24, 2, 2, 'D');
+
+    const dateStr = item.date ? new Date(item.date).toLocaleDateString() : 'N/A';
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text("DISPATCH DETAILS", 112, yPos + 6);
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Dispatch Date: ${dateStr}`, 112, yPos + 14);
+
+    yPos += 32;
+
+    const summaryData = [
+        ['Stock Out Item Name:', item.item || '-'],
+        ['Bags Dispatched (Out):', `${item.bagsOut || 0} Bags`],
+        ['Rate Per Bag:', `${CURRENCY_SYMBOL} ${(Number(item.ratePerBag) || 0).toFixed(2)}`],
+        ['Total Dispatched Amount:', `${CURRENCY_SYMBOL} ${(Number(item.dispatchedAmount) || 0).toFixed(2)}`],
+        ['Remaining Stock Bags:', `${item.remainingBags !== undefined ? item.remainingBags : 0} Bags`],
+        ['Total Purchased All Stock Value:', `${CURRENCY_SYMBOL} ${(Number(item.totalAllBagsVal) || 0).toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 4 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        didParseCell: function(data) {
+            if (data.row.index === 3) data.cell.styles.textColor = [239, 68, 68];
+            if (data.row.index === 5) data.cell.styles.textColor = [16, 185, 129];
+        }
+    });
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(148, 163, 184);
+    doc.text("Computer Generated Stock Out Voucher - Valid Without Physical Signature", 105, 285, { align: 'center' });
+
+    doc.save(`Stock_Out_${(item.customer || 'Customer').replace(/\s+/g, '_')}_${item.id}.pdf`);
+}
 
 function populatePendingDemandsDropdown() {
     const select = document.getElementById('dr-pending-select');
@@ -13348,6 +14894,7 @@ record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
         populatePendingDemandsDropdown();
         handlePendingDemandSelection(); // reset input fields
         renderDemandRecordTable();
+
         refreshAll();
     } catch (e) {
         console.error("Save Error:", e);
@@ -13616,64 +15163,77 @@ let savedVehicles = [];
 let editingCustomerId = null;
 
 
-// 1. SIRF RIDER SAVE KARNE KA FUNCTION
+// 1. Updated Rider Save Function (All dropdowns are sync'd instantly)
 async function saveOnlyRider() {
     const riderName = document.getElementById('only-rider-name-input').value.trim();
+    if (!riderName) {
+        alert("Meharbani karke Rider ka naam likhein!");
+        return;
+    }
+    const newRider = {
+        id: 'rider_' + Date.now(),
+        name: riderName,
+        date: new Date().toISOString()
+    };
+    savedRiders.push(newRider);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+            payload: JSON.stringify(savedRiders)
+        });
+        alert("Rider ka naam kamyabi se save ho gaya!");
+        document.getElementById('only-rider-name-input').value = ''; // Input khali karein
+        renderOnlyRiderTable();
         
-            if (!riderName) {
-                    alert("Meharbani karke Rider ka naam likhein!");
-                            return;
-                                }
-                                
-                                    const newRider = {
-                                            id: 'rider_' + Date.now(),
-                                                    name: riderName,
-                                                            date: new Date().toISOString()
-                                                                };
-                                                                
-                                                                    savedRiders.push(newRider);
-                                                                    
-                                                                        try {
-                                                                                const userId = loggedInUser.id || loggedInUser.uid;
-                                                                                        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
-                                                                                                    payload: JSON.stringify(savedRiders)
-                                                                                                            });
-                                                                                                                    
-                                                                                                                            alert("Rider ka naam kamyabi se save ho gaya!");
-                                                                                                                                    document.getElementById('only-rider-name-input').value = ''; // Input khali karein
-                                                                                                                                            renderOnlyRiderTable();
-                                                                                                                                                } catch (e) {
-                                                                                                                                                        alert("Rider save karne mein masla aaya: " + e.message);
-                                                                                                                                                            }
-                                                                                                                                                            }
-                                                                                                                                                            
-                                                                                                                                                            // RIDER TABLE SHOW KARNE KA FUNCTION
-                                                                                                                                                            function renderOnlyRiderTable() {
-                                                                                                                                                                const tbody = document.getElementById('only-rider-list-body');
-                                                                                                                                                                    if (!tbody) return;
-                                                                                                                                                                        tbody.innerHTML = '';
-                                                                                                                                                                        
-                                                                                                                                                                            savedRiders.forEach(rider => {
-                                                                                                                                                                                    const row = document.createElement('tr');
-                                                                                                                                                                                            row.innerHTML = `
-                                                                                                                                                                                                        <td>${new Date(rider.date).toLocaleDateString()}</td>
-                                                                                                                                                                                                                    <td style="font-weight: bold; color: var(--accent-color);">${rider.name}</td>
-                                                                                                                                                                                                                                <td><button class="btn btn-danger btn-sm" onclick="deleteOnlyRider('${rider.id}')">Delete</button></td>
-                                                                                                                                                                                                                                        `;
-                                                                                                                                                                                                                                                tbody.appendChild(row);
-                                                                                                                                                                                                                                                    });
-                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                    
-                                                                                                                                                                                                                                                    // RIDER DELETE KARNE KA FUNCTION
-                                                                                                                                                                                                                                                    async function deleteOnlyRider(id) {
-                                                                                                                                                                                                                                                        if(!confirm("Kya aap waqai is Rider ko delete karna chahte hain?")) return;
-                                                                                                                                                                                                                                                            savedRiders = savedRiders.filter(r => r.id !== id);
-                                                                                                                                                                                                                                                                try {
-                                                                                                                                                                                                                                                                        const userId = loggedInUser.id || loggedInUser.uid;
-                                                                                                                                                                                                                                                                                await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
-                                                                                                                                                                                                                                                                                            payload: JSON.stringify(savedRiders)
-                                                                                                                                                                                                                                                                                                    });
-                                                                                                                                                                                                                                                                                                            renderOnlyRiderTable();
+        // Instant dropdown sync triggers
+        if (typeof populateGatePassRiderAndVehicleDropdowns === 'function') populateGatePassRiderAndVehicleDropdowns();
+        if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
+        if (typeof populateDemandRecordRiderDropdown === 'function') populateDemandRecordRiderDropdown();
+    } catch (e) {
+        alert("Rider save karne mein masla aaya: " + e.message);
+    }
+}
+
+// Rider Table ko Screen par Dikhane ka Function
+function renderOnlyRiderTable() {
+    const tbody = document.getElementById('only-rider-list-body');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const safeRiders = Array.isArray(savedRiders) ? savedRiders : [];
+
+    if (safeRiders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center;">Koi saved rider nahi mila.</td></tr>';
+        return;
+    }
+
+    [...safeRiders].reverse().forEach(rider => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${rider.date ? new Date(rider.date).toLocaleDateString() : 'N/A'}</td>
+            <td><strong>${rider.name}</strong></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteOnlyRider('${rider.id}')">Delete</button></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+
+// 2. Updated Rider Delete Function (Removed riders are immediately excluded from dropdowns)
+async function deleteOnlyRider(id) {
+    if(!confirm("Kya aap waqai is Rider ko delete karna chahte hain?")) return;
+    savedRiders = savedRiders.filter(r => r.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+            payload: JSON.stringify(savedRiders)
+        });
+        renderOnlyRiderTable();
+        
+        // Instant dropdown sync triggers
+        if (typeof populateGatePassRiderAndVehicleDropdowns === 'function') populateGatePassRiderAndVehicleDropdowns();
+        if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
+        if (typeof populateDemandRecordRiderDropdown === 'function') populateDemandRecordRiderDropdown();
     } catch(e) {
         console.error(e);
     }
@@ -13682,6 +15242,7 @@ async function saveOnlyRider() {
 // --------------------------------------------------------
 
 // 2. SIRF VEHICLE NUMBER SAVE KARNE KA FUNCTION
+// 1. Updated Vehicle Save Function
 async function saveOnlyVehicle() {
     const vehicleNo = document.getElementById('only-vehicle-no-input').value.trim();
     
@@ -13705,10 +15266,31 @@ async function saveOnlyVehicle() {
         });
         
         alert("Vehicle Number kamyabi se save ho gaya!");
-        document.getElementById('only-vehicle-no-input').value = ''; // Input khali karein
+        document.getElementById('only-vehicle-no-input').value = ''; 
         renderOnlyVehicleTable();
+
+        // ✅ NAYA UPDATE: Save hote hi Used Stock dropdown ko furan update karein
+        if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
     } catch (e) {
         alert("Vehicle save karne mein masla aaya: " + e.message);
+    }
+}
+
+// 2. Updated Vehicle Delete Function
+async function deleteOnlyVehicle(id) {
+    if(!confirm("Kya aap waqai is Vehicle ko delete karna chahte hain?")) return;
+    savedVehicles = savedVehicles.filter(v => v.id !== id);
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').set({
+            payload: JSON.stringify(savedVehicles)
+        });
+        renderOnlyVehicleTable();
+
+        // ✅ NAYA UPDATE: Delete hote hi Used Stock dropdown refresh karein
+        if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
+    } catch(e) {
+        console.error(e);
     }
 }
 
@@ -14859,6 +16441,843 @@ async function saveEditedCustomerFromModal() {
     }
 }
 
+// 1. Auto Calculation: Qty * Price
+function calculateStockValue() {
+    const qty = parseFloat(document.getElementById('stock-quantity').value) || 0;
+    const price = parseFloat(document.getElementById('stock-price').value) || 0;
+    document.getElementById('stock-total-value').value = (qty * price).toFixed(2);
+}
+
+// 2. Stock Save aur Inventory Update
+// --- NEW STOCK HISTORY & ADD STOCK FUNCTIONS ---
+async function dbFetchAddedStockHistory() {
+    if (!loggedInUser) return;
+    const userId = loggedInUser.id || loggedInUser.uid;
+    const key = getUserSpecificKey('added_stock_history'); // Sahi user-specific key
+    try {
+        const doc = await db.collection('appData').doc(userId).collection('datasets').doc(key).get();
+        if (doc.exists) {
+            const parsed = JSON.parse(doc.data().payload);
+            addedStockHistory = Array.isArray(parsed) ? parsed : [];
+        }
+    } catch (e) {
+        console.error("Stock history fetch error:", e);
+        addedStockHistory = [];
+    }
+}
+
+async function addNewStock() {
+    const category = document.getElementById('stock-category').value;
+    const productName = document.getElementById('stock-product-name').value.trim();
+    const type = document.getElementById('stock-type').value; // 'in' or 'out'
+    const qty = parseInt(document.getElementById('stock-quantity').value) || 0;
+    const price = parseFloat(document.getElementById('stock-price').value) || 0;
+    const date = document.getElementById('stock-date').value;
+
+    if (!productName || qty <= 0 || price <= 0 || !date) {
+        alert("Sahi Product, Quantity, Price aur Date darj karein.");
+        return;
+    }
+
+    const totalValue = qty * price;
+
+    const newRecord = {
+        id: 'ash_' + Date.now(),
+        category: category,
+        productName: productName,
+        type: type, // 'in' ya 'out'
+        quantity: qty,
+        price: price,
+        totalValue: totalValue,
+        date: date
+    };
+    addedStockHistory.push(newRecord);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('added_stock_history')).set({
+    payload: JSON.stringify(addedStockHistory)
+});
+
+alert("Stock IN kamyabi se record ho gaya!");
+        
+        // Form Clear karein
+        document.getElementById('stock-product-name').value = '';
+        document.getElementById('stock-quantity').value = '';
+        document.getElementById('stock-price').value = '';
+        document.getElementById('stock-total-value').value = '';
+        
+        renderAddedStockHistoryTable();
+
+        // --- DYNAMIC REFRESH HOOK ---
+        // Naya stock add hote hi Used Stock dropdown ko refresh karein
+        if (typeof populateUsedStockDropdowns === 'function') {
+            populateUsedStockDropdowns();
+        }
+    } catch (e) {
+        alert("Error saving stock: " + e.message);
+    }
+}
+
+function renderAddedStockHistoryTable() {
+    const tbody = document.getElementById('added-stock-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const searchSelect = document.getElementById('added-stock-search-select');
+    const selectedCategory = searchSelect ? searchSelect.value : ''; 
+
+    let filteredHistory = addedStockHistory || [];
+    if (selectedCategory && selectedCategory !== '') {
+        filteredHistory = filteredHistory.filter(record => record.category === selectedCategory);
+    }
+
+    const sortedChronologically = [...addedStockHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const runningBalances = {};
+    
+    sortedChronologically.forEach(record => {
+        const prod = record.productName;
+        if (!runningBalances[prod]) runningBalances[prod] = 0;
+        
+        if (record.type === 'out') {
+            runningBalances[prod] -= (record.quantity || 0);
+        } else {
+            runningBalances[prod] += (record.quantity || 0);
+        }
+        record.remaining = runningBalances[prod];
+    });
+
+    const sortedToDisplay = [...filteredHistory].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    let totalIn = 0;
+    let totalOut = 0;
+    let valueIn = 0;
+
+    if (sortedToDisplay.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Koi history record nahi mila.</td></tr>';
+        document.getElementById('added-stock-summary').style.display = 'none';
+        return;
+    }
+
+    sortedToDisplay.forEach(record => {
+        const isOut = record.type === 'out';
+        
+        if (isOut) {
+            totalOut += (record.quantity || 0);
+        } else {
+            totalIn += (record.quantity || 0);
+            valueIn += (record.totalValue || 0);
+        }
+
+        const typeBadge = isOut 
+            ? `<span style="background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px;">Sold By</span>` 
+            : `<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-right: 5px;">Receive By</span>`;
+
+        const remainingStock = record.remaining !== undefined ? record.remaining : 0;
+        
+        const workerText = record.workerName && record.workerName !== '-' ? record.workerName : '-';
+        // RIDER ki jagah Vehicle Number display karein (purane records ke liye fallback)
+        const vehicleText = record.vehicleNumber || record.riderName || '-';
+        const unitPrice = record.price ? record.price.toFixed(2) : '0.00';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(record.date).toLocaleDateString()}</td>
+            <td><span style="background: rgba(20, 184, 166, 0.15); color: var(--accent-color); padding: 4px 8px; border-radius: 4px; font-weight: bold;">${record.category}</span></td>
+            <td><strong>${record.productName}</strong></td>
+            <td style="color: var(--text-light);">${workerText}</td>
+            <td style="color: var(--warning-color); font-weight: bold;">${vehicleText}</td>
+            <td style="font-weight:bold;">${typeBadge} ${record.quantity || 0}</td>
+            <td style="font-weight:bold; color:var(--info-color);">${remainingStock}</td>
+            <td style="font-weight:bold;">${CURRENCY_SYMBOL}${unitPrice}</td>
+            <td style="font-weight:bold; color:${isOut ? 'var(--danger-color)' : 'var(--success-color)'};">${CURRENCY_SYMBOL}${record.totalValue.toFixed(2)}</td>
+            <td>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-warning btn-sm" onclick="openEditStockHistoryModal('${record.id}')">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteAddedStockHistory('${record.id}')">Delete</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    const remaining = totalIn - totalOut;
+
+    const summaryDiv = document.getElementById('added-stock-summary');
+    if (summaryDiv) {
+        summaryDiv.style.display = 'grid';
+        document.getElementById('ash-total-in').textContent = totalIn;
+        document.getElementById('ash-total-out').textContent = totalOut;
+        document.getElementById('ash-remaining').textContent = remaining;
+        document.getElementById('ash-total-val').textContent = `${CURRENCY_SYMBOL}${valueIn.toFixed(2)}`;
+    }
+}
+
+function openEditStockHistoryModal(id) {
+    const record = addedStockHistory.find(r => r.id === id);
+    if (!record) return;
+
+    document.getElementById('edit-sh-id').value = record.id;
+    document.getElementById('edit-sh-product').value = record.productName;
+    document.getElementById('edit-sh-type').value = record.type || 'in'; // IN/OUT load karega
+    document.getElementById('edit-sh-qty').value = record.quantity;
+    document.getElementById('edit-sh-price').value = record.price;
+    document.getElementById('edit-sh-total').value = record.totalValue.toFixed(2);
+    document.getElementById('edit-sh-date').value = record.date;
+
+    const catSelect = document.getElementById('edit-sh-category');
+    catSelect.innerHTML = '';
+    expenseCategories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        if (cat === record.category) opt.selected = true;
+        catSelect.appendChild(opt);
+    });
+
+    document.getElementById('edit-stock-history-modal').style.display = 'flex';
+}
+
+// Edit Modal ko band karne ka function
+function closeEditStockHistoryModal() {
+    const modal = document.getElementById('edit-stock-history-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+async function saveEditedStockHistory() {
+    const id = document.getElementById('edit-sh-id').value;
+    const category = document.getElementById('edit-sh-category').value;
+    const productName = document.getElementById('edit-sh-product').value.trim();
+    const type = document.getElementById('edit-sh-type').value; 
+    const qty = parseInt(document.getElementById('edit-sh-qty').value) || 0;
+    const price = parseFloat(document.getElementById('edit-sh-price').value) || 0;
+    const date = document.getElementById('edit-sh-date').value;
+
+    if (!productName || qty <= 0 || price <= 0 || !date) {
+        alert("Sahi details darj karein.");
+        return;
+    }
+
+    const recordIndex = addedStockHistory.findIndex(r => r.id === id);
+    if (recordIndex === -1) return;
+
+    addedStockHistory[recordIndex].category = category;
+    addedStockHistory[recordIndex].productName = productName;
+    addedStockHistory[recordIndex].type = type; 
+    addedStockHistory[recordIndex].quantity = qty;
+    addedStockHistory[recordIndex].price = price;
+    addedStockHistory[recordIndex].totalValue = qty * price;
+    addedStockHistory[recordIndex].date = date;
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('added_stock_history').set({
+            payload: JSON.stringify(addedStockHistory)
+        });
+        alert("Stock history update ho gayi!");
+        closeEditStockHistoryModal();
+        renderAddedStockHistoryTable();
+
+        // --- DYNAMIC REFRESH HOOK ---
+        // Stock edit hote hi dropdown list ko update karein
+        if (typeof populateUsedStockDropdowns === 'function') {
+            populateUsedStockDropdowns();
+        }
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+// History delete karna
+async function deleteAddedStockHistory(id) {
+    if (!confirm("Kya aap waqai is record ko history se delete karna chahte hain?")) return;
+
+    addedStockHistory = addedStockHistory.filter(r => r.id !== id);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        await db.collection('appData').doc(userId).collection('datasets').doc('added_stock_history').set({
+            payload: JSON.stringify(addedStockHistory)
+        });
+        alert("Record history se delete ho gaya!");
+        renderAddedStockHistoryTable();
+
+        // --- DYNAMIC REFRESH HOOK ---
+        // Stock delete hote hi dropdown list ko update karein
+        if (typeof populateUsedStockDropdowns === 'function') {
+            populateUsedStockDropdowns();
+        }
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+function renderInventoryDashboard() {
+    let inventory = JSON.parse(localStorage.getItem('stock_inventory')) || [];
+    let grandTotalValue = 0;
+
+    inventory.forEach(item => {
+        grandTotalValue += (item.quantity * item.price);
+    });
+
+    // Isay aap dashboard par kahin bhi show kar sakte hain
+    console.log("Total Inventory Value: Rs. " + grandTotalValue.toFixed(2));
+    
+    // UI mein dikhane ke liye
+    const displayElement = document.getElementById('total-inventory-display');
+    if(displayElement) {
+        displayElement.innerText = `Rs. ${grandTotalValue.toLocaleString()}`;
+    }
+}
+
+// 1. Stock History array se unique available items list karna
+function getAvailableStockList() {
+    const stockMap = {};
+    const historyArray = Array.isArray(addedStockHistory) ? addedStockHistory : [];
+    
+    historyArray.forEach(item => {
+        const name = item.productName;
+        if (!name) return;
+        
+        if (!stockMap[name]) {
+            stockMap[name] = { name: name, category: item.category, totalIn: 0, totalOut: 0, lastPrice: 0 };
+        }
+        if (item.type === 'out') {
+            stockMap[name].totalOut += (item.quantity || 0);
+        } else {
+            stockMap[name].totalIn += (item.quantity || 0);
+            stockMap[name].lastPrice = item.price || 0;
+        }
+    });
+    
+    const list = [];
+    for (const key in stockMap) {
+        const remaining = stockMap[key].totalIn - stockMap[key].totalOut;
+        if (remaining > 0) {
+            list.push({
+                name: key,
+                category: stockMap[key].category,
+                remaining: remaining,
+                lastPrice: stockMap[key].lastPrice
+            });
+        }
+    }
+    return list;
+}
+
+let masterAvailableStockList = []; // Master copy for live combobox filtering
+
+function populateUsedStockDropdowns() {
+    masterAvailableStockList = getAvailableStockList();
+    renderCustomStockOptions(""); // Initial render (all items)
+
+    // Worker dropdown load karein
+    const workerSelect = document.getElementById('us-worker-select');
+    if (workerSelect) {
+        workerSelect.innerHTML = '<option value="">-- Select Worker --</option>';
+        const workersArray = Array.isArray(demandWorkers) ? demandWorkers : [];
+        workersArray.forEach(w => {
+            const opt = document.createElement('option');
+            opt.value = w.name;
+            opt.textContent = `${w.name} (${w.phone || ''})`;
+            workerSelect.appendChild(opt);
+        });
+    }
+
+    // Vehicle Number dropdown load karein (NAYA UPDATE)
+    const vehicleSelect = document.getElementById('us-vehicle-select');
+    if (vehicleSelect) {
+        vehicleSelect.innerHTML = '<option value="">-- Select Vehicle Number --</option>';
+        const vehiclesArray = Array.isArray(savedVehicles) ? savedVehicles : [];
+        vehiclesArray.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.number;
+            opt.textContent = v.number;
+            vehicleSelect.appendChild(opt);
+        });
+    }
+}
+
+// 2. Custom Select Dropdown Toggle
+function toggleCustomSelect() {
+    const list = document.getElementById('us-stock-options-list');
+    if (!list) return;
+    list.style.display = (list.style.display === 'none' || list.style.display === '') ? 'block' : 'none';
+}
+
+// 3. Dropdown band karna jab user bahar click kare
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.custom-select-wrapper');
+    const list = document.getElementById('us-stock-options-list');
+    if (wrapper && list && !wrapper.contains(e.target)) {
+        list.style.display = 'none';
+    }
+});
+
+// 4. Custom option elements dynamic renderer
+function renderCustomStockOptions(query = "") {
+    const listContainer = document.getElementById('us-stock-options-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    const lowercaseQuery = query.toLowerCase().trim();
+    let matchCount = 0;
+
+    masterAvailableStockList.forEach(item => {
+        const displayName = `${item.name} (${item.category}) - Available: ${item.remaining}`;
+        if (!lowercaseQuery || displayName.toLowerCase().includes(lowercaseQuery)) {
+            matchCount++;
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 10px 14px; cursor: pointer; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.9rem; transition: background 0.2s;';
+            div.innerHTML = `<strong>${item.name}</strong> <span style="font-size:0.8rem; opacity:0.6;">(${item.category})</span> <span style="float:right; font-weight:bold; color:#10b981;">Available: ${item.remaining}</span>`;
+            
+            div.onmouseover = () => div.style.backgroundColor = 'rgba(255,255,255,0.05)';
+            div.onmouseout = () => div.style.backgroundColor = 'transparent';
+            div.onclick = () => selectCustomStockItem(item);
+            listContainer.appendChild(div);
+        }
+    });
+
+    if (matchCount === 0) {
+        listContainer.innerHTML = '<div style="padding: 12px; text-align: center; color: #94a3b8; font-size: 0.85rem;">No matching stock items found.</div>';
+    }
+}
+
+// 5. Item selection handler (Highly compatible setAttribute binding)
+function selectCustomStockItem(item) {
+    document.getElementById('us-stock-search').value = `${item.name} (${item.category})`;
+    
+    const hiddenInput = document.getElementById('us-stock-item');
+    if (hiddenInput) {
+        hiddenInput.value = item.name;
+        // setAttribute is 100% bug-free on Safari/legacy mobile browsers
+        hiddenInput.setAttribute('data-remaining', item.remaining);
+        hiddenInput.setAttribute('data-category', item.category);
+    }
+    
+    const priceInput = document.getElementById('us-unit-price');
+    if (priceInput) priceInput.value = item.lastPrice;
+
+    calculateUsedStockTotal();
+    document.getElementById('us-stock-options-list').style.display = 'none';
+}
+
+// 6. Live Search filter oninput handler
+function filterCustomSelect() {
+    const query = document.getElementById('us-stock-search').value;
+    renderCustomStockOptions(query);
+    document.getElementById('us-stock-options-list').style.display = 'block';
+}
+
+// 7. Dynamic local timezone safe date formatter (Safari Compatibility)
+function formatUsedStockDate(dateStr) {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`; // Returns DD/MM/YYYY
+    }
+    return dateStr;
+}
+
+// 8. Used Stock History Table Renderer (With safe date handling)
+// 8. Used Stock History Table Renderer (With live Remaining Stock)
+function renderUsedStockTable() {
+    const tbody = document.getElementById('used-stock-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // --- NAYA CODE: Live Remaining Stock nikalne ke liye list mangwayein ---
+    const currentStockList = getAvailableStockList();
+    // ------------------------------------------------------------------------
+
+    const listToRender = Array.isArray(usedStockLog) ? usedStockLog : [];
+    const sorted = [...listToRender].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    if (sorted.length === 0) {
+        // NAYA CODE: colspan ko 9 se 10 kar diya kyun ke ab 10 columns hain
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Used stock ka koi record nahi mila.</td></tr>';
+        return;
+    }
+
+    sorted.forEach(log => {
+        // --- NAYA CODE: Is specific item ka remaining stock dhoondna ---
+        const stockItem = currentStockList.find(s => s.name === log.productName);
+        const remainingQty = stockItem ? stockItem.remaining : 0;
+        // ---------------------------------------------------------------
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatUsedStockDate(log.date)}</td>
+            <td><span style="background: rgba(20, 184, 166, 0.15); color: var(--accent-color); padding: 4px 8px; border-radius: 4px; font-weight: bold;">${log.category}</span></td>
+            <td><strong>${log.productName}</strong></td>
+            <td><strong>${log.workerName}</strong></td>
+            <td>${log.riderName}</td>
+            <td style="font-weight: bold; color: var(--danger-color);">${log.quantity}</td>
+            
+            <!-- NAYA COLUMN: Remaining Qty yahan dikhegi -->
+            <td style="font-weight: bold; color: var(--info-color);">${remainingQty}</td>
+            
+            <td>${CURRENCY_SYMBOL}${log.price.toFixed(2)}</td>
+            <td style="font-weight: bold; color: var(--danger-color);">${CURRENCY_SYMBOL}${log.totalValue.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteUsedStock('${log.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// 7. Used Stock delete/revert implementation
+async function deleteUsedStock(id) {
+    if (!confirm("Kya aap waqai is used stock entry ko delete karna chahte hain? Is se stock automatically revert ho jayega.")) {
+        return;
+    }
+
+    const logEntry = usedStockLog.find(l => l.id === id);
+    if (!logEntry) return;
+
+    // Out transaction clean/revert karna
+    addedStockHistory = addedStockHistory.filter(r => r.id !== logEntry.ashRefId);
+    
+    // Log list update
+    usedStockLog = usedStockLog.filter(l => l.id !== id);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+        
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('added_stock_history')).set({
+            payload: JSON.stringify(addedStockHistory)
+        });
+        
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('pos_app_used_stock')).set({
+            payload: JSON.stringify(usedStockLog)
+        });
+
+        localStorage.setItem(getUserSpecificKey('pos_app_used_stock'), JSON.stringify(usedStockLog));
+        localStorage.setItem(getUserSpecificKey('added_stock_history'), JSON.stringify(addedStockHistory));
+
+        alert("Record successfully deleted and stock reverted back!");
+        
+        populateUsedStockDropdowns();
+        renderUsedStockTable();
+        refreshAll();
+
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+}
+
+// Edit Stock History Modal ke liye total value calculate karne ka function
+function calcEditStockTotal() {
+    const qty = parseInt(document.getElementById('edit-sh-qty').value) || 0;
+    const price = parseFloat(document.getElementById('edit-sh-price').value) || 0;
+    document.getElementById('edit-sh-total').value = (qty * price).toFixed(2);
+}
+
+// Used Stock form ke liye total value calculate karne ka function
+function calculateUsedStockTotal() {
+    const qty = parseFloat(document.getElementById('us-quantity').value) || 0;
+    const price = parseFloat(document.getElementById('us-unit-price').value) || 0;
+    document.getElementById('us-total-value').value = (qty * price).toFixed(2);
+}
+
+
+// Database se Used Stock History load karne ka function
+async function dbFetchUsedStock() {
+    usedStockLog = await dbFetchData("pos_app_used_stock") || [];
+}
+
+// Used Stock ko save aur stock se deduct karne ka updated function
+async function saveUsedStock() {
+    const stockItemName = document.getElementById('us-stock-item').value;
+    const workerName = document.getElementById('us-worker-select').value;
+    const vehicleNumber = document.getElementById('us-vehicle-select').value; // Rider ki jagah Vehicle Number
+    const qtyTaken = parseInt(document.getElementById('us-quantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('us-unit-price').value) || 0;
+    const totalVal = parseFloat(document.getElementById('us-total-value').value) || 0;
+    const date = document.getElementById('us-date').value;
+
+    const hiddenInput = document.getElementById('us-stock-item');
+    const availableQty = parseInt(hiddenInput.getAttribute('data-remaining')) || 0;
+    const category = hiddenInput.getAttribute('data-category') || '';
+
+    if (!stockItemName || (!workerName && !vehicleNumber) || qtyTaken <= 0 || !date) {
+        alert("Meharbani karke Stock Item, Qty, Date aur (Worker ya Vehicle Number mein se koi 1) zaroor select karein.");
+        return;
+    }
+
+    if (qtyTaken > availableQty) {
+        alert(`Ghalti: Aapke paas sirf ${availableQty} stock mojud hai. Aap ${qtyTaken} nikal rahe hain.`);
+        return;
+    }
+
+    // 1. Naya Entry Log banayein
+    const logId = 'usl_' + Date.now();
+    const ashRefId = 'ash_out_' + Date.now(); // Reference for stock OUT ledger
+
+    const newLog = {
+        id: logId,
+        ashRefId: ashRefId,
+        productName: stockItemName,
+        category: category,
+        workerName: workerName || '-',
+        vehicleNumber: vehicleNumber || '-', // Vehicle Number saved
+        quantity: qtyTaken,
+        price: unitPrice,
+        totalValue: totalVal,
+        date: date
+    };
+
+    usedStockLog.push(newLog);
+
+    // 2. Added Stock History mein OUT entry shamil karein
+    const outRecord = {
+        id: ashRefId,
+        category: category,
+        productName: stockItemName,
+        type: 'out',
+        quantity: qtyTaken,
+        price: unitPrice,
+        totalValue: totalVal,
+        date: date,
+        workerName: workerName || '-',
+        riderName: vehicleNumber || '-' // History Ledger Report support
+    };
+    addedStockHistory.push(outRecord);
+
+    try {
+        const userId = loggedInUser.id || loggedInUser.uid;
+
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('pos_app_used_stock')).set({
+            payload: JSON.stringify(usedStockLog)
+        });
+
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('added_stock_history')).set({
+            payload: JSON.stringify(addedStockHistory)
+        });
+
+        localStorage.setItem(getUserSpecificKey('pos_app_used_stock'), JSON.stringify(usedStockLog));
+        localStorage.setItem(getUserSpecificKey('added_stock_history'), JSON.stringify(addedStockHistory));
+
+        alert("Used Stock kamyabi se record aur deduct ho gaya!");
+        
+        // Clear used stock inputs
+        document.getElementById('us-stock-search').value = '';
+        document.getElementById('us-stock-item').value = '';
+        document.getElementById('us-worker-select').value = '';
+        document.getElementById('us-vehicle-select').value = '';
+        document.getElementById('us-quantity').value = '';
+        document.getElementById('us-unit-price').value = '';
+        document.getElementById('us-total-value').value = '';
+
+        populateUsedStockDropdowns();
+        renderUsedStockTable();
+        renderAddedStockHistoryTable();
+        refreshAll();
+
+    } catch (e) {
+        alert("Error saving used stock: " + e.message);
+    }
+}
+
+// Used Stock History Table Renderer (Updated)
+function renderUsedStockTable() {
+    const tbody = document.getElementById('used-stock-history-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const currentStockList = getAvailableStockList();
+    const listToRender = Array.isArray(usedStockLog) ? usedStockLog : [];
+    const sorted = [...listToRender].sort((a,b) => new Date(b.date) - new Date(a.date));
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center;">Used stock ka koi record nahi mila.</td></tr>';
+        return;
+    }
+
+    sorted.forEach(log => {
+        const stockItem = currentStockList.find(s => s.name === log.productName);
+        const remainingQty = stockItem ? stockItem.remaining : 0;
+        
+        // Vehicle Number display karein (purane data ke liye riderName fallback)
+        const vehicleDisplay = log.vehicleNumber || log.riderName || '-';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${formatUsedStockDate(log.date)}</td>
+            <td><span style="background: rgba(20, 184, 166, 0.15); color: var(--accent-color); padding: 4px 8px; border-radius: 4px; font-weight: bold;">${log.category}</span></td>
+            <td><strong>${log.productName}</strong></td>
+            <td><strong>${log.workerName || '-'}</strong></td>
+            <td><strong style="color: var(--warning-color);">${vehicleDisplay}</strong></td>
+            <td style="font-weight: bold; color: var(--danger-color);">${log.quantity}</td>
+            <td style="font-weight: bold; color: var(--info-color);">${remainingQty}</td>
+            <td>${CURRENCY_SYMBOL}${log.price.toFixed(2)}</td>
+            <td style="font-weight: bold; color: var(--danger-color);">${CURRENCY_SYMBOL}${log.totalValue.toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-danger" onclick="deleteUsedStock('${log.id}')">Delete</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// =========================================================
+// STOCK HISTORY & LEDGER PDF REPORT GENERATOR
+// =========================================================
+function generateStockHistoryPDF(reportType) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF library load nahi hui. Meharbani karke page refresh karein.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait A4 Page
+
+    let now = (typeof getCloudDate === 'function') ? getCloudDate() : new Date();
+    let startDate, endDate, reportTitle;
+
+    if (reportType === 'daily') {
+        reportTitle = "Daily Product Stock Report";
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        endDate = new Date(new Date().setHours(23, 59, 59, 999));
+    } else if (reportType === 'weekly') {
+        reportTitle = "Weekly Product Stock Report";
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        startDate = new Date(now.setDate(diff));
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        endDate.setHours(23, 59, 59, 999);
+    } else if (reportType === 'monthly') {
+        reportTitle = "Monthly Product Stock Report";
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    } else if (reportType === 'custom') {
+        const fromStr = document.getElementById('ash-from-date')?.value;
+        const toStr = document.getElementById('ash-to-date')?.value;
+
+        if (!fromStr || !toStr) {
+            alert("Meharbani karke dono dates (From Date aur To Date) select karein.");
+            return;
+        }
+
+        startDate = new Date(fromStr + 'T00:00:00');
+        endDate = new Date(toStr + 'T23:59:59');
+        reportTitle = `Product Stock Report (${fromStr} to ${toStr})`;
+    }
+
+    const historyArray = Array.isArray(addedStockHistory) ? addedStockHistory : [];
+    const selectedCategory = document.getElementById('added-stock-search-select')?.value || '';
+
+    // Aggregate data per product
+    const productMap = {};
+
+    historyArray.forEach(item => {
+        const name = item.productName;
+        if (!name) return;
+        if (selectedCategory && item.category !== selectedCategory) return;
+
+        if (!productMap[name]) {
+            productMap[name] = {
+                name: name,
+                price: item.price || 0,
+                soldQty: 0,
+                soldTotal: 0,
+                totalIn: 0,
+                totalOut: 0
+            };
+        }
+
+        const itemDate = new Date(item.date);
+        if (item.type === 'out') {
+            productMap[name].totalOut += (item.quantity || 0);
+            if (itemDate >= startDate && itemDate <= endDate) {
+                productMap[name].soldQty += (item.quantity || 0);
+                productMap[name].soldTotal += (item.totalValue || (item.quantity * (item.price || 0)) || 0);
+            }
+        } else {
+            productMap[name].totalIn += (item.quantity || 0);
+            if (item.price) productMap[name].price = item.price;
+        }
+    });
+
+    let totalSoldQty = 0;
+    let totalSoldAmount = 0;
+    let totalRemainingQty = 0;
+    let totalRemainingAmount = 0;
+
+    const tableData = [];
+
+    for (const name in productMap) {
+        const p = productMap[name];
+        const remQty = p.totalIn - p.totalOut;
+        const remTotal = remQty * p.price;
+
+        totalSoldQty += p.soldQty;
+        totalSoldAmount += p.soldTotal;
+        
+        if (remQty > 0) {
+            totalRemainingQty += remQty;
+            totalRemainingAmount += remTotal;
+        }
+
+        // Sirf Exactly 6 Columns
+        tableData.push([
+            p.name,
+            `${CURRENCY_SYMBOL}${(p.price || 0).toFixed(2)}`,
+            p.soldQty,
+            `${CURRENCY_SYMBOL}${p.soldTotal.toFixed(2)}`,
+            remQty,
+            `${CURRENCY_SYMBOL}${remTotal.toFixed(2)}`
+        ]);
+    }
+
+    let yPos = 15;
+
+    // Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 7;
+
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+    doc.text(reportTitle, 105, yPos, { align: 'center' }); yPos += 6;
+
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, yPos, { align: 'center' }); yPos += 10;
+
+    // Totals Display (Header Summary)
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text(`Total Sold Items: ${totalSoldQty}  |  Total Sold Value: ${CURRENCY_SYMBOL}${totalSoldAmount.toFixed(2)}`, 14, yPos); yPos += 6;
+    doc.text(`Total Remaining Items: ${totalRemainingQty}  |  Total Remaining Value: ${CURRENCY_SYMBOL}${totalRemainingAmount.toFixed(2)}`, 14, yPos); yPos += 8;
+
+    // Table with 6 columns and Footer Total
+    doc.autoTable({
+        startY: yPos,
+        head: [['Item Name', 'Unit Price', 'Sold Qty', 'Sold Total', 'Remaining Qty', 'Remaining Total']],
+        body: tableData,
+        foot: [[
+            'TOTAL',
+            '',
+            totalSoldQty,
+            `${CURRENCY_SYMBOL}${totalSoldAmount.toFixed(2)}`,
+            totalRemainingQty,
+            `${CURRENCY_SYMBOL}${totalRemainingAmount.toFixed(2)}`
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold' },
+        footStyles: { fillColor: [15, 23, 42], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 3, halign: 'center' },
+        columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } }
+    });
+
+    doc.save(`Stock_Report_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`);
+}
+
+
+
+
 </script>
 <!-- EDIT CASH TRANSACTION MODAL -->
 <div id="edit-cash-modal" class="modal-backdrop">
@@ -15011,5 +17430,44 @@ async function saveEditedCustomerFromModal() {
         </div>
     </div>
 </div>
+
+<!-- EDIT ADDED STOCK HISTORY MODAL -->
+<div id="edit-stock-history-modal" class="modal-backdrop">
+    <div class="modal-content">
+        <h3 class="panel-title">Edit Stock Record</h3>
+        <input type="hidden" id="edit-sh-id">
+        <div class="form-grid">
+            <label>Category:</label>
+            <select id="edit-sh-category" class="form-control"></select>
+            
+            <label>Product Name:</label>
+            <input type="text" id="edit-sh-product" class="form-control">
+
+            <label>Transaction Type:</label>
+            <!-- NAYA: Sirf Stock IN ka option rakha gaya hai aur ise lock kar diya hai -->
+            <select id="edit-sh-type" class="form-control" style="font-weight: bold;">
+                <option value="in">🟢 Receive By</option>
+                <option value="out">🔴 Sold By</option>
+            </select>
+            
+            <label>Quantity:</label>
+            <input type="number" id="edit-sh-qty" class="form-control" oninput="calcEditStockTotal()">
+            
+            <label>Price Per Unit:</label>
+            <input type="number" id="edit-sh-price" class="form-control" oninput="calcEditStockTotal()">
+            
+            <label>Total Value:</label>
+            <input type="text" id="edit-sh-total" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold; color:var(--success-color);">
+            
+            <label>Date:</label>
+            <input type="date" id="edit-sh-date" class="form-control">
+        </div>
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button type="button" class="btn btn-success" onclick="saveEditedStockHistory()">Save Changes</button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditStockHistoryModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
