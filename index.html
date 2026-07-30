@@ -12,6 +12,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <!-- Chart.js Library Graph Rendering ke liye -->
+     <!-- Chart.js DataLabels Plugin (Displays values directly on bars) -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Google Fonts for modern typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -19,9 +23,60 @@
     <style>
 
 /* ========================================================= */
-/* PREMIUM LOGIN BACKGROUND & GLASSMORPHISM EFFECT           */
+/* EXECUTIVE GRAPH & CARD ENHANCEMENTS                       */
 /* ========================================================= */
 
+.chart-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chart-legend-badges {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.legend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: rgba(15, 23, 42, 0.6);
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legend-badge .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.badge-teal .dot { background-color: #14b8a6; box-shadow: 0 0 8px rgba(20, 184, 166, 0.8); }
+.badge-blue .dot { background-color: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.8); }
+.badge-amber .dot { background-color: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.8); }
+
+.professional-chart-wrapper {
+    height: 400px !important;
+    position: relative;
+    padding: 24px !important;
+    background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.4) !important;
+}
+
+.card-glow-teal:hover { border-color: rgba(20, 184, 166, 0.4) !important; box-shadow: 0 10px 25px rgba(20, 184, 166, 0.15) !important; }
+.card-glow-blue:hover { border-color: rgba(59, 130, 246, 0.4) !important; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15) !important; }
+.card-glow-amber:hover { border-color: rgba(245, 158, 11, 0.4) !important; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.15) !important; }
 
 
 
@@ -1698,84 +1753,47 @@ body,
 </div>
 <!-- END NEW MODULE: CASH BOOK HISTORY -->
                 
-                <!-- START NEW DASHBOARD MODULE -->
-                <div id="Dashboard" class="module-content active">
-                    <h2 class="panel-title">Dashboard</h2>
-                    
-                    <!-- 1. Today's Summary -->
-                    <div class="dashboard-section">
-                        <h3 class="section-title">Today's Summary</h3>
-                        <div class="dashboard-grid">
-                            <div class="dashboard-card">
-                                <p class="card-title">Today's Total Sales</p>
-                                <h2 id="dashboard-total-sales" class="card-value sales">Rs. 0.00</h2>
-                            </div>
-                            <div class="dashboard-card">
-                                <p class="card-title">Today's Total Expenses</p>
-                                <h2 id="dashboard-total-expenses" class="card-value expenses">Rs. 0.00</h2>
-                            </div>
-                            <div class="dashboard-card">
-                                <p class="card-title">Today's Total Purchases</p>
-                                <h2 id="dashboard-total-purchases" class="card-value purchases">Rs. 0.00</h2>
-                            </div>
-                             <div class="dashboard-card">
-                                <p class="card-title">Total Receivables</p>
-                                <h2 id="dashboard-total-receivables" class="card-value cash">Rs. 0.00</h2>
-                            </div>
-                        </div>
-                    </div>
+                <!-- START ENHANCED DASHBOARD MODULE -->
+<div id="Dashboard" class="module-content active">
+    <h2 class="panel-title">Dashboard</h2>
+    
+    <!-- 1. Stock & Purchase Summary Cards -->
+    <div class="dashboard-section">
+        <h3 class="section-title">Stock & Purchase Summary</h3>
+        <div class="dashboard-grid">
+            <div class="dashboard-card card-glow-teal">
+                <p class="card-title">Total Purchaser Amount</p>
+                <h2 id="dashboard-today-purchases" class="card-value purchases">Rs. 0.00</h2>
+            </div>
+            <div class="dashboard-card card-glow-blue">
+                <p class="card-title">Purchased Stock Amount</p>
+                <h2 id="dashboard-purchased-stock-amount" class="card-value sales">Rs. 0.00</h2>
+            </div>
+            <div class="dashboard-card card-glow-amber">
+                <p class="card-title">Total Stock Amount</p>
+                <h2 id="dashboard-total-stock-amount" class="card-value profit">Rs. 0.00</h2>
+            </div>
+        </div>
+    </div>
 
-                    <!-- 2. Quick Actions -->
-                    <div class="dashboard-section">
-                        <h3 class="section-title">Quick Actions</h3>
-                        <div class="quick-actions-grid">
-                            <button class="btn btn-success" onclick="openModule(event, 'PartialPayments')">💰 Create New Invoice</button>
-                            <button class="btn btn-primary" onclick="openModule(event, 'PurchaseProductPayment')">🛒 Add New Purchase</button>
-                            <button class="btn btn-warning" onclick="openModule(event, 'AddExpense')">💸 Add New Expense</button>
-                        </div>
-                    </div>
+    <!-- 2. Professional Executive Chart Section -->
+    <div class="dashboard-section" style="margin-top: 25px;">
+        <div class="chart-header-container">
+            <h3 class="section-title" style="margin: 0;">📊 Stock & Financial Overview</h3>
+            <div class="chart-legend-badges">
+                <span class="legend-badge badge-teal"><i class="dot"></i> Purchaser Amount</span>
+                <span class="legend-badge badge-blue"><i class="dot"></i> Purchased Stock</span>
+                <span class="legend-badge badge-amber"><i class="dot"></i> Total Stock</span>
+            </div>
+        </div>
+        
+        <div class="dashboard-card professional-chart-wrapper">
+            <canvas id="dashboardStockChart"></canvas>
+        </div>
+    </div>
 
-                    <!-- 3. Important Alerts -->
-                    <div class="dashboard-section">
-                         <h3 class="section-title">Important Alerts</h3>
-                         <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div class="dashboard-card">
-                                <h4 class="card-title">Low Stock Items</h4>
-                                <ul id="dashboard-low-stock-list">
-                                    <!-- Low stock items will be populated by JS -->
-                                </ul>
-                            </div>
-                            <div class="dashboard-card">
-                                <h4 class="card-title">Due Payments (Receivables)</h4>
-                                <ul id="dashboard-due-payments-list">
-                                    <!-- Due payments will be populated by JS -->
-                                </ul>
-                            </div>
-                         </div>
-                    </div>
-                    
-                    <!-- 4. Business Overview -->
-                     <div class="dashboard-section">
-                         <h3 class="section-title">Business Overview</h3>
-                         <div class="dashboard-grid">
-                             <div class="dashboard-card">
-                                 <h4 class="card-title">Top Selling Products</h4>
-                                 <ul id="dashboard-top-products-list">
-                                     <!-- Top selling products will be populated by JS -->
-                                 </ul>
-                             </div>
-                              <div class="dashboard-card">
-                                <h4 class="card-title">Total Payables</h4>
-                                 <h2 id="dashboard-total-payables" class="card-value expenses">Rs. 0.00</h2>
-                                 <ul id="dashboard-due-purchases-list">
-                                    <!-- Due purchases will be populated by JS -->
-                                </ul>
-                            </div>
-                         </div>
-                    </div>
-
-                </div>
-                <!-- END NEW DASHBOARD MODULE -->
+</div>
+<!-- END ENHANCED DASHBOARD MODULE -->
 
                 <div id="Products" class="module-content">
                      <h2 class="panel-title"> Products</h2>
@@ -2819,6 +2837,25 @@ body,
         <!-- NAYE PDF REPORT BUTTONS AUR DATE FILTERS -->
         <div style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
             <h4 style="margin-top:0; color:var(--text-light);">📄 Generate Stock Ledger PDF Reports</h4>
+
+
+            <!-- Single Product Selection aur PDF Button -->
+<div class="manage-form" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+    <h4 style="margin-top:0; color:var(--text-light);">📄 Single Product Ledger Report</h4>
+    <div class="form-grid" style="grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end;">
+        <div>
+            <label>Product Select Karein:</label>
+            <select id="ash-single-product-select" class="form-control">
+                <option value="">-- Select Product --</option>
+            </select>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" onclick="generateSingleProductPDF()">
+                📥 Download Ledger PDF
+            </button>
+        </div>
+    </div>
+</div>
             
             <!-- Daily, Weekly, Monthly Buttons -->
             <div class="report-buttons" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
@@ -2906,8 +2943,8 @@ body,
             <label>Phone Number:</label>
             <input type="tel" id="labor-phone" class="form-control" placeholder="Mobile Number">
             
-            <label>Per Day Salary (Rozana ki Ujrat):</label>
-            <input type="number" id="labor-rate" class="form-control" placeholder="E.g. 1000 per day">
+            <label>Monthly Salary (Mahana Ujrat):</label>
+<input type="number" id="labor-rate" class="form-control" placeholder="E.g. 30000 per month">
         </div>
         <button class="btn btn-success" onclick="saveLabor()" style="margin-top:20px; width: 100%;">Save Employee</button>
     </div>
@@ -2915,7 +2952,7 @@ body,
     <div class="table-container" style="margin-top: 20px;">
         <h3>Registered Labor List</h3>
         <table class="cart-table">
-            <thead><tr><th>Name</th><th>Phone</th><th>Per Day Rate</th><th>Actions</th></tr></thead>
+<thead><tr><th>Name</th><th>Phone</th><th>Monthly Rate</th><th>Actions</th></tr></thead>
             <tbody id="labor-list-body"></tbody>
         </table>
     </div>
@@ -3182,6 +3219,12 @@ body,
                 <label>Purchaser Name:</label>
                 <input type="text" id="pc-name" class="form-control" placeholder="Supplier Name">
             </div>
+
+            <div>
+    <label>Purchaser Phone / Mobile:</label>
+    <input type="tel" id="pc-phone" class="form-control" placeholder="e.g. 03452523984">
+</div>
+
             <div>
                 <label>Bags:</label>
                 <input type="number" id="pc-bags" class="form-control" oninput="calculatePurchaseBill()" placeholder="0">
@@ -3192,7 +3235,7 @@ body,
             </div>
             <div>
                 <label>Rate (Per Kg):</label>
-                <input type="number" id="pc-rate" class="form-control" oninput="calculatePurchaseBill()" placeholder="40">
+<input type="number" id="pc-rate" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold; color:var(--accent-color);">
             </div>
             <div>
                 <label>Labor (Per Bag):</label>
@@ -3228,32 +3271,34 @@ body,
     <div class="table-container" style="margin-top: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
         <h3 style="margin: 0;">Purchase History</h3>
-        <!-- Search Bar aur PDF Report Button -->
+        <!-- Search Bar aur PDF Report Buttons -->
         <div style="display: flex; gap: 10px; flex-grow: 1; max-width: 550px;">
-            <input type="text" id="pc-search-input" class="form-control" placeholder="🔍 Search by Purchaser Name or Item..." oninput="renderMaalPurchaseTable()">
-            <button class="btn btn-info" onclick="generatePurchaserMaalReportPDF()" style="white-space: nowrap;">📄 Purchaser PDF Report</button>
+            <input type="text" id="pc-search-input" class="form-control" placeholder="🔍 Search by Name or S.No..." oninput="renderMaalPurchaseTable()">
+            <button class="btn btn-primary" onclick="generatePurchaserMaalReportPDF('monthly')" style="white-space: nowrap;">📅 Monthly PDF</button>
+            <button class="btn btn-info" onclick="generatePurchaserMaalReportPDF('all')" style="white-space: nowrap;">📄 All Time PDF</button>
         </div>
     </div>
 
     <table class="cart-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Item</th>
-                    <th>Purchaser</th>
-                    <th>Bags</th>
-                    <th>Weight</th>
-                    <th>Rate</th>
-                    <th>Labor</th>
-                    <th>Transport</th>
-                    <th>Total Bill</th>
-                    <th>Paid</th>
-                    <th>Balance</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="maal-purchase-body"></tbody>
-        </table>
+        <thead>
+            <tr>
+                <th>S.No</th> <!-- NAYA COLUMN -->
+                <th>Date</th>
+                <th>Item</th>
+                <th>Purchaser Name</th>
+                <th>Bags</th>
+                <th>Weight</th>
+                <th>Rate</th>
+                <th>Labor</th>
+                <th>Transport</th>
+                <th>Total Bill</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="maal-purchase-body"></tbody>
+    </table>
     </div>
 </div>
 
@@ -3299,6 +3344,8 @@ body,
 
             <label>Purchaser Name:</label>
             <input type="text" id="edit-mp-name" class="form-control">
+            <label>Purchaser Phone:</label>
+<input type="tel" id="edit-mp-phone" class="form-control">
 
             <label>Bags:</label>
             <input type="number" id="edit-mp-bags" class="form-control" oninput="calcEditMaalMath()">
@@ -3307,8 +3354,7 @@ body,
             <input type="number" id="edit-mp-weight" class="form-control" oninput="calcEditMaalMath()">
 
             <label>Rate (Per Kg):</label>
-            <input type="number" id="edit-mp-rate" class="form-control" oninput="calcEditMaalMath()">
-
+<input type="number" id="edit-mp-rate" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold;">
             <label>Labor (Per Bag):</label>
             <input type="number" id="edit-mp-labor" class="form-control" oninput="calcEditMaalMath()">
 
@@ -3697,6 +3743,7 @@ body,
 </div>
 
 <script>
+let myDashboardChart = null; // <-- Yahan is line ko add karein
 
 let currentStockReportType = 'daily'; // Default filter state
 // ==========================================
@@ -4348,7 +4395,7 @@ function renderLaborList() {
         tbody.innerHTML += `<tr>
             <td>${lab.name}</td>
             <td>${lab.phone || '-'}</td>
-<td>${CURRENCY_SYMBOL}${lab.rate.toFixed(2)} / Day</td>
+<td>${CURRENCY_SYMBOL}${lab.rate.toFixed(2)} / Month</td>
             <td><button class="btn btn-danger btn-sm" onclick="deleteLabor('${lab.id}')">Delete</button></td>
         </tr>`;
     });
@@ -5876,112 +5923,255 @@ function refreshAll() {
     updateSellReturnSummaryCards(); 
         renderMaalPurchaseTable();
     renderOpenGatePasses();
+ populateASHProductDropdown();
+
 }
 
-// --- NEW DASHBOARD FUNCTIONS ---
 function renderDashboard() {
-    const getTodayString = () => getLocalDateString(getCloudDate());
-    const todayStr = getTodayString();
+    // 1. Total Purchaser Amount
+    const totalMaalBill = (maalPurchases || []).reduce((sum, p) => sum + (Number(p.bill) || 0), 0);
+    const totalRegularBill = (purchaseLog || []).reduce((sum, log) => sum + (Number(log.grandTotal || log.totalCost) || 0), 0);
+    const totalPurchaserAmount = totalMaalBill + totalRegularBill;
 
-    const todaysSales = partialPaymentInvoices
-        .filter(inv => getLocalDateString(inv.createdAt) === todayStr)
-        .reduce((sum, inv) => sum + inv.paidAmount, 0);
+    // 2. Purchased Stock Amount
+    const totalAddedStockVal = (addedStockHistory || [])
+        .filter(h => h.type === 'in')
+        .reduce((sum, h) => sum + (Number(h.totalValue) || 0), 0);
+    const totalPurchasedStockAmount = totalMaalBill + totalAddedStockVal;
 
-    const todaysExpenses = expenses
-        .filter(exp => getLocalDateString(exp.date) === todayStr)
-        .reduce((sum, exp) => sum + exp.amount, 0);
+    // 3. Total Stock Amount
+    const productsVal = (products || []).reduce((sum, p) => sum + ((p.quantity || 0) * (p.costPrice || p.price || 0)), 0);
+    const availableStock = typeof getAvailableStockList === 'function' ? getAvailableStockList() : [];
+    const rawStockVal = availableStock.reduce((sum, item) => sum + (item.remaining * item.lastPrice), 0);
+    const totalStockAmount = productsVal + rawStockVal;
 
-    const todaysPurchases = purchaseLog
-        .filter(log => getLocalDateString(log.date) === todayStr)
-        .reduce((sum, log) => sum + (log.grandTotal || log.totalCost), 0);
+    // Update Card Values
+    const purchasesCard = document.getElementById('dashboard-today-purchases');
+    if (purchasesCard) purchasesCard.textContent = `${CURRENCY_SYMBOL}${totalPurchaserAmount.toFixed(2)}`;
 
-    // NAYI LINE YAHAN ADD KAREIN
-    const totalReceivables = partialPaymentInvoices.reduce((sum, inv) => sum + inv.remainingBalance, 0);
+    const stockAmtCard = document.getElementById('dashboard-purchased-stock-amount');
+    if (stockAmtCard) stockAmtCard.textContent = `${CURRENCY_SYMBOL}${totalPurchasedStockAmount.toFixed(2)}`;
 
-const netSales = todaysSales - todaysExpenses;
-document.getElementById('dashboard-total-sales').textContent = `${CURRENCY_SYMBOL}${netSales.toFixed(2)}`;    document.getElementById('dashboard-total-expenses').textContent = `${CURRENCY_SYMBOL}${todaysExpenses.toFixed(2)}`;
-    document.getElementById('dashboard-total-purchases').textContent = `${CURRENCY_SYMBOL}${todaysPurchases.toFixed(2)}`;
-    document.getElementById('dashboard-total-receivables').textContent = `${CURRENCY_SYMBOL}${totalReceivables.toFixed(2)}`;
-    
+    const totalStockCard = document.getElementById('dashboard-total-stock-amount');
+    if (totalStockCard) totalStockCard.textContent = `${CURRENCY_SYMBOL}${totalStockAmount.toFixed(2)}`;
 
-    // 2. Important Alerts
+    // --- ENHANCED EXECUTIVE CHART RENDERING ---
+    const canvas = document.getElementById('dashboardStockChart');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+
+        // Create High-Definition Linear Gradients
+        const gradientTeal = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientTeal.addColorStop(0, 'rgba(20, 184, 166, 0.95)');
+        gradientTeal.addColorStop(1, 'rgba(13, 148, 136, 0.15)');
+
+        const gradientBlue = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientBlue.addColorStop(0, 'rgba(59, 130, 246, 0.95)');
+        gradientBlue.addColorStop(1, 'rgba(37, 99, 235, 0.15)');
+
+        const gradientAmber = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientAmber.addColorStop(0, 'rgba(245, 158, 11, 0.95)');
+        gradientAmber.addColorStop(1, 'rgba(217, 119, 6, 0.15)');
+
+        if (myDashboardChart) {
+            myDashboardChart.destroy();
+        }
+
+        // Register DataLabels Plugin if available
+        const pluginsList = typeof ChartDataLabels !== 'undefined' ? [ChartDataLabels] : [];
+
+        myDashboardChart = new Chart(ctx, {
+            type: 'bar',
+            plugins: pluginsList,
+            data: {
+                labels: ['Total Purchaser Amount', 'Purchased Stock Amount', 'Total Stock Amount'],
+                datasets: [{
+                    label: 'Amount (Rs.)',
+                    data: [totalPurchaserAmount, totalPurchasedStockAmount, totalStockAmount],
+                    backgroundColor: [gradientTeal, gradientBlue, gradientAmber],
+                    borderColor: [
+                        '#14b8a6',
+                        '#3b82f6',
+                        '#f59e0b'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                    barPercentage: 0.5,
+                    categoryPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                },
+                layout: {
+                    padding: {
+                        top: 35,
+                        bottom: 10,
+                        left: 10,
+                        right: 15
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'start',
+                        offset: -28,
+                        color: '#ffffff',
+                        font: {
+                            family: 'Inter',
+                            size: 12,
+                            weight: '700'
+                        },
+                        formatter: function(value) {
+                            return 'Rs. ' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                        },
+                        textShadowColor: 'rgba(0, 0, 0, 0.6)',
+                        textShadowBlur: 4
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.92)',
+                        titleColor: '#f8fafc',
+                        titleFont: { family: 'Inter', size: 13, weight: '700' },
+                        bodyColor: '#cbd5e1',
+                        bodyFont: { family: 'Inter', size: 12 },
+                        borderColor: 'rgba(255, 255, 255, 0.12)',
+                        borderWidth: 1,
+                        padding: 14,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ` Amount: Rs. ${Number(context.parsed.y).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.04)',
+                            borderDash: [5, 5],
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { family: 'Inter', size: 11, weight: '500' },
+                            padding: 8,
+                            callback: function(value) {
+                                if (value >= 1000000) return 'Rs. ' + (value / 1000000).toFixed(1) + 'M';
+                                if (value >= 1000) return 'Rs. ' + (value / 1000).toFixed(0) + 'k';
+                                return 'Rs. ' + value;
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#e2e8f0',
+                            font: { family: 'Inter', size: 12, weight: '600' },
+                            padding: 10
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+    // --- LOWER ALERTS & OVERVIEW SECTIONS (PRESERVED) ---
     // Low Stock
     const lowStockList = document.getElementById('dashboard-low-stock-list');
-    lowStockList.innerHTML = '';
-    const lowStockItems = products.filter(p => p.quantity <= (p.lowStockThreshold || 5));
-    if (lowStockItems.length === 0) {
-        lowStockList.innerHTML = '<li class="empty-state">No low stock items.</li>';
-    } else {
-        lowStockItems.forEach(p => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="item-name">${p.name}</span><span class="item-value danger">${p.quantity} left</span>`;
-            lowStockList.appendChild(li);
-        });
+    if (lowStockList) {
+        lowStockList.innerHTML = '';
+        const lowStockItems = products.filter(p => p.quantity <= (p.lowStockThreshold || 5));
+        if (lowStockItems.length === 0) {
+            lowStockList.innerHTML = '<li class="empty-state">No low stock items.</li>';
+        } else {
+            lowStockItems.forEach(p => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="item-name">${p.name}</span><span class="item-value danger">${p.quantity} left</span>`;
+                lowStockList.appendChild(li);
+            });
+        }
     }
 
     // Due Payments (Receivables)
     const duePaymentsList = document.getElementById('dashboard-due-payments-list');
-    duePaymentsList.innerHTML = '';
-    const dueInvoices = partialPaymentInvoices.filter(inv => inv.remainingBalance > 0);
-    if (dueInvoices.length === 0) {
-        duePaymentsList.innerHTML = '<li class="empty-state">No outstanding payments.</li>';
-    } else {
-        dueInvoices.slice(0, 5).forEach(inv => { 
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="item-name">${inv.customerName}</span><span class="item-value">${CURRENCY_SYMBOL}${inv.remainingBalance.toFixed(2)}</span>`;
-            duePaymentsList.appendChild(li);
-        });
+    if (duePaymentsList) {
+        duePaymentsList.innerHTML = '';
+        const dueInvoices = partialPaymentInvoices.filter(inv => inv.remainingBalance > 0);
+        if (dueInvoices.length === 0) {
+            duePaymentsList.innerHTML = '<li class="empty-state">No outstanding payments.</li>';
+        } else {
+            dueInvoices.slice(0, 5).forEach(inv => { 
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="item-name">${inv.customerName}</span><span class="item-value">${CURRENCY_SYMBOL}${inv.remainingBalance.toFixed(2)}</span>`;
+                duePaymentsList.appendChild(li);
+            });
+        }
     }
 
-    // 3. Business Overview
     // Top Selling Products
     const topProductsList = document.getElementById('dashboard-top-products-list');
-    topProductsList.innerHTML = '';
-    const productSales = {};
-    partialPaymentInvoices.forEach(inv => {
-        inv.invoiceItems.forEach(item => {
-            if (!productSales[item.name]) {
-                productSales[item.name] = 0;
-            }
-            productSales[item.name] += item.quantity;
+    if (topProductsList) {
+        topProductsList.innerHTML = '';
+        const productSales = {};
+        partialPaymentInvoices.forEach(inv => {
+            inv.invoiceItems.forEach(item => {
+                if (!productSales[item.name]) {
+                    productSales[item.name] = 0;
+                }
+                productSales[item.name] += item.quantity;
+            });
         });
-    });
 
-    const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
-    if (sortedProducts.length === 0) {
-        topProductsList.innerHTML = '<li class="empty-state">No sales data available.</li>';
-    } else {
-        sortedProducts.slice(0, 5).forEach(([name, qty]) => { 
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="item-name">${name}</span><span class="item-value">${qty} sold</span>`;
-            topProductsList.appendChild(li);
-        });
+        const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
+        if (sortedProducts.length === 0) {
+            topProductsList.innerHTML = '<li class="empty-state">No sales data available.</li>';
+        } else {
+            sortedProducts.slice(0, 5).forEach(([name, qty]) => { 
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="item-name">${name}</span><span class="item-value">${qty} sold</span>`;
+                topProductsList.appendChild(li);
+            });
+        }
     }
     
     // Total Payables
-    const totalPayables = purchaseLog
-        .reduce((sum, log) => sum + log.remainingBalance, 0);
-    document.getElementById('dashboard-total-payables').textContent = `${CURRENCY_SYMBOL}${totalPayables.toFixed(2)}`;
+    const totalPayables = purchaseLog.reduce((sum, log) => sum + log.remainingBalance, 0);
+    const totalPayablesEl = document.getElementById('dashboard-total-payables');
+    if (totalPayablesEl) totalPayablesEl.textContent = `${CURRENCY_SYMBOL}${totalPayables.toFixed(2)}`;
     
     // Due Purchases (Payables)
     const duePurchasesList = document.getElementById('dashboard-due-purchases-list');
-    duePurchasesList.innerHTML = '';
-    const duePurchases = purchaseLog.filter(log => log.remainingBalance > 0);
-    if (duePurchases.length === 0) {
-        duePurchasesList.innerHTML = '<li class="empty-state">No outstanding payables.</li>';
-    } else {
-        duePurchases.slice(0, 5).forEach(log => {
-             const purchaser = purchasers.find(p => p.id === log.purchaserId);
-             if(purchaser) {
-                const li = document.createElement('li');
-                li.innerHTML = `<span class="item-name">${purchaser.name}</span><span class="item-value danger">${CURRENCY_SYMBOL}${log.remainingBalance.toFixed(2)}</span>`;
-                duePurchasesList.appendChild(li);
-             }
-        });
+    if (duePurchasesList) {
+        duePurchasesList.innerHTML = '';
+        const duePurchases = purchaseLog.filter(log => log.remainingBalance > 0);
+        if (duePurchases.length === 0) {
+            duePurchasesList.innerHTML = '<li class="empty-state">No outstanding payables.</li>';
+        } else {
+            duePurchases.slice(0, 5).forEach(log => {
+                 const purchaser = purchasers.find(p => p.id === log.purchaserId);
+                 if(purchaser) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span class="item-name">${purchaser.name}</span><span class="item-value danger">${CURRENCY_SYMBOL}${log.remainingBalance.toFixed(2)}</span>`;
+                    duePurchasesList.appendChild(li);
+                 }
+            });
+        }
     }
-}
-// --- END NEW DASHBOARD FUNCTIONS ---
-
 // --- MANAGE PRODUCTS FUNCTIONS (WITH AUTOMATIC COST PRICE) ---
 function handleNewProductImageUpload(event) {
     const file = event.target.files[0];
@@ -11804,23 +11994,39 @@ function renderUserPermissions() {
     if (!user) return;
     if (!user.permissions) user.permissions = [];
 
-    // 'POS' ki jagah sahi key 'PartialPayments' ka istemal kiya gaya hai
-    const modules = [
-        'Dashboard', 'Products', 'ManageProducts', 'ProductStockReport','AddCustomer',
-        'PartialPayments', 'SellReturn', 'AllReports', 'ProfitLossStatement',
-        'PurchasePurchaserDetail', 'PurchaseProductPayment', 'PurchaseAddPayment',
-        'PurchaseHistory', 'PurchaseReports', 'AddExpense', 'ExpenseHistory',
-        'GatePass', 'GatePassHistory', 'CashBook', 'BankAndCash',  'RecoverySheet', 'Settings'
-    ];
+    // Updated active modules list for Admin Dashboard User Permission Control
+    const moduleLabels = {
+        'Dashboard': '📊 Dashboard',
+        'AddCustomer': '👥 Add Customer',
+        'DemandForm': '📝 Demand',
+        'DemandRecord': '📝 Demand Record',
+        'DemandWorkers': '📝 Demand Workers',
+        'AddStock': '💸 Add Stock',
+        'AddedStockHistory': '💸 Stock History',
+        'UsedStock': '💸 Used Stock',
+        'GatePass': '📤 Gate Pass Open',
+        'GatePassHistory': '📤 Gate Pass Close',
+        'RiderDetailsModule': '🏍️ Rider Details',
+        'VehicleDetailsModule': '🏍️ Add Vehicle Number',
+        'AddLabor': '👷 Add Labor',
+        'LaborSalary': '👷 Labor Salary',
+        'LaborReport': '👷 Labor Report',
+        'RecoverySheet': '📄 Recovery Sheet',
+        'MaalPurchase': '🛒 Purchase Material Entry',
+        'StockOutModule': '🛒 Stock Out',
+        'Settings': '⚙️ Settings'
+    };
+
+    const modules = Object.keys(moduleLabels);
 
     const grid = document.createElement('div');
     grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
     grid.style.gap = '10px';
 
     modules.forEach(mod => {
         const isChecked = user.permissions.includes(mod);
-        const displayLabel = mod === 'PartialPayments' ? 'POS' : mod; // UI par 'POS' hi dikhega
+        const displayLabel = moduleLabels[mod] || mod;
         grid.innerHTML += `
             <div class="checkbox-group" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="user-perm-${mod}" class="user-perm-check" value="${mod}" ${isChecked ? 'checked' : ''}>
@@ -11865,31 +12071,46 @@ function renderPermissionsManagement() {
     if (!container) return;
     container.innerHTML = '';
 
-    // 'POS' ki jagah database key 'PartialPayments' istemal ki gayi hai
-    const modules = [
-        'Dashboard', 'Products', 'ManageProducts', 'ProductStockReport',
-        'PartialPayments', 'SellReturn', 'AllReports', 'ProfitLossStatement',
-        'PurchasePurchaserDetail', 'PurchaseProductPayment', 'PurchaseAddPayment',
-        'PurchaseHistory', 'PurchaseReports', 'AddExpense', 'ExpenseHistory',
-        'GatePass', 'GatePassHistory', 'CashBook', 'BankAndCash', 'Settings'
-    ];
+    const moduleLabels = {
+        'Dashboard': '📊 Dashboard',
+        'AddCustomer': '👥 Add Customer',
+        'DemandForm': '📝 Demand',
+        'DemandRecord': '📝 Demand Record',
+        'DemandWorkers': '📝 Demand Workers',
+        'AddStock': '💸 Add Stock',
+        'AddedStockHistory': '💸 Stock History',
+        'UsedStock': '💸 Used Stock',
+        'GatePass': '📤 Gate Pass Open',
+        'GatePassHistory': '📤 Gate Pass Close',
+        'RiderDetailsModule': '🏍️ Rider Details',
+        'VehicleDetailsModule': '🏍️ Add Vehicle Number',
+        'AddLabor': '👷 Add Labor',
+        'LaborSalary': '👷 Labor Salary',
+        'LaborReport': '👷 Labor Report',
+        'RecoverySheet': '📄 Recovery Sheet',
+        'MaalPurchase': '🛒 Purchase Material Entry',
+        'StockOutModule': '🛒 Stock Out',
+        'Settings': '⚙️ Settings'
+    };
+
+    const modules = Object.keys(moduleLabels);
 
     const role = 'client';
     if (!appSettings.permissions) {
         appSettings.permissions = {};
     }
     if (!appSettings.permissions[role]) {
-        appSettings.permissions[role] = ['Dashboard', 'Products', 'PartialPayments', 'SellReturn'];
+        appSettings.permissions[role] = ['Dashboard', 'AddCustomer', 'DemandForm', 'RecoverySheet'];
     }
 
     const grid = document.createElement('div');
     grid.style.display = 'grid';
-    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+    grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
     grid.style.gap = '10px';
 
     modules.forEach(module => {
         const isChecked = appSettings.permissions[role].includes(module);
-        const displayLabel = module === 'PartialPayments' ? 'POS' : module;
+        const displayLabel = moduleLabels[module] || module;
         grid.innerHTML += `
             <div class="checkbox-group" style="display: flex; align-items: center; gap: 8px;">
                 <input type="checkbox" id="perm-${role}-${module}" class="role-perm-check" value="${module}" ${isChecked ? 'checked' : ''}>
@@ -11996,12 +12217,10 @@ async function initializeApp() {
 // initializeApp() ke end mein, jahan data fetch ho raha hai:
     await dbFetchAddedStockHistory();
     await dbFetchUsedStock();
-    // Baki elements ko refresh karne se pehle ye lazmi load ho jayein
-    // 3. Admin permissions set karein
     if (!appSettings.permissions) {
         appSettings.permissions = {
             admin: ['all'],
-            client: ['Dashboard', 'Products', 'PartialPayments', 'SellReturn']
+            client: ['Dashboard', 'AddCustomer', 'DemandForm', 'RecoverySheet']
         };
         await saveSettings();
     }
@@ -12145,13 +12364,9 @@ async function initializeApp() {
     await dbFetchMaalPurchases(); 
     await dbFetchExpenseStockInventory();
     await dbFetchExpenseStockLog();
-
-    // ========================================================
-    // DETAILED CLOUD SYNCING FOR WORKERS & RIDERS ON STARTUP
-    // ========================================================
-    
-    // A. Workers database se load karein
     await dbFetchDemandWorkers();
+    await dbFetchCustomers();
+    await dbFetchLaborData();
 
     // B. Riders aur Vehicles database se load karein (UPDATED)
     try {
@@ -13676,16 +13891,27 @@ let maalPurchases = [];
 function calculatePurchaseBill() {
     const bags = parseFloat(document.getElementById('pc-bags')?.value) || 0;
     const weight = parseFloat(document.getElementById('pc-perkg')?.value) || 0;
-    const rate = parseFloat(document.getElementById('pc-rate')?.value) || 0;
     const pay = parseFloat(document.getElementById('pc-pay')?.value) || 0;
 
+    // 1. Automatic Rate Calculation: Total Weight divided by Bags
+    let autoRate = 0;
+    if (bags > 0 && weight > 0) {
+        autoRate = weight / bags;
+    }
+    
+    // Rate wale box mein value set karna
+    const rateInput = document.getElementById('pc-rate');
+    if (rateInput) rateInput.value = autoRate.toFixed(2);
+
+    // Labor aur Transport (Pehele ki tarah)
     const laborInput = document.getElementById('pc-labor')?.value;
-    const laborPerBag = (laborInput === '' || laborInput === undefined || isNaN(parseFloat(laborInput))) ? 0 : parseFloat(laborInput);
+    const laborPerBag = (laborInput === '' || isNaN(parseFloat(laborInput))) ? 0 : parseFloat(laborInput);
 
     const transportInput = document.getElementById('pc-transport')?.value;
-    const transportPerBag = (transportInput === '' || transportInput === undefined || isNaN(parseFloat(transportInput))) ? 0 : parseFloat(transportInput);
+    const transportPerBag = (transportInput === '' || isNaN(parseFloat(transportInput))) ? 0 : parseFloat(transportInput);
 
-    const materialCost = weight * rate;
+    // 2. Bill Calculation logic
+    const materialCost = weight * autoRate; 
     const totalLabor = bags * laborPerBag;
     const totalTransport = bags * transportPerBag;
 
@@ -13696,10 +13922,10 @@ function calculatePurchaseBill() {
     if (document.getElementById('pc-balance')) document.getElementById('pc-balance').value = netBalance.toFixed(2);
 }
 
-// 2. Save New Purchase Record
 async function saveMaalPurchase() {
     const item = document.getElementById('pc-item')?.value.trim() || '';
     const name = document.getElementById('pc-name')?.value.trim() || '';
+    const phone = document.getElementById('pc-phone')?.value.trim() || ''; // NAYA: Phone input uthayein
     const bags = parseFloat(document.getElementById('pc-bags')?.value) || 0;
     const weight = parseFloat(document.getElementById('pc-perkg')?.value) || 0;
     const rate = parseFloat(document.getElementById('pc-rate')?.value) || 0;
@@ -13716,9 +13942,15 @@ async function saveMaalPurchase() {
     const payMode = document.getElementById('pc-pay-mode')?.value || 'Cash';
 
     if (!item || !name || weight <= 0 || rate <= 0) {
-        alert("Item Name, Purchaser, Weight aur Rate darj karna zaruri hai!");
+        alert("Item Name, Purchaser Name, Weight aur Rate darj karna zaruri hai!");
         return;
     }
+
+    // Auto Serial Number Logic
+    if (!appSettings.nextMaalPurchaseSerial) appSettings.nextMaalPurchaseSerial = 1001;
+    const currentSerialNo = appSettings.nextMaalPurchaseSerial;
+    appSettings.nextMaalPurchaseSerial++;
+    saveSettings(); 
 
     const recId = 'mp' + Date.now();
     const initialPayments = [];
@@ -13734,9 +13966,11 @@ async function saveMaalPurchase() {
 
     const entry = {
         id: recId,
+        serialNo: currentSerialNo,
         date: new Date().toISOString(),
         item: item,
         name: name,
+        phone: phone, // NAYA: Mobile number yahan order record mein save ho raha hai
         bags: bags,
         weight: weight,
         rate: rate,
@@ -13754,9 +13988,10 @@ async function saveMaalPurchase() {
 
     renderMaalPurchaseTable();
 
-    // Reset Form
+    // Reset Form fields
     document.getElementById('pc-item').value = '';
     document.getElementById('pc-name').value = '';
+    document.getElementById('pc-phone').value = ''; // NAYA: Phone field ko bhi clear karein
     document.getElementById('pc-bags').value = '';
     document.getElementById('pc-perkg').value = '';
     document.getElementById('pc-rate').value = '';
@@ -13773,7 +14008,7 @@ async function saveMaalPurchase() {
             });
         }
         localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
-        alert("Purchase Record Save ho gaya!");
+        alert(`Purchase Record Save ho gaya! (S.No: ${currentSerialNo})`);
     } catch(e) {
         localStorage.setItem('maal_purchases_backup', JSON.stringify(maalPurchases));
         alert("Record Local Memory mein Save ho gaya!");
@@ -13830,13 +14065,14 @@ function renderMaalPurchaseTable() {
             <td style="color: #ef4444; font-weight:bold;">${CURRENCY_SYMBOL}${balVal}</td>
             <td>
                 <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                    ${Number(balVal) > 0.01 
-                        ? `<button class="btn btn-success btn-sm" onclick="openMaalPaymentModal('${item.id}')">Pay</button>` 
-                        : `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Paid</button>`}
-                    <button class="btn btn-warning btn-sm" onclick="openEditMaalModal('${item.id}')">Edit</button>
-                    <button class="btn btn-info btn-sm" onclick="generateMaalPurchasePDF('${item.id}')">PDF</button>
-                    <button class="btn btn-danger btn-sm" onclick="deleteMaalPurchase('${item.id}')">Delete</button>
-                </div>
+    ${Number(balVal) > 0.01 
+        ? `<button class="btn btn-success btn-sm" onclick="openMaalPaymentModal('${item.id}')">Pay</button>` 
+        : `<button class="btn btn-secondary btn-sm" disabled style="opacity:0.6;">Paid</button>`}
+    <button class="btn btn-warning btn-sm" onclick="openEditMaalModal('${item.id}')">Edit</button>
+    <button class="btn btn-info btn-sm" onclick="generateMaalPurchasePDF('${item.id}')">PDF</button>
+    <button class="btn btn-success btn-sm" onclick="sendMaalPurchaseWhatsApp('${item.id}')">WhatsApp</button>
+    <button class="btn btn-danger btn-sm" onclick="deleteMaalPurchase('${item.id}')">Delete</button>
+</div>
             </td>
         `;
         tbody.appendChild(row);
@@ -14047,7 +14283,6 @@ async function submitMaalPayment() {
     generateMaalPurchasePDF(id);
 }
 
-// 6. Open Edit Purchase Record Modal
 function openEditMaalModal(id) {
     const item = (maalPurchases || []).find(p => p.id === id);
     if (!item) return;
@@ -14055,6 +14290,7 @@ function openEditMaalModal(id) {
     document.getElementById('edit-mp-id').value = item.id;
     document.getElementById('edit-mp-item').value = item.item || '';
     document.getElementById('edit-mp-name').value = item.name || '';
+    document.getElementById('edit-mp-phone').value = item.phone || ''; // NAYA: Phone input modal mein load karein
     document.getElementById('edit-mp-bags').value = item.bags || 0;
     document.getElementById('edit-mp-weight').value = item.weight || 0;
     document.getElementById('edit-mp-rate').value = item.rate || 0;
@@ -14073,19 +14309,26 @@ function closeEditMaalModal() {
 function calcEditMaalMath() {
     const bags = parseFloat(document.getElementById('edit-mp-bags')?.value) || 0;
     const weight = parseFloat(document.getElementById('edit-mp-weight')?.value) || 0;
-    const rate = parseFloat(document.getElementById('edit-mp-rate')?.value) || 0;
     const labor = parseFloat(document.getElementById('edit-mp-labor')?.value) || 0;
     const transport = parseFloat(document.getElementById('edit-mp-transport')?.value) || 0;
     const pay = parseFloat(document.getElementById('edit-mp-pay')?.value) || 0;
 
-    const totalBill = (weight * rate) + (bags * labor) + (bags * transport);
+    // Automatic Rate Calculation
+    let autoRate = 0;
+    if (bags > 0 && weight > 0) {
+        autoRate = weight / bags;
+    }
+    
+    // Edit wale rate box mein value daalna
+    document.getElementById('edit-mp-rate').value = autoRate.toFixed(2);
+
+    const totalBill = (weight * autoRate) + (bags * labor) + (bags * transport);
     const balance = totalBill - pay;
 
     document.getElementById('edit-mp-bill').value = totalBill.toFixed(2);
     document.getElementById('edit-mp-balance').value = balance.toFixed(2);
 }
 
-// 7. Save Edited Purchase Record
 async function saveEditedMaalPurchase() {
     const id = document.getElementById('edit-mp-id').value;
     const itemIndex = maalPurchases.findIndex(p => p.id === id);
@@ -14093,6 +14336,7 @@ async function saveEditedMaalPurchase() {
 
     const item = document.getElementById('edit-mp-item').value.trim();
     const name = document.getElementById('edit-mp-name').value.trim();
+    const phone = document.getElementById('edit-mp-phone').value.trim(); // NAYA: Edited phone number uthayein
     const bags = parseFloat(document.getElementById('edit-mp-bags').value) || 0;
     const weight = parseFloat(document.getElementById('edit-mp-weight').value) || 0;
     const rate = parseFloat(document.getElementById('edit-mp-rate').value) || 0;
@@ -14109,6 +14353,7 @@ async function saveEditedMaalPurchase() {
 
     maalPurchases[itemIndex].item = item;
     maalPurchases[itemIndex].name = name;
+    maalPurchases[itemIndex].phone = phone; // NAYA: Save edited phone number
     maalPurchases[itemIndex].bags = bags;
     maalPurchases[itemIndex].weight = weight;
     maalPurchases[itemIndex].rate = rate;
@@ -14956,11 +15201,13 @@ function renderDemandRecordTable() {
                 <td style="font-weight:bold;">${rec.receivedBy || '-'}</td> <!-- Yahan naam show hoga -->
                 <td style="color:#ef4444; font-weight:bold;">${CURRENCY_SYMBOL}${rec.netBalance.toFixed(2)}</td>
                 <td>
-                    <div style="display: flex; gap: 5px;">
-                        <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
-                    </div>
-                </td>
+                    <td>
+    <div style="display: flex; gap: 5px;">
+        <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
+        <button class="btn btn-sm btn-success" onclick="sendDemandWhatsApp('${rec.id}')">WhatsApp</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
+    </div>
+</td>
             </tr>
         `;
     });
@@ -16009,11 +16256,11 @@ function checkExistingAttendance() {
     calculateLaborSalary();
 }
 
-// 2. Salary Calculate karna (Allowance add kar ke)
+// 2. Salary Calculate karna (Monthly base par)
 function calculateLaborSalary() {
     const laborId = document.getElementById('labor-select').value;
     const status = document.getElementById('labor-status').value;
-    const allowance = parseFloat(document.getElementById('labor-allowance').value) || 0; // Allowance uthayega
+    const allowance = parseFloat(document.getElementById('labor-allowance').value) || 0; 
     const salaryEl = document.getElementById('labor-calculated-salary');
 
     if (!laborId) {
@@ -16021,10 +16268,14 @@ function calculateLaborSalary() {
         return;
     }
 
+    // Employee ka data aur monthly salary hasil karein
     const labor = laborList.find(l => l.id === laborId);
-    const dailyWage = labor.rate || 0; 
+    const monthlyWage = labor.rate || 0; 
+    
+    // Monthly salary ko 30 dinon par divide karke 1 din ki salary nikalyein
+    const dailyWage = monthlyWage / 30; 
 
-    // Agar Present hai to (Base Salary + Allowance), warna sirf Allowance
+    // Agar Present hai to (Daily Wage + Allowance), warna sirf Allowance (agar koi ho)
     if (status === 'Present') {
         salaryEl.value = (dailyWage + allowance).toFixed(2);
     } else {
@@ -16263,7 +16514,7 @@ function downloadIndividualLaborPDF() {
     doc.text(`Month: ${monthVal}`, 150, yPos); yPos += 6;
     doc.text(`Employee Name: ${labor.name}`, 14, yPos);
     doc.text(`Phone: ${labor.phone || 'N/A'}`, 150, yPos); yPos += 6;
-    doc.text(`Daily Wage Rate: ${CURRENCY_SYMBOL}${labor.rate.toFixed(2)} / Day`, 14, yPos);
+doc.text(`Monthly Wage Rate: ${CURRENCY_SYMBOL}${labor.rate.toFixed(2)} / Month`, 14, yPos);
     doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 150, yPos); yPos += 12;
 
     // Daily Attendance Table
@@ -17292,6 +17543,298 @@ function resetDemandRecordForm() {
     handlePendingDemandSelection();
 }
 
+function generateSingleProductStockPDF() {
+    const searchInput = document.getElementById('ash-single-product-search');
+    const productName = searchInput.value.trim();
+
+    if (!productName) {
+        alert("Meharbani karke pehle Product ka naam likhein!");
+        return;
+    }
+
+    // 1. Sirf is product ki history filter karein
+    const filteredHistory = addedStockHistory.filter(item => 
+        item.productName.toLowerCase() === productName.toLowerCase()
+    );
+
+    if (filteredHistory.length === 0) {
+        alert("Is naam ka koi record stock history mein nahi mila!");
+        return;
+    }
+
+    // 2. Chronological Order mein sort karein (Purana pehle, Naya baad mein)
+    const sorted = [...filteredHistory].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    // Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 10;
+    
+    doc.setFontSize(16);
+    doc.text("Single Product Stock Ledger", 105, yPos, { align: 'center' }); yPos += 8;
+
+    doc.setFontSize(12); doc.setFont('helvetica', 'normal');
+    doc.text(`Product Name: ${productName.toUpperCase()}`, 14, yPos);
+    doc.text(`Generated On: ${new Date().toLocaleString()}`, 196, yPos, { align: 'right' }); yPos += 10;
+
+    // Table Data aur Running Balance Calculation
+    let runningStock = 0;
+    const tableRows = [];
+
+    sorted.forEach(record => {
+        if (record.type === 'out') {
+            runningStock -= record.quantity;
+        } else {
+            runningStock += record.quantity;
+        }
+
+        tableRows.push([
+            new Date(record.date).toLocaleDateString(),
+            record.category || '-',
+            record.workerName || record.riderName || '-', // Worker ya Vehicle
+            record.type === 'in' ? 'Receive (IN)' : 'Sold (OUT)',
+            record.quantity,
+            runningStock,
+            `${CURRENCY_SYMBOL}${record.price.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${record.totalValue.toFixed(2)}`
+        ]);
+    });
+
+    doc.autoTable({
+        startY: yPos,
+        head: [['Date', 'Category', 'Worker/Vehicle', 'Type', 'Qty', 'Balance', 'Rate', 'Total']],
+        body: tableRows,
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255 }, // Teal Color
+        styles: { fontSize: 8 },
+        columnStyles: {
+            4: { fontStyle: 'bold' },
+            5: { fontStyle: 'bold', fillColor: [240, 240, 240] }
+        }
+    });
+
+    // Final Summary
+    yPos = doc.previousAutoTable.finalY + 10;
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text(`Current Available Stock: ${runningStock}`, 14, yPos);
+
+    doc.save(`History_${productName.replace(/\s+/g, '_')}.pdf`);
+}
+
+
+// Is line ko populateUsedStockDropdowns ke andar kahin bhi rakh dein
+function updateStockSearchDatalist() {
+    const datalist = document.getElementById('stock-product-names-list');
+    if (!datalist) return;
+    datalist.innerHTML = '';
+    
+    // Sare unique product names nikalna history se
+    const uniqueNames = [...new Set(addedStockHistory.map(item => item.productName))];
+    
+    uniqueNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        datalist.appendChild(option);
+    });
+}
+
+function populateASHProductDropdown() {
+    const select = document.getElementById('ash-single-product-select');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Select Product --</option>';
+    const allNames = [...new Set([...products.map(p => p.name), ...addedStockHistory.map(item => item.productName)])];
+    allNames.sort().forEach(name => {
+        if (name) {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            select.appendChild(opt);
+        }
+    });
+}
+
+function generateSingleProductPDF() {
+    const productName = document.getElementById('ash-single-product-select').value.trim();
+    if (!productName) {
+        alert("Meharbani karke pehle list se ek Product select karein!");
+        return;
+    }
+
+    // Aaj ki date (Format: DD/MM/YYYY)
+    const dateString = new Date().toLocaleDateString('en-GB');
+
+    // Calculations
+    let totalInQty = 0;
+    let soldQty = 0;
+    let lastKnownPrice = 0;
+    let detectedCategory = 'General';
+
+    // History se Inward aur Outward stock calculate karna
+    addedStockHistory.forEach(h => {
+        if (h.productName.trim().toLowerCase() === productName.toLowerCase()) {
+            if (h.type === 'in') {
+                totalInQty += (parseInt(h.quantity) || 0);
+                lastKnownPrice = parseFloat(h.price) || lastKnownPrice;
+                detectedCategory = h.category || detectedCategory;
+            } else if (h.type === 'out') {
+                soldQty += (parseInt(h.quantity) || 0);
+            }
+        }
+    });
+
+    const masterProduct = products.find(p => p.name.trim().toLowerCase() === productName.toLowerCase());
+    const finalPrice = masterProduct ? (masterProduct.price || lastKnownPrice) : lastKnownPrice;
+    const finalCategory = masterProduct ? (masterProduct.category || detectedCategory) : detectedCategory;
+
+    const remainingQty = totalInQty - soldQty;
+    const soldTotal = soldQty * finalPrice;
+    const remainingTotal = remainingQty * finalPrice;
+
+    // PDF Generation
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    // 1. Report Title (Sabse upar)
+    doc.setFontSize(22); 
+    doc.setFont('helvetica', 'bold');
+    doc.text("Single Product Report", 105, 20, { align: 'center' });
+    
+    let yPos = 35;
+    
+    // 2. Category (Title ke neechay)
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Category:", 14, yPos);
+    
+    // Category ke naam ke darmiyan space dene ke liye x=45 set kiya
+    doc.setFont('helvetica', 'normal');
+    doc.text(finalCategory, 45, yPos); 
+    
+    yPos += 8; // Agli line ke liye space
+    
+    // 3. Product Name (Category ke neechay)
+    doc.setFont('helvetica', 'bold');
+    doc.text("Product Name:", 14, yPos);
+    
+    // Product ke naam ke darmiyan space dene ke liye x=45 set kiya
+    doc.setFont('helvetica', 'normal');
+    doc.text(productName, 45, yPos); 
+
+    yPos += 15; // Table aur text ke darmiyan thori si space
+
+    // 4. Table Layout
+    doc.autoTable({
+        startY: yPos,
+        head: [['Date', 'Unit Price', 'Sold/Used Qty', 'Sold Total', 'Remaining Qty', 'Remaining Total']],
+        body: [[
+            dateString,
+            `${CURRENCY_SYMBOL}${finalPrice.toFixed(2)}`,
+            soldQty,
+            `${CURRENCY_SYMBOL}${soldTotal.toFixed(2)}`,
+            remainingQty,
+            `${CURRENCY_SYMBOL}${remainingTotal.toFixed(2)}`
+        ]],
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, halign: 'center' },
+        styles: { halign: 'center', fontSize: 10 }
+    });
+
+    doc.save(`Single_Product_Report_${productName.replace(/\s+/g, '_')}.pdf`);
+}
+
+function sendMaalPurchaseWhatsApp(id) {
+    // Pehle PDF download trigger karein
+    generateMaalPurchasePDF(id);
+
+    const record = maalPurchases.find(p => p.id === id);
+    if (!record) return;
+
+    let phone = record.phone || '';
+
+    if (!phone || phone === 'N/A') {
+        phone = prompt("Supplier ka WhatsApp Number enter karein (e.g. 03452523984):");
+        if (!phone) return;
+    }
+    
+    // Number formatting (92 format)
+    let cleanedPhone = phone.replace(/[^0-9]/g, '');
+    if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
+        cleanedPhone = '92' + cleanedPhone.substring(1); 
+    } else if (cleanedPhone.startsWith('3') && cleanedPhone.length === 10) {
+        cleanedPhone = '92' + cleanedPhone; 
+    }
+
+    const dateStr = record.date ? new Date(record.date).toLocaleDateString() : '-';
+    
+    let msg = `*--- PURCHASE MAAL ENTRY RECEIPT ---*\n\n`;
+    msg += `*Serial No:* ${record.serialNo || '-'}\n`;
+    msg += `*Date:* ${dateStr}\n`;
+    msg += `*Supplier Name:* ${record.name}\n`;
+    msg += `*Item Name:* ${record.item}\n`;
+    msg += `*Bags:* ${record.bags || 0}  |  *Weight:* ${record.weight || 0} Kg\n`;
+    msg += `--------------------------------\n`;
+    msg += `*Total Bill:* ${CURRENCY_SYMBOL} ${(record.bill || 0).toFixed(2)}\n`;
+    msg += `*Paid Amount:* ${CURRENCY_SYMBOL} ${(record.pay || 0).toFixed(2)}\n`;
+    msg += `*Remaining Balance:* ${CURRENCY_SYMBOL} ${(record.balance || 0).toFixed(2)}\n\n`;
+
+
+    // NAYA HAL: whatsapp:// custom protocol se direct Desktop App trigger hogi bina tab khole (Bug Fix)
+    const url = `whatsapp://send?phone=${cleanedPhone}&text=${encodeURIComponent(msg)}`;
+    window.location.href = url; // Current page se trigger hoga, naya tab nahi khulega
+}
+
+function sendDemandWhatsApp(id) {
+    // Pehle PDF download trigger karein
+    generateDemandRecordPDFById(id);
+
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) return;
+
+    let phone = record.phone || '';
+
+    // Customer profile lookup
+    if ((!phone || phone === 'N/A') && typeof savedCustomersList !== 'undefined') {
+        const matchedCust = savedCustomersList.find(c => c.name.toLowerCase() === (record.customer || '').toLowerCase());
+        if (matchedCust) {
+            phone = matchedCust.phone || '';
+        }
+    }
+
+    if (!phone || phone === 'N/A') {
+        phone = prompt(`Customer "${record.customer}" ka phone number nahi mila. Meharbani karke WhatsApp Number enter karein (e.g. 03452523984):`);
+        if (!phone) return;
+    }
+
+    // Number formatting
+    let cleanedPhone = phone.replace(/[^0-9]/g, ''); 
+    if (cleanedPhone.startsWith('0') && cleanedPhone.length === 11) {
+        cleanedPhone = '92' + cleanedPhone.substring(1); 
+    } else if (cleanedPhone.startsWith('3') && cleanedPhone.length === 10) {
+        cleanedPhone = '92' + cleanedPhone; 
+    }
+
+    const dateStr = record.date ? new Date(record.date).toLocaleDateString() : '-';
+    const billVal = record.bill !== undefined ? record.bill : (record.demand * (record.rate || 0));
+    const prevBal = Number(record.oldBalance || 0);
+    const rcvdVal = Number(record.recovery || 0);
+    const outstandingVal = (billVal + prevBal) - rcvdVal;
+
+    let msg = `*--- DEMAND & RECOVERY INVOICE ---*\n\n`;
+    msg += `*Serial No:* #${record.serialNo || '-'}\n`;
+    msg += `*Date:* ${dateStr}\n`;
+    msg += `*Customer Name:* ${record.customer}\n`;
+    msg += `*Qty:* ${record.demand}\n`;
+    msg += `--------------------------------\n`;
+    msg += `*Total Bill:* ${CURRENCY_SYMBOL} ${(billVal + prevBal).toFixed(2)}\n`;
+    msg += `*Recovery Received:* ${CURRENCY_SYMBOL} ${rcvdVal.toFixed(2)} (By: ${record.receivedBy || 'N/A'})\n`;
+    msg += `*Current Outstanding Balance:* ${CURRENCY_SYMBOL} ${outstandingVal.toFixed(2)}\n\n`;
+    // NAYA HAL: window.location.href ke sath whatsapp:// scheme (Bug Fix)
+    const url = `whatsapp://send?phone=${cleanedPhone}&text=${encodeURIComponent(msg)}`;
+    window.location.href = url; // Current window redirect se app trigger hogi
+}
 
 </script>
 <!-- EDIT CASH TRANSACTION MODAL -->
