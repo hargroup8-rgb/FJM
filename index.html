@@ -1189,7 +1189,7 @@ body,
         <button class="tab-link sub-tab" onclick="openModule(event, 'StockOutModule')">📉 Stock Out</button>
     </div>
 </div>
-                    <button class="tab-link" onclick="openModule(event, 'Settings')">⚙️ Settings</button>
+                    <button class="tab-link admin-only" onclick="openModule(event, 'Settings')">⚙️ Settings</button>
                     <button class="tab-link admin-only" onclick="openModule(event, 'AdminDashboard')">👑 Admin Dashboard</button>
                 </div>
             </div>
@@ -1563,6 +1563,13 @@ body,
 
     <!-- Detailed Demand Report -->
     <div class="table-container" style="margin-top: 20px;">
+        
+        <!-- Demand Record Summary Card -->
+<div class="dashboard-card card-glow-teal" style="margin-bottom: 20px; max-width: 300px;">
+    <p class="card-title">Total Sale</p>
+    <h2 id="dr-total-sale-display" class="card-value sales">Rs. 0.00</h2>
+</div>
+        
         <h3>📋 Finalized Demand Record Report</h3>
         <table class="cart-table">
             <!-- Table Header Update -->
@@ -1758,24 +1765,32 @@ body,
     <h2 class="panel-title">Dashboard</h2>
     
     <!-- 1. Stock & Purchase Summary Cards -->
-    <div class="dashboard-section">
-        <h3 class="section-title">Stock & Purchase Summary</h3>
-        <div class="dashboard-grid">
-            <div class="dashboard-card card-glow-teal">
-                <p class="card-title">Total Purchaser Amount</p>
-                <h2 id="dashboard-today-purchases" class="card-value purchases">Rs. 0.00</h2>
-            </div>
-            <div class="dashboard-card card-glow-blue">
-                <p class="card-title">Purchased Stock Amount</p>
-                <h2 id="dashboard-purchased-stock-amount" class="card-value sales">Rs. 0.00</h2>
-            </div>
-            <div class="dashboard-card card-glow-amber">
-                <p class="card-title">Total Stock Amount</p>
-                <h2 id="dashboard-total-stock-amount" class="card-value profit">Rs. 0.00</h2>
-            </div>
+<div class="dashboard-section">
+    <h3 class="section-title">Stock & Purchase Summary</h3>
+    <div class="dashboard-grid">
+        <!-- NAYA CARD: Total Sale -->
+        <div class="dashboard-card card-glow-teal">
+            <p class="card-title">Total Sale</p>
+            <h2 id="dashboard-total-sale" class="card-value sales">Rs. 0.00</h2>
+        </div>
+        <div class="dashboard-card card-glow-teal">
+            <p class="card-title">Total Purchaser Amount</p>
+            <h2 id="dashboard-today-purchases" class="card-value purchases">Rs. 0.00</h2>
+        </div>
+        <div class="dashboard-card card-glow-blue">
+            <p class="card-title">Purchased Stock Amount</p>
+            <h2 id="dashboard-purchased-stock-amount" class="card-value sales">Rs. 0.00</h2>
+        </div>
+        <div class="dashboard-card card-glow-amber">
+            <p class="card-title">Total Stock Amount</p>
+            <h2 id="dashboard-total-stock-amount" class="card-value profit">Rs. 0.00</h2>
         </div>
     </div>
+</div>
 
+
+
+    
     <!-- 2. Professional Executive Chart Section -->
     <div class="dashboard-section" style="margin-top: 25px;">
         <div class="chart-header-container">
@@ -1826,6 +1841,8 @@ body,
                     <div class="dashboard-section">
                         <h3 class="section-title">Stock Summary</h3>
                         <div class="dashboard-grid">
+
+                            
                             <div class="dashboard-card">
                                 <p class="card-title">Sold Stock (Qty)</p>
                                 <h2 id="stk-total-sold-count" class="card-value info">0</h2>
@@ -1833,6 +1850,7 @@ body,
                             <div class="dashboard-card">
                                 <p class="card-title">Sold Amount (Bika Hua Maal)</p>
                                 <h2 id="stk-total-sold-amount" class="card-value sales">Rs. 0.00</h2>
+                            
                             </div>
                             <div class="dashboard-card">
                                 <p class="card-title">Remaining Stock (Qty)</p>
@@ -3219,12 +3237,12 @@ body,
                 <label>Purchaser Name:</label>
                 <input type="text" id="pc-name" class="form-control" placeholder="Supplier Name">
             </div>
-
             <div>
-    <label>Purchaser Phone / Mobile:</label>
-    <input type="tel" id="pc-phone" class="form-control" placeholder="e.g. 03452523984">
-</div>
-
+                <label>Purchaser Phone / Mobile:</label>
+                <input type="tel" id="pc-phone" class="form-control" placeholder="e.g. 03452523984">
+            </div>
+            
+            <!-- BAGS KA BOX (Jo ghalti se delete ho gaya tha) -->
             <div>
                 <label>Bags:</label>
                 <input type="number" id="pc-bags" class="form-control" oninput="calculatePurchaseBill()" placeholder="0">
@@ -3234,8 +3252,14 @@ body,
                 <input type="number" id="pc-perkg" class="form-control" oninput="calculatePurchaseBill()" placeholder="500">
             </div>
             <div>
+                <label>(Per 40kg / Mann):</label>
+                <input type="number" id="pc-maund-rate" class="form-control" oninput="calculatePurchaseBill()" placeholder="e.g. 4000">
+            </div>
+            
+            <!-- RATE PER KG KA BOX (Ab sirf 1 dafa hai) -->
+            <div>
                 <label>Rate (Per Kg):</label>
-<input type="number" id="pc-rate" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold; color:var(--accent-color);">
+                <input type="number" id="pc-rate" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold; color:var(--accent-color);">
             </div>
             <div>
                 <label>Labor (Per Bag):</label>
@@ -3245,6 +3269,7 @@ body,
                 <label>Transport (Per Bag):</label>
                 <input type="number" id="pc-transport" class="form-control" oninput="calculatePurchaseBill()" value="100" placeholder="100">
             </div>
+            
             <div>
                 <label>Total Bill:</label>
                 <input type="number" id="pc-bill" class="form-control" readonly style="font-weight:bold; color:var(--text-light);">
@@ -3260,6 +3285,7 @@ body,
                 <label>Pay Amount:</label>
                 <input type="number" id="pc-pay" class="form-control" oninput="calculatePurchaseBill()" placeholder="0">
             </div>
+            
             <div>
                 <label>Balance:</label>
                 <input type="number" id="pc-balance" class="form-control" readonly style="font-weight:bold; color:var(--danger-color);">
@@ -3344,8 +3370,9 @@ body,
 
             <label>Purchaser Name:</label>
             <input type="text" id="edit-mp-name" class="form-control">
+            
             <label>Purchaser Phone:</label>
-<input type="tel" id="edit-mp-phone" class="form-control">
+            <input type="tel" id="edit-mp-phone" class="form-control">
 
             <label>Bags:</label>
             <input type="number" id="edit-mp-bags" class="form-control" oninput="calcEditMaalMath()">
@@ -3353,8 +3380,12 @@ body,
             <label>Total Weight (Kg):</label>
             <input type="number" id="edit-mp-weight" class="form-control" oninput="calcEditMaalMath()">
 
+            <label>Rate (Per 40kg / Mann):</label>
+            <input type="number" id="edit-mp-maund-rate" class="form-control" oninput="calcEditMaalMath()">
+
             <label>Rate (Per Kg):</label>
-<input type="number" id="edit-mp-rate" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold;">
+            <input type="number" id="edit-mp-rate" class="form-control" readonly style="background: rgba(255,255,255,0.05); font-weight:bold;">
+            
             <label>Labor (Per Bag):</label>
             <input type="number" id="edit-mp-labor" class="form-control" oninput="calcEditMaalMath()">
 
@@ -3547,57 +3578,39 @@ body,
 <!-- END UPDATED MODULE -->
 
 
-                <div id="Settings" class="module-content">
-                    <h2 class="panel-title">Invoice & System Settings</h2>
-                    <div class="manage-form">
-                        <h3 class="panel-title" style="font-size: 1.2rem;">Invoice Details</h3>
-                        <div class="form-grid">
-                            <label for="setting-res-name">Restaurant Name:</label><input type="text" id="setting-res-name" class="form-control" style="grid-column: 2 / 5;">
-                            <label for="setting-res-address">Phone Number:</label><input type="text" id="setting-res-phone" class="form-control" style="grid-column: 2 / 5;">
-                            <label for="setting-res-address">Address:</label><input type="text" id="setting-res-address" class="form-control" style="grid-column: 2 / 5;">
-                            <label for="setting-res-note">Invoice Note:</label><input type="text" id="setting-res-note" class="form-control" placeholder="e.g., Thank you for your visit!" style="grid-column: 2 / 5;">
-                        </div>
-                        <hr style="border-color: var(--border-color); margin: 20px 0;">
-                        <h3 class="panel-title" style="font-size: 1.2rem;">Financial & Inventory Settings</h3>
-                        <div class="form-grid">
-                            <label for="setting-discount-percent">Discount %:</label>
-                            <div class="checkbox-group"><input type="number" id="setting-discount-percent" class="form-control"><input type="checkbox" id="setting-enable-discount"><label for="setting-enable-discount">Enable Discount</label></div>
-                            <label for="setting-tax-percent">Tax %:</label>
-                            <div class="checkbox-group"><input type="number" id="setting-tax-percent" class="form-control"><input type="checkbox" id="setting-enable-tax"><label for="setting-enable-tax">Enable Tax</label></div>
-                            <label for="setting-invoice-start-number">Next Invoice #:</label>
-                            <input type="number" id="setting-invoice-start-number" class="form-control">
-<label for="setting-gatepass-start-number">Next Gate Pass #:</label>
-<input type="number" id="setting-gatepass-start-number" class="form-control">
+               <div id="Settings" class="module-content">
+    <h2 class="panel-title">Invoice & System Settings</h2>
+    <div class="manage-form">
+        <h3 class="panel-title" style="font-size: 1.2rem;">Invoice Details</h3>
+        <div class="form-grid">
+            <label for="setting-res-name">Restaurant Name:</label><input type="text" id="setting-res-name" class="form-control" style="grid-column: 2 / 5;">
+            <label for="setting-res-address">Phone Number:</label><input type="text" id="setting-res-phone" class="form-control" style="grid-column: 2 / 5;">
+            <label for="setting-res-address">Address:</label><input type="text" id="setting-res-address" class="form-control" style="grid-column: 2 / 5;">
+            <label for="setting-res-note">Invoice Note:</label><input type="text" id="setting-res-note" class="form-control" placeholder="e.g., Thank you for your visit!" style="grid-column: 2 / 5;">
+        </div>
 
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
+        <h3 class="panel-title" style="font-size: 1.2rem;">Branding Settings</h3>
+        <div class="form-grid">
+            <label for="setting-logo-upload">Logo Image:</label>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
+                <input type="file" id="setting-logo-upload" class="form-control" accept="image/*" style="flex-grow: 1;">
+                <img id="logo-preview" src="" alt="Logo Preview" style="width: 64px; height: 64px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border-color);">
+            </div>
+        </div>
+        <div class="manage-buttons"><button id="btn-save-settings" class="btn btn-success">Save Settings</button></div>
 
-
-                        </div>
-                        <hr style="border-color: var(--border-color); margin: 20px 0;">
-                        <h3 class="panel-title" style="font-size: 1.2rem;">Branding Settings</h3>
-                        <div class="form-grid">
-                            <label for="setting-logo-upload">Logo Image:</label>
-                            <div style="display: flex; gap: 10px; align-items: center; justify-content: flex-start;">
-                                <input type="file" id="setting-logo-upload" class="form-control" accept="image/*" style="flex-grow: 1;">
-                                <img id="logo-preview" src="" alt="Logo Preview" style="width: 64px; height: 64px; object-fit: contain; border-radius: 4px; border: 1px solid var(--border-color);">
-                            </div>
-                        </div>
-                        <div class="manage-buttons"><button id="btn-save-settings" class="btn btn-success">Save Settings</button></div>
-
-
-
-                        
-                        <!-- DATA MANAGEMENT SECTION -->
-                        <hr style="border-color: var(--border-color); margin: 20px 0;">
-                        <h3 class="panel-title" style="font-size: 1.2rem;">Data Management</h3>
-                        <p>Use these buttons to save all your application data to a file on your computer for backup, or to load it back in.</p>
-                        <div class="manage-buttons">
-                            <button id="btn-save-data" class="btn btn-info">Save All Data to File</button>
-                            <label for="file-load-data" class="btn btn-warning">Load Data from File</label>
-                            <input type="file" id="file-load-data" accept=".json" style="display: none;">
-                        </div>
-
-                    </div>
-                </div>
+        <!-- DATA MANAGEMENT SECTION -->
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
+        <h3 class="panel-title" style="font-size: 1.2rem;">Data Management</h3>
+        <p>Use these buttons to save all your application data to a file on your computer for backup, or to load it back in.</p>
+        <div class="manage-buttons">
+            <button id="btn-save-data" class="btn btn-info">Save All Data to File</button>
+            <label for="file-load-data" class="btn btn-warning">Load Data from File</label>
+            <input type="file" id="file-load-data" accept=".json" style="display: none;">
+        </div>
+    </div>
+</div>
                 
                 <div id="AdminDashboard" class="module-content admin-only">
                     <h2 class="panel-title">Admin Dashboard</h2>
@@ -5928,6 +5941,9 @@ function refreshAll() {
 }
 
 function renderDashboard() {
+    // 0. Total Sale (Demand Records ke tamam bills ka sum)
+    const totalSale = (demandRecords || []).reduce((sum, rec) => sum + (Number(rec.bill) || 0), 0);
+
     // 1. Total Purchaser Amount
     const totalMaalBill = (maalPurchases || []).reduce((sum, p) => sum + (Number(p.bill) || 0), 0);
     const totalRegularBill = (purchaseLog || []).reduce((sum, log) => sum + (Number(log.grandTotal || log.totalCost) || 0), 0);
@@ -5945,7 +5961,10 @@ function renderDashboard() {
     const rawStockVal = availableStock.reduce((sum, item) => sum + (item.remaining * item.lastPrice), 0);
     const totalStockAmount = productsVal + rawStockVal;
 
-    // Update Card Values
+    // Update Dashboard Cards
+    const totalSaleCard = document.getElementById('dashboard-total-sale');
+    if (totalSaleCard) totalSaleCard.textContent = `${CURRENCY_SYMBOL}${totalSale.toFixed(2)}`;
+
     const purchasesCard = document.getElementById('dashboard-today-purchases');
     if (purchasesCard) purchasesCard.textContent = `${CURRENCY_SYMBOL}${totalPurchaserAmount.toFixed(2)}`;
 
@@ -5955,12 +5974,16 @@ function renderDashboard() {
     const totalStockCard = document.getElementById('dashboard-total-stock-amount');
     if (totalStockCard) totalStockCard.textContent = `${CURRENCY_SYMBOL}${totalStockAmount.toFixed(2)}`;
 
-    // --- ENHANCED EXECUTIVE CHART RENDERING ---
+    // --- CHART GRAPH UPDATES ---
     const canvas = document.getElementById('dashboardStockChart');
     if (canvas) {
         const ctx = canvas.getContext('2d');
 
-        // Create High-Definition Linear Gradients
+        // Color Gradients
+        const gradientGreen = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientGreen.addColorStop(0, 'rgba(16, 185, 129, 0.95)');
+        gradientGreen.addColorStop(1, 'rgba(5, 150, 105, 0.15)');
+
         const gradientTeal = ctx.createLinearGradient(0, 0, 0, 350);
         gradientTeal.addColorStop(0, 'rgba(20, 184, 166, 0.95)');
         gradientTeal.addColorStop(1, 'rgba(13, 148, 136, 0.15)');
@@ -5977,23 +6000,18 @@ function renderDashboard() {
             myDashboardChart.destroy();
         }
 
-        // Register DataLabels Plugin if available
         const pluginsList = typeof ChartDataLabels !== 'undefined' ? [ChartDataLabels] : [];
 
         myDashboardChart = new Chart(ctx, {
             type: 'bar',
             plugins: pluginsList,
             data: {
-                labels: ['Total Purchaser Amount', 'Purchased Stock Amount', 'Total Stock Amount'],
+                labels: ['Total Sale', 'Total Purchaser Amount', 'Purchased Stock Amount', 'Total Stock Amount'],
                 datasets: [{
                     label: 'Amount (Rs.)',
-                    data: [totalPurchaserAmount, totalPurchasedStockAmount, totalStockAmount],
-                    backgroundColor: [gradientTeal, gradientBlue, gradientAmber],
-                    borderColor: [
-                        '#14b8a6',
-                        '#3b82f6',
-                        '#f59e0b'
-                    ],
+                    data: [totalSale, totalPurchaserAmount, totalPurchasedStockAmount, totalStockAmount],
+                    backgroundColor: [gradientGreen, gradientTeal, gradientBlue, gradientAmber],
+                    borderColor: ['#10b981', '#14b8a6', '#3b82f6', '#f59e0b'],
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
@@ -6004,32 +6022,16 @@ function renderDashboard() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 1200,
-                    easing: 'easeOutQuart'
-                },
-                layout: {
-                    padding: {
-                        top: 35,
-                        bottom: 10,
-                        left: 10,
-                        right: 15
-                    }
-                },
+                animation: { duration: 1200, easing: 'easeOutQuart' },
+                layout: { padding: { top: 35, bottom: 10, left: 10, right: 15 } },
                 plugins: {
-                    legend: {
-                        display: false
-                    },
+                    legend: { display: false },
                     datalabels: {
                         anchor: 'end',
                         align: 'start',
                         offset: -28,
                         color: '#ffffff',
-                        font: {
-                            family: 'Inter',
-                            size: 12,
-                            weight: '700'
-                        },
+                        font: { family: 'Inter', size: 12, weight: '700' },
                         formatter: function(value) {
                             return 'Rs. ' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                         },
@@ -6057,11 +6059,7 @@ function renderDashboard() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(255, 255, 255, 0.04)',
-                            borderDash: [5, 5],
-                            drawBorder: false
-                        },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)', borderDash: [5, 5], drawBorder: false },
                         ticks: {
                             color: '#94a3b8',
                             font: { family: 'Inter', size: 11, weight: '500' },
@@ -6074,15 +6072,8 @@ function renderDashboard() {
                         }
                     },
                     x: {
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#e2e8f0',
-                            font: { family: 'Inter', size: 12, weight: '600' },
-                            padding: 10
-                        }
+                        grid: { display: false, drawBorder: false },
+                        ticks: { color: '#e2e8f0', font: { family: 'Inter', size: 11, weight: '600' }, padding: 10 }
                     }
                 }
             }
@@ -7012,45 +7003,93 @@ function generateInvoicePDF(invoiceId) {
         return;
     }
 
+    const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     let yPos = 15;
 
     const isCashSale = invoice.customerName === "Cash Customer" && invoice.remainingBalance <= 0.01;
 
-    doc.setFontSize(24); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
-    doc.text(appSettings.restaurantName, 105, yPos, { align: 'center' }); yPos += 8;
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(appSettings.restaurantAddress, 105, yPos, { align: 'center' }); yPos += 5;
-    doc.text(`Phone: ${appSettings.restaurantPhone}`, 105, yPos, { align: 'center' }); yPos += 10;
-    doc.setFontSize(16); doc.text(`INVOICE (${isCashSale ? 'CASH SALE' : invoice.status.toUpperCase()})`, 105, yPos, { align: 'center' }); yPos += 10;
+    // --- CONFIGURABLE HEADER & LOGO WRITE LOGIC ---
+    if (appSettings.logoBase64) {
+        try {
+            // Invoice header par Logo render karna
+            doc.addImage(appSettings.logoBase64, 'PNG', 14, yPos, 22, 22);
+            doc.setFontSize(20); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
+            doc.text(appSettings.restaurantName || "FJM ERP", 42, yPos + 7);
+            doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+            doc.text(appSettings.restaurantAddress || "", 42, yPos + 13);
+            doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 42, yPos + 18);
+            yPos += 28;
+        } catch (e) {
+            console.error("Logo Render Error: ", e);
+            doc.setFontSize(22); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
+            doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+            doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+            doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+            doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 10;
+        }
+    } else {
+        doc.setFontSize(24); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
+        doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+        doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+        doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+        doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 10;
+    }
 
+    // Title Header
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+    doc.text(`INVOICE (${isCashSale ? 'CASH SALE' : (invoice.status || 'SALE').toUpperCase()})`, 105, yPos, { align: 'center' }); yPos += 10;
+
+    // Customer & Invoice Details
     if (!isCashSale) {
-        const detailsTableData = [['Invoice ID:', invoice.invoiceId], ['Customer Name:', invoice.customerName],['Customer Phone:', invoice.customerPhone],['Date Created:', new Date(invoice.createdAt).toLocaleDateString()],
+        const detailsTableData = [
+            ['Invoice ID:', invoice.invoiceId],
+            ['Customer Name:', invoice.customerName || 'N/A'],
+            ['Customer Phone:', invoice.customerPhone || 'N/A'],
+            ['Date Created:', new Date(invoice.createdAt).toLocaleDateString()]
         ];
-        doc.autoTable({ startY: yPos, body: detailsTableData, theme: 'plain', styles: { fontSize: 10, cellPadding: 2 }, margin: { left: 14, right: 14 } });
+        doc.autoTable({
+            startY: yPos,
+            body: detailsTableData,
+            theme: 'plain',
+            styles: { fontSize: 10, cellPadding: 2 },
+            margin: { left: 14, right: 14 }
+        });
         yPos = doc.previousAutoTable.finalY + 5;
-    
-        } else {
-        const detailsTableData = [['Invoice ID:', invoice.invoiceId],['Date Created:', new Date(invoice.createdAt).toLocaleDateString()]];
-        doc.autoTable({ startY: yPos, body: detailsTableData, theme: 'plain', styles: { fontSize: 10, cellPadding: 2 }, margin: { left: 14, right: 14 } });
+    } else {
+        const detailsTableData = [
+            ['Invoice ID:', invoice.invoiceId],
+            ['Date Created:', new Date(invoice.createdAt).toLocaleDateString()]
+        ];
+        doc.autoTable({
+            startY: yPos,
+            body: detailsTableData,
+            theme: 'plain',
+            styles: { fontSize: 10, cellPadding: 2 },
+            margin: { left: 14, right: 14 }
+        });
         yPos = doc.previousAutoTable.finalY + 5;
     }
 
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Purchased Items:', 14, yPos); yPos += 5;
-    const itemsTableData = invoice.invoiceItems.map(item =>[
+    // Items Table
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text('Purchased Items:', 14, yPos); yPos += 5;
+
+    const itemsTableData = (invoice.invoiceItems || []).map(item => [
         '', 
-        item.name,
-        item.quantity,
-        `${CURRENCY_SYMBOL}${item.price.toFixed(2)}`,
-        `${CURRENCY_SYMBOL}${(item.quantity * item.price).toFixed(2)}`
+        item.name || 'Product',
+        item.quantity || 0,
+        `${CURRENCY_SYMBOL}${(item.price || 0).toFixed(2)}`,
+        `${CURRENCY_SYMBOL}${((item.quantity || 0) * (item.price || 0)).toFixed(2)}`
     ]);
+
     doc.autoTable({
         startY: yPos,
         head: [['Image', 'Product Name', 'Quantity', 'Unit Price', 'Subtotal']],
         body: itemsTableData,
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 2 },
-        headStyles: { fillColor:[42, 105, 185], textColor: 255 },
+        headStyles: { fillColor: [42, 105, 185], textColor: 255 },
         bodyStyles: { minCellHeight: 15, valign: 'middle' },
         columnStyles: {
             0: { cellWidth: 17 }, 
@@ -7063,9 +7102,9 @@ function generateInvoicePDF(invoiceId) {
         didDrawCell: function(data) {
             if (data.section === 'body' && data.column.index === 0) {
                 const rowIndex = data.row.index;
-                const invoiceItem = invoice.invoiceItems[rowIndex];
+                const invoiceItem = (invoice.invoiceItems || [])[rowIndex];
                 if (invoiceItem) {
-                    const product = products.find(p => p.id === invoiceItem.id);
+                    const product = (products || []).find(p => p.id === invoiceItem.id);
                     if (product && product.image_path) {
                         const imgSize = 12; 
                         const x = data.cell.x + (data.cell.width - imgSize) / 2;
@@ -7082,23 +7121,38 @@ function generateInvoicePDF(invoiceId) {
     });
     yPos = doc.previousAutoTable.finalY + 10;
 
+    // Payment Summary Table
+    const summaryData = [
+        ['Total Amount:', `${CURRENCY_SYMBOL}${(invoice.totalAmount || 0).toFixed(2)}`],
+        ['Total Paid:', `${CURRENCY_SYMBOL}${(invoice.paidAmount || 0).toFixed(2)}`]
+    ];
+    if (!isCashSale) {
+        summaryData.push(['Remaining Balance (Due):', `${CURRENCY_SYMBOL}${(invoice.remainingBalance || 0).toFixed(2)}`]);
+    }
 
-    const summaryData = [['Total Amount:', `${CURRENCY_SYMBOL}${invoice.totalAmount.toFixed(2)}`],['Total Paid:', `${CURRENCY_SYMBOL}${invoice.paidAmount.toFixed(2)}`]];
-    if (!isCashSale) { summaryData.push(['Remaining Balance (Due):', `${CURRENCY_SYMBOL}${invoice.remainingBalance.toFixed(2)}`]); }
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Payment Summary:', 14, yPos); yPos += 5;
-    doc.autoTable({ startY: yPos, body: summaryData, theme: 'grid', styles: { fontSize: 10, cellPadding: 2, fontStyle: 'bold' }, margin: { left: 14, right: 14 } });
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text('Payment Summary:', 14, yPos); yPos += 5;
+    doc.autoTable({
+        startY: yPos,
+        body: summaryData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 2, fontStyle: 'bold' },
+        margin: { left: 14, right: 14 }
+    });
     yPos = doc.previousAutoTable.finalY + 10;
 
-    if (invoice.payments.length > 0) {
-        doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text('Payment History:', 14, yPos); yPos += 5;
+    // Payment History Table
+    if (invoice.payments && invoice.payments.length > 0) {
+        doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+        doc.text('Payment History:', 14, yPos); yPos += 5;
         const paymentTableData = invoice.payments.map(p => {
-            let method = p.method;
+            let method = p.method || 'Cash';
             if (p.accountDetails) {
                 method += ` (${p.accountDetails})`;
             }
             const formattedAmount = p.amount < 0 
                 ? `-${CURRENCY_SYMBOL}${Math.abs(p.amount).toFixed(2)}` 
-                : `${CURRENCY_SYMBOL}${p.amount.toFixed(2)}`;
+                : `${CURRENCY_SYMBOL}${(p.amount || 0).toFixed(2)}`;
 
             return [
                 new Date(p.date).toLocaleDateString(),
@@ -7107,17 +7161,26 @@ function generateInvoicePDF(invoiceId) {
                 p.notes || ''
             ];
         });
-        doc.autoTable({ startY: yPos, head: [['Date', 'Method', 'Amount Paid', 'Notes']], body: paymentTableData, theme: 'grid', styles: { fontSize: 9 }, headStyles: { fillColor:[42, 105, 185], textColor: 255 }, margin: { left: 14, right: 14 } });
+        doc.autoTable({
+            startY: yPos,
+            head: [['Date', 'Method', 'Amount Paid', 'Notes']],
+            body: paymentTableData,
+            theme: 'grid',
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [42, 105, 185], textColor: 255 },
+            margin: { left: 14, right: 14 }
+        });
         yPos = doc.previousAutoTable.finalY + 10;
     }
 
-    doc.setFontSize(10); doc.setFont('helvetica', 'italic');
-    doc.text(appSettings.invoiceNote, 14, yPos);
+    // Invoice Footer Note
+    if (appSettings.invoiceNote) {
+        doc.setFontSize(10); doc.setFont('helvetica', 'italic');
+        doc.text(appSettings.invoiceNote, 14, yPos);
+    }
 
     doc.save(`Invoice_${invoice.invoiceId}.pdf`);
 }
-// --- END PARTIAL PAYMENTS FUNCTIONS ---
-
 
 // --- SELL RETURN FUNCTIONS ---
 
@@ -11395,48 +11458,64 @@ function deleteUser(userId) {
 }
 
 function populateSettingsForm() {
-    document.getElementById('setting-res-name').value = appSettings.restaurantName;
-    document.getElementById('setting-res-address').value = appSettings.restaurantAddress;
-    document.getElementById('setting-res-phone').value = appSettings.restaurantPhone;
-    document.getElementById('setting-res-note').value = appSettings.invoiceNote;
-    document.getElementById('setting-discount-percent').value = appSettings.discountPercent;
-    document.getElementById('setting-tax-percent').value = appSettings.taxPercent;
-    document.getElementById('setting-enable-discount').checked = appSettings.enableDiscount;
-    document.getElementById('setting-enable-tax').checked = appSettings.enableTax;
-    document.getElementById('logo-preview').src = appSettings.logoBase64 || IMG_PLACEHOLDER;
-    document.getElementById('setting-invoice-start-number').value = appSettings.nextInvoiceNumber;
+    if (document.getElementById('setting-res-name')) document.getElementById('setting-res-name').value = appSettings.restaurantName || '';
+    if (document.getElementById('setting-res-address')) document.getElementById('setting-res-address').value = appSettings.restaurantAddress || '';
+    if (document.getElementById('setting-res-phone')) document.getElementById('setting-res-phone').value = appSettings.restaurantPhone || '';
+    if (document.getElementById('setting-res-note')) document.getElementById('setting-res-note').value = appSettings.invoiceNote || '';
+    if (document.getElementById('logo-preview')) document.getElementById('logo-preview').src = appSettings.logoBase64 || IMG_PLACEHOLDER;
 }
 
 function saveAppSettings() {
-    appSettings.restaurantName = document.getElementById('setting-res-name').value.trim();
-    appSettings.restaurantAddress = document.getElementById('setting-res-address').value.trim();
-    appSettings.restaurantPhone = document.getElementById('setting-res-phone').value.trim();
-    appSettings.invoiceNote = document.getElementById('setting-res-note').value.trim();
-    appSettings.discountPercent = parseFloat(document.getElementById('setting-discount-percent').value);
-    appSettings.taxPercent = parseFloat(document.getElementById('setting-tax-percent').value);
-    appSettings.enableDiscount = document.getElementById('setting-enable-discount').checked;
-    appSettings.enableTax = document.getElementById('setting-enable-tax').checked;
-    appSettings.nextInvoiceNumber = parseInt(document.getElementById('setting-invoice-start-number').value) || 100;
+    if (document.getElementById('setting-res-name')) appSettings.restaurantName = document.getElementById('setting-res-name').value.trim();
+    if (document.getElementById('setting-res-address')) appSettings.restaurantAddress = document.getElementById('setting-res-address').value.trim();
+    if (document.getElementById('setting-res-phone')) appSettings.restaurantPhone = document.getElementById('setting-res-phone').value.trim();
+    if (document.getElementById('setting-res-note')) appSettings.invoiceNote = document.getElementById('setting-res-note').value.trim();
 
     saveSettings();
     alert("Settings saved successfully!");
     refreshAll(); 
-    appSettings.nextGatePassNumber = parseInt(document.getElementById('setting-gatepass-start-number').value) || 100;
 }
 
 function handleLogoUpload(event) {
     const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            appSettings.logoBase64 = e.target.result;
-            document.getElementById('logo-preview').src = e.target.result;
+    
+    // Agar koi file select na ho (e.g. user cancels picker), to purana logo remove NAI hoga
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            // Image Compress & Resize Logic (Cloud Storage Limit se bachne ke liye)
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxWidth = 200, maxHeight = 200;
+            let width = img.width, height = img.height;
+
+            if (width > height) {
+                if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; }
+            } else {
+                if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Light-weight PNG String
+            const compressedBase64 = canvas.toDataURL('image/png');
+            
+            // Settings update & preview
+            appSettings.logoBase64 = compressedBase64;
+            const preview = document.getElementById('logo-preview');
+            if (preview) {
+                preview.src = compressedBase64;
+                preview.style.display = 'block';
+            }
         };
-        reader.readAsDataURL(file);
-    } else {
-        appSettings.logoBase64 = null;
-        document.getElementById('logo-preview').src = IMG_PLACEHOLDER;
-    }
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 function saveAllDataToFile() {
@@ -12757,9 +12836,8 @@ if (actualModuleName === 'ExpenseStock' || actualModuleName === 'UsedStock') {
             renderInventoryCostingReport();
         }
         if (actualModuleName === 'Settings') {
-            populateSettingsForm();
-            document.getElementById('setting-gatepass-start-number').value = appSettings.nextGatePassNumber || 100;
-        }
+    populateSettingsForm();
+}
         if (actualModuleName === 'DemandForm') {
             await dbFetchMaalPurchases(); // Safe fetch method
             await dbFetchDemandWorkers();
@@ -13887,30 +13965,32 @@ let maalPurchases = [];
 // UPGRADED MAAL PURCHASE MODULE (PAYMENTS, EDIT & AUTO PDF)
 // =========================================================
 
-// 1. Live Form Bill Calculation
 function calculatePurchaseBill() {
     const bags = parseFloat(document.getElementById('pc-bags')?.value) || 0;
     const weight = parseFloat(document.getElementById('pc-perkg')?.value) || 0;
     const pay = parseFloat(document.getElementById('pc-pay')?.value) || 0;
+    
+    // NAYA: 40Kg (Mann) ka rate read karein
+    const maundRate = parseFloat(document.getElementById('pc-maund-rate')?.value) || 0;
 
-    // 1. Automatic Rate Calculation: Total Weight divided by Bags
+    // NAYA LOGIC: Mann rate ko 40 se divide kar ke 1 Kg ka rate nikalna
     let autoRate = 0;
-    if (bags > 0 && weight > 0) {
-        autoRate = weight / bags;
+    if (maundRate > 0) {
+        autoRate = maundRate / 40;
     }
     
-    // Rate wale box mein value set karna
+    // Rate (Per kg) wale box mein value set karna
     const rateInput = document.getElementById('pc-rate');
     if (rateInput) rateInput.value = autoRate.toFixed(2);
 
-    // Labor aur Transport (Pehele ki tarah)
+    // Labor aur Transport
     const laborInput = document.getElementById('pc-labor')?.value;
     const laborPerBag = (laborInput === '' || isNaN(parseFloat(laborInput))) ? 0 : parseFloat(laborInput);
 
     const transportInput = document.getElementById('pc-transport')?.value;
     const transportPerBag = (transportInput === '' || isNaN(parseFloat(transportInput))) ? 0 : parseFloat(transportInput);
 
-    // 2. Bill Calculation logic
+    // Bill Calculation logic
     const materialCost = weight * autoRate; 
     const totalLabor = bags * laborPerBag;
     const totalTransport = bags * transportPerBag;
@@ -13923,6 +14003,7 @@ function calculatePurchaseBill() {
 }
 
 async function saveMaalPurchase() {
+const maundRate = parseFloat(document.getElementById('pc-maund-rate')?.value) || 0;
     const item = document.getElementById('pc-item')?.value.trim() || '';
     const name = document.getElementById('pc-name')?.value.trim() || '';
     const phone = document.getElementById('pc-phone')?.value.trim() || ''; // NAYA: Phone input uthayein
@@ -13973,6 +14054,7 @@ async function saveMaalPurchase() {
         phone: phone, // NAYA: Mobile number yahan order record mein save ho raha hai
         bags: bags,
         weight: weight,
+        maundRate: maundRate,
         rate: rate,
         labor: labor,
         transport: transport,
@@ -13981,6 +14063,7 @@ async function saveMaalPurchase() {
         balance: balance,
         paymentMode: payMode,
         payments: initialPayments
+        
     };
 
     if (!Array.isArray(maalPurchases)) maalPurchases = [];
@@ -13999,6 +14082,7 @@ async function saveMaalPurchase() {
     document.getElementById('pc-transport').value = '100';
     document.getElementById('pc-pay').value = '';
     calculatePurchaseBill();
+document.getElementById('pc-maund-rate').value = '';
 
     try {
         if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
@@ -14286,7 +14370,7 @@ async function submitMaalPayment() {
 function openEditMaalModal(id) {
     const item = (maalPurchases || []).find(p => p.id === id);
     if (!item) return;
-
+document.getElementById('edit-mp-maund-rate').value = item.maundRate || 0;
     document.getElementById('edit-mp-id').value = item.id;
     document.getElementById('edit-mp-item').value = item.item || '';
     document.getElementById('edit-mp-name').value = item.name || '';
@@ -14313,10 +14397,13 @@ function calcEditMaalMath() {
     const transport = parseFloat(document.getElementById('edit-mp-transport')?.value) || 0;
     const pay = parseFloat(document.getElementById('edit-mp-pay')?.value) || 0;
 
-    // Automatic Rate Calculation
+    // NAYA: 40Kg (Mann) ka rate read karein
+    const maundRate = parseFloat(document.getElementById('edit-mp-maund-rate')?.value) || 0;
+
+    // NAYA LOGIC: Mann rate ko 40 se divide kar ke 1 Kg ka rate nikalna
     let autoRate = 0;
-    if (bags > 0 && weight > 0) {
-        autoRate = weight / bags;
+    if (maundRate > 0) {
+        autoRate = maundRate / 40;
     }
     
     // Edit wale rate box mein value daalna
@@ -14362,6 +14449,7 @@ async function saveEditedMaalPurchase() {
     maalPurchases[itemIndex].bill = bill;
     maalPurchases[itemIndex].pay = pay;
     maalPurchases[itemIndex].balance = balance;
+maalPurchases[itemIndex].maundRate = maundRate;
 
     closeEditMaalModal();
     renderMaalPurchaseTable();
@@ -15153,8 +15241,6 @@ async function submitDemandRecord() {
     }
 }
 
-// 5. Finalized Demand report table render karna (with search and date filters)
-// TABLE RENDER FUNCTION UPDATE
 function renderDemandRecordTable() {
     const tbody = document.getElementById('dr-table-body');
     if (!tbody) return;
@@ -15164,19 +15250,18 @@ function renderDemandRecordTable() {
     const fromDateVal = document.getElementById('dr-filter-from')?.value;
     const toDateVal = document.getElementById('dr-filter-to')?.value;
 
-    let filtered = (demandRecords || []).filter(r => r.processed);
+    let filtered = (demandRecords || []).filter(r => r.processed || r.bill);
 
     // Filter Logic...
     if (fromDateVal) {
         const fromDateObj = new Date(fromDateVal + 'T00:00:00');
         filtered = filtered.filter(r => new Date(r.date) >= fromDateObj);
     }
-   if (toDateVal) {
+    if (toDateVal) {
         const toDateObj = new Date(toDateVal + 'T23:59:59');
         filtered = filtered.filter(r => new Date(r.date) <= toDateObj);
     }
     
-    // YAHAN TABDEELI KI GAYI HAI: Ab Name aur Serial Number dono se search hoga
     if (searchQuery) {
         filtered = filtered.filter(r => 
             (r.customer && r.customer.toLowerCase().includes(searchQuery)) ||
@@ -15184,30 +15269,36 @@ function renderDemandRecordTable() {
         );
     }
 
+    // --- NAYA CODE: Total Sale (Tamam Bills ka sum) Calculate karna ---
+    const totalSale = filtered.reduce((sum, rec) => sum + (Number(rec.bill) || 0), 0);
+    const totalSaleEl = document.getElementById('dr-total-sale-display');
+    if (totalSaleEl) {
+        totalSaleEl.textContent = `${CURRENCY_SYMBOL}${totalSale.toFixed(2)}`;
+    }
+    // ----------------------------------------------------------------
+
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
         const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
         
-        // TABLE ROW MEIN "Received By" ADD KARNA
         tbody.innerHTML += `
             <tr>
                 <td>${dateStr}</td>
                 <td><strong>${rec.customer}</strong></td>
                 <td>${rec.itemName || '-'}</td>
                 <td>${rec.demand}</td>
-                <td>${CURRENCY_SYMBOL}${rec.rate.toFixed(2)}</td>
-                <td><strong>${CURRENCY_SYMBOL}${rec.bill.toFixed(2)}</strong></td>
-                <td>${CURRENCY_SYMBOL}${rec.oldBalance.toFixed(2)}</td>
-                <td style="color:#10b981; font-weight:bold;">${CURRENCY_SYMBOL}${rec.recovery.toFixed(2)}</td>
-                <td style="font-weight:bold;">${rec.receivedBy || '-'}</td> <!-- Yahan naam show hoga -->
-                <td style="color:#ef4444; font-weight:bold;">${CURRENCY_SYMBOL}${rec.netBalance.toFixed(2)}</td>
+                <td>${CURRENCY_SYMBOL}${(rec.rate || 0).toFixed(2)}</td>
+                <td><strong>${CURRENCY_SYMBOL}${(rec.bill || 0).toFixed(2)}</strong></td>
+                <td>${CURRENCY_SYMBOL}${(rec.oldBalance || 0).toFixed(2)}</td>
+                <td style="color:#10b981; font-weight:bold;">${CURRENCY_SYMBOL}${(rec.recovery || 0).toFixed(2)}</td>
+                <td style="font-weight:bold;">${rec.receivedBy || '-'}</td>
+                <td style="color:#ef4444; font-weight:bold;">${CURRENCY_SYMBOL}${(rec.netBalance || 0).toFixed(2)}</td>
                 <td>
-                    <td>
-    <div style="display: flex; gap: 5px;">
-        <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
-        <button class="btn btn-sm btn-success" onclick="sendDemandWhatsApp('${rec.id}')">WhatsApp</button>
-        <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
-    </div>
-</td>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
+                        <button class="btn btn-sm btn-success" onclick="sendDemandWhatsApp('${rec.id}')">WhatsApp</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
+                    </div>
+                </td>
             </tr>
         `;
     });
