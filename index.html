@@ -3787,7 +3787,7 @@ async function saveDemandWorker() {
     demandWorkers.push(newWorker);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
             payload: JSON.stringify(demandWorkers)
         });
@@ -3812,7 +3812,7 @@ async function deleteDemandWorker(id) {
     if (!confirm("Kya aap waqai is worker ko delete karna chahte hain?")) return;
     demandWorkers = demandWorkers.filter(w => w.id !== id);
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
             payload: JSON.stringify(demandWorkers)
         });
@@ -4065,7 +4065,7 @@ async function saveUpdatedDemand() {
     demandRecords[recordIndex].worker = selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null;
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         // Firebase database mein naya data save karna
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
@@ -4126,7 +4126,7 @@ async function updateMaterialStatus(id, newStatus) {
     demandRecords[index].materialStatus = newStatus;
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         // Cloud Firestore mein save karein
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
@@ -4151,7 +4151,7 @@ async function toggleMaterialStatus(id) {
                         record.materialStatus = record.materialStatus === 'Shipped' ? 'In warehouse' : 'Shipped';
                             
                                 try {
-                                        const userId = loggedInUser.id || loggedInUser.uid;
+                                        const userId = 'FJM_MASTER_DB';
                                                 await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
                                                             payload: JSON.stringify(demandRecords)
                                                                     });
@@ -4360,7 +4360,7 @@ let laborAttendance = [];
 // Labor ko fetch karne ka logic
 async function dbFetchLaborData() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     try {
         const doc1 = await db.collection('appData').doc(userId).collection('datasets').doc('labor_list').get();
         if (doc1.exists) laborList = JSON.parse(doc1.data().payload) || [];
@@ -4394,7 +4394,7 @@ async function saveLabor() {
 }
 
 async function saveLaborToDB() {
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     await db.collection('appData').doc(userId).collection('datasets').doc('labor_list').set({
         payload: JSON.stringify(laborList)
     });
@@ -4668,7 +4668,7 @@ async function deleteDemandWorker(id) {
     if (!confirm("Kya aap waqai is worker ko delete karna chahte hain?")) return;
     demandWorkers = demandWorkers.filter(w => w.id !== id);
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
             payload: JSON.stringify(demandWorkers)
         });
@@ -4794,7 +4794,7 @@ async function submitNewDemand() {
             return;
         }
         
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         
         appSettings.nextSerialNo = currentSerial + 1;
         await saveSettings(); 
@@ -5137,7 +5137,7 @@ async function markAsPaid(id) {
     }
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         
         // Firebase Cloud mein data save karein
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
@@ -5527,21 +5527,17 @@ function toggleSidebar() {
     }
 }
 
-// --- DATA ISOLATION RE-ARCHITECTURE ---
 function getUserSpecificKey(baseKey) {
-    if (!loggedInUser || !loggedInUser.id) {
-        console.error("Critical Error: User not logged in for data operation.");
-        return baseKey; 
-    }
-    return `${baseKey}_${loggedInUser.id}`;
+    // Ab har user ka data alag nahi hoga, sab ek hi master record share karenge
+    return baseKey; 
 }
 
 async function dbFetchData(baseKey) {
     if (!loggedInUser) return [];
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const masterDbId = 'FJM_MASTER_DB'; // <-- Nayi Master ID
     const key = getUserSpecificKey(baseKey);
     try {
-        const doc = await db.collection('appData').doc(userId).collection('datasets').doc(key).get();
+        const doc = await db.collection('appData').doc(masterDbId).collection('datasets').doc(key).get();
         if (doc.exists) {
             const data = doc.data();
             if (data && data.payload) {
@@ -5556,7 +5552,7 @@ async function dbFetchData(baseKey) {
 
 async function loadUserSettingsOnline() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     const key = getUserSpecificKey(SETTINGS_KEY);
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc(key).get();
@@ -5597,9 +5593,9 @@ appSettings.nextCustomerCode = appSettings.nextCustomerCode ?? 1001; // Agar peh
 
 async function saveData(key, data) {
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            let userId = loggedInUser.id || loggedInUser.uid;
-            await db.collection('appData').doc(userId).collection('datasets').doc(key).set({ 
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const masterDbId = 'FJM_MASTER_DB'; // <-- Nayi Master ID
+            await db.collection('appData').doc(masterDbId).collection('datasets').doc(key).set({ 
                 payload: JSON.stringify(data) 
             });
         }
@@ -5614,7 +5610,7 @@ async function saveData(key, data) {
 // Firebase se user ka data download karke browser ki local storage mein daalne ka function
 async function syncDataFromFirebase() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     if (!userId) return;
 
     // In tamam keys ka data humne cloud se sync karna hai
@@ -5757,7 +5753,7 @@ async function loadGlobalUsers() {
 
 async function saveOnlineData(subCollection, docId, data) {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     try {
         // Seedha Firebase Firestore me specific user ke under save hoga
         await db.collection('users').doc(userId).collection(subCollection).doc(docId).set(data);
@@ -5769,14 +5765,18 @@ async function saveOnlineData(subCollection, docId, data) {
 
 async function loadProductsFromFirebase() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
     
     try {
-        const snapshot = await db.collection('users').doc(userId).collection('products').get();
-        products = []; // Array ko khali kar ke naya data bharein
-        snapshot.forEach(doc => {
-            products.push({ id: doc.id, ...doc.data() });
-        });
+        // userId ki jagah FJM_MASTER_DB laga diya gaya hai
+        const snapshot = await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('pos_app_products').get();
+        
+        products = []; 
+        if (snapshot.exists) {
+            const data = snapshot.data();
+            if (data && data.payload) {
+                products = JSON.parse(data.payload);
+            }
+        }
         renderProductGrid();
         renderManageProductsList();
     } catch (e) {
@@ -9841,7 +9841,7 @@ async function saveAndGenerateGatePass() {
     };
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
 
         appSettings.nextGatePassNumber = currentGPNum + 1;
         await saveSettings();
@@ -10197,7 +10197,7 @@ async function saveGatePassStatusAndInTime(event, id) {
     gatePassLog[recordIndex].inTime = newInTime || 'N/A';
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         
         // 1. LOCAL BROWSER STORAGE MEIN LAZMI SAVE KAREIN TA KE REFRESH PAR WAPAS OPEN NA HO JAYE (Bug Fix)
         localStorage.setItem(getUserSpecificKey(GATE_PASS_LOG_KEY), JSON.stringify(gatePassLog));
@@ -10274,7 +10274,7 @@ async function saveUpdatedGatePass() {
     gatePassLog[recordIndex].inTime = inTime || 'N/A'; 
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         
         // YAHAN BHI LOCAL STORAGE UPDATE KAREIN (Bug Fix)
         localStorage.setItem(getUserSpecificKey(GATE_PASS_LOG_KEY), JSON.stringify(gatePassLog));
@@ -10309,7 +10309,7 @@ async function deleteGatePass(id) {
     gatePassLog = gatePassLog.filter(gp => String(gp.id) !== String(id));
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({
             payload: JSON.stringify(gatePassLog)
         });
@@ -10336,7 +10336,7 @@ async function toggleGatePassStatus(passId) {
         }
 
         try {
-            const userId = loggedInUser.id || loggedInUser.uid;
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({
                 payload: JSON.stringify(gatePassLog)
             });
@@ -12222,7 +12222,7 @@ function updateUserNav() {
         return;
     }
 
-    // User ki customized permissions uthayein, agar khali hon to default role-based use karein
+    // User ki customized permissions uthayein
     const userPermissions = (loggedInUser.permissions && loggedInUser.permissions.length > 0)
                             ? loggedInUser.permissions
                             : (appSettings.permissions[userRole] || []);
@@ -12232,17 +12232,16 @@ function updateUserNav() {
         el.style.display = 'none';
     });
     
-    // Dashboard hamesha sabko dikhana chahiye
-    const dashLink = document.querySelector(`.tab-link[onclick*="'Dashboard'"]`);
-    if (dashLink) dashLink.style.display = '';
+    let firstVisibleModule = null; // Auto-open ke liye pehla module save karenge
 
     // Sirf wahi modules dikhayein jin ki ijazat (permission) mili hui hai
     userPermissions.forEach(moduleName => {
         const link = document.querySelector(`.tab-link[onclick*="'${moduleName}'"]`);
         if (link) {
             link.style.display = ''; // Sub-tab show karein
+            if (!firstVisibleModule) firstVisibleModule = moduleName;
             
-            // Agar ye link kisi dropdown ke andar hai, to parent dropdown aur uske toggle button ko bhi show karein
+            // Agar ye link kisi dropdown ke andar hai, to parent dropdown show karein
             const parentDropdown = link.closest('.nav-item-dropdown');
             if (parentDropdown) {
                 parentDropdown.style.display = '';
@@ -12258,6 +12257,11 @@ function updateUserNav() {
     document.querySelectorAll('.admin-only').forEach(el => {
         el.style.display = 'none';
     });
+
+    // Agar Dashboard ki permission nahi hai, toh pehla allowed module auto-open karein
+    if (!userPermissions.includes('Dashboard') && firstVisibleModule) {
+        openModule(null, firstVisibleModule);
+    }
 }
 
 // --- INITIALIZATION AND DOM LOAD EVENTS ---
@@ -12311,7 +12315,7 @@ async function initializeApp() {
     document.getElementById('user-session-info').innerHTML = `Welcome, <strong>${loggedInUser.name}</strong>! <button class="btn btn-danger btn-sm" onclick="handleLogout()">Logout</button>`;
 
     // Demand records load karein
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
         if (doc.exists) {
@@ -12515,7 +12519,7 @@ async function openModule(evt, moduleName) {
     }
 
 if (actualModuleName === 'RiderDetailsModule') {
-            const userId = loggedInUser.id || loggedInUser.uid;
+            const userId = 'FJM_MASTER_DB';
             try {
                 const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
                 if (docRiders.exists) {
@@ -12528,7 +12532,7 @@ if (actualModuleName === 'RiderDetailsModule') {
         }
 
         if (actualModuleName === 'VehicleDetailsModule') {
-            const userId = loggedInUser.id || loggedInUser.uid;
+            const userId = 'FJM_MASTER_DB';
             try {
                 const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
                 if (docVehicles.exists) {
@@ -12554,7 +12558,7 @@ if (actualModuleName === 'RiderDetailsModule') {
             await dbFetchDemandWorkers(); // Safe worker fetch
 
             // Cloud se updated demand lists aur riders ko dobara fetch karein
-            const userId = loggedInUser.id || loggedInUser.uid;
+            const userId = 'FJM_MASTER_DB';
             try {
                 const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
                 if (doc.exists) {
@@ -12727,7 +12731,7 @@ if (actualModuleName === 'RiderDetailsModule') {
     renderExpensesList();
 }
 if (actualModuleName === 'ExpenseStock' || actualModuleName === 'UsedStock') {
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     
     // ✅ Firebase Cloud se fresh Vehicles List load karein
     try {
@@ -12777,7 +12781,7 @@ if (actualModuleName === 'ExpenseStock' || actualModuleName === 'UsedStock') {
             renderBCManageBanksTable();
         }
        if (actualModuleName === 'GatePass') {
-            const userId = loggedInUser.id || loggedInUser.uid;
+            const userId = 'FJM_MASTER_DB';
             
             // 1. Demand Records Fetch
             try {
@@ -13926,7 +13930,7 @@ async function updateMaterialStatusDirectly(id, newStatus) {
     demandRecords[index].materialStatus = newStatus;
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         // Cloud Firestore mein save karein
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
@@ -14085,8 +14089,8 @@ const maundRate = parseFloat(document.getElementById('pc-maund-rate')?.value) ||
 document.getElementById('pc-maund-rate').value = '';
 
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            const userId = loggedInUser.id || loggedInUser.uid;
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
                 payload: JSON.stringify(maalPurchases)
             });
@@ -14350,8 +14354,8 @@ async function submitMaalPayment() {
 
     // Save to DB
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            const userId = loggedInUser.id || loggedInUser.uid;
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
                 payload: JSON.stringify(maalPurchases)
             });
@@ -14455,8 +14459,8 @@ maalPurchases[itemIndex].maundRate = maundRate;
     renderMaalPurchaseTable();
 
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            const userId = loggedInUser.id || loggedInUser.uid;
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
                 payload: JSON.stringify(maalPurchases)
             });
@@ -14692,8 +14696,8 @@ async function deleteMaalPurchase(id) {
     renderMaalPurchaseTable();
 
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            const userId = loggedInUser.id || loggedInUser.uid;
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').set({
                 payload: JSON.stringify(maalPurchases)
             });
@@ -14709,7 +14713,7 @@ async function deleteMaalPurchase(id) {
 // 10. Fetch Function
 async function dbFetchMaalPurchases() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_purchases').get();
         if (doc.exists) {
@@ -14737,7 +14741,7 @@ let maalStockOutLog = [];
 
 async function dbFetchMaalStockOut() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc('maal_stock_out_log').get();
         if (doc.exists && doc.data()?.payload) {
@@ -14894,8 +14898,8 @@ async function saveStockOutRecord() {
     document.getElementById('so-total-all-bags-amount').value = '';
 
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            const userId = loggedInUser.id || loggedInUser.uid;
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc('maal_stock_out_log').set({
                 payload: JSON.stringify(maalStockOutLog)
             });
@@ -14998,8 +15002,8 @@ async function saveEditedStockOut() {
     setupStockOutModuleUI();
 
     try {
-        if (loggedInUser && (loggedInUser.id || loggedInUser.uid)) {
-            const userId = loggedInUser.id || loggedInUser.uid;
+        if (loggedInUser && ('FJM_MASTER_DB')) {
+            const userId = 'FJM_MASTER_DB';
             await db.collection('appData').doc(userId).collection('datasets').doc('maal_stock_out_log').set({
                 payload: JSON.stringify(maalStockOutLog)
             });
@@ -15212,7 +15216,7 @@ async function submitDemandRecord() {
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
 
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
@@ -15333,11 +15337,11 @@ async function deleteDemandRecordFromTable(id) {
     if (!confirm("Kya aap waqai is record ko delete karna chahte hain? Cashbook aur lists se entries saaf ho jayengi.")) return;
     
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         demandRecords = demandRecords.filter(r => r.id !== id);
 
         // Firestore Update
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
 
@@ -15472,8 +15476,8 @@ async function saveLaborAdvance() {
     laborAttendance.push(record);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('labor_attendance').set({
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('labor_attendance').set({
             payload: JSON.stringify(laborAttendance)
         });
 
@@ -15521,8 +15525,8 @@ async function saveOnlyRider() {
     };
     savedRiders.push(newRider);
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('riders_list').set({
             payload: JSON.stringify(savedRiders)
         });
         alert("Rider ka naam kamyabi se save ho gaya!");
@@ -15568,8 +15572,8 @@ async function deleteOnlyRider(id) {
     if(!confirm("Kya aap waqai is Rider ko delete karna chahte hain?")) return;
     savedRiders = savedRiders.filter(r => r.id !== id);
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').set({
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('riders_list').set({
             payload: JSON.stringify(savedRiders)
         });
         renderOnlyRiderTable();
@@ -15604,8 +15608,8 @@ async function saveOnlyVehicle() {
     savedVehicles.push(newVehicle);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').set({
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('vehicles_list').set({
             payload: JSON.stringify(savedVehicles)
         });
         
@@ -15625,8 +15629,8 @@ async function deleteOnlyVehicle(id) {
     if(!confirm("Kya aap waqai is Vehicle ko delete karna chahte hain?")) return;
     savedVehicles = savedVehicles.filter(v => v.id !== id);
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').set({
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('vehicles_list').set({
             payload: JSON.stringify(savedVehicles)
         });
         renderOnlyVehicleTable();
@@ -15660,8 +15664,8 @@ async function deleteOnlyVehicle(id) {
     if(!confirm("Kya aap waqai is Vehicle ko delete karna chahte hain?")) return;
     savedVehicles = savedVehicles.filter(v => v.id !== id);
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
-        await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').set({
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('vehicles_list').set({
             payload: JSON.stringify(savedVehicles)
         });
         renderOnlyVehicleTable();
@@ -15823,9 +15827,9 @@ function generateRecoveryReportPDF(reportType) {
 
 async function dbFetchCustomers() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     try {
-        const doc = await db.collection('appData').doc(userId).collection('datasets').doc('customers_list').get();
+        const doc = await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc('customers_list').get();
         if (doc.exists) {
             savedCustomersList = JSON.parse(doc.data().payload) || [];
         }
@@ -16116,12 +16120,12 @@ async function saveAndGenerateGatePass() {
     clients: [...addedClientsForGatePass], riderName: riderName, numberPlate: numberPlate || 'N/A', outTime: outTime || 'N/A', status: document.getElementById('gp-status').value || 'Open', items: [] };
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         // Agla number hamesha current unique number se ek bara hona chahiye
         appSettings.nextGatePassNumber = currentGPNum + 1;
         await saveSettings();
         gatePassLog.push(gatePassRecord);
-        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({ payload: JSON.stringify(gatePassLog) });
+        await db.collection('appData').doc('FJM_MASTER_DB').collection('datasets').doc(getUserSpecificKey(GATE_PASS_LOG_KEY)).set({ payload: JSON.stringify(gatePassLog) });
         alert("Gate Pass kamyabi se save ho gaya!");
         generateGatePassPDF(gatePassRecord);
         addedClientsForGatePass = [];
@@ -16297,7 +16301,7 @@ async function saveUpdatedDemand() {
     demandRecords[recordIndex].netBalance = (demandRecords[recordIndex].bill + (demandRecords[recordIndex].oldBalance || 0)) - (demandRecords[recordIndex].recovery || 0);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
@@ -16413,7 +16417,7 @@ async function saveLaborAttendance() {
     }
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc('labor_attendance').set({
             payload: JSON.stringify(laborAttendance)
         });
@@ -16800,7 +16804,7 @@ function calculateStockValue() {
 // --- NEW STOCK HISTORY & ADD STOCK FUNCTIONS ---
 async function dbFetchAddedStockHistory() {
     if (!loggedInUser) return;
-    const userId = loggedInUser.id || loggedInUser.uid;
+    const userId = 'FJM_MASTER_DB';
     const key = getUserSpecificKey('added_stock_history'); // Sahi user-specific key
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc(key).get();
@@ -16842,7 +16846,7 @@ async function addNewStock() {
     addedStockHistory.push(newRecord);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('added_stock_history')).set({
     payload: JSON.stringify(addedStockHistory)
 });
@@ -17020,7 +17024,7 @@ async function saveEditedStockHistory() {
     addedStockHistory[recordIndex].date = date;
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc('added_stock_history').set({
             payload: JSON.stringify(addedStockHistory)
         });
@@ -17045,7 +17049,7 @@ async function deleteAddedStockHistory(id) {
     addedStockHistory = addedStockHistory.filter(r => r.id !== id);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         await db.collection('appData').doc(userId).collection('datasets').doc('added_stock_history').set({
             payload: JSON.stringify(addedStockHistory)
         });
@@ -17293,7 +17297,7 @@ async function deleteUsedStock(id) {
     usedStockLog = usedStockLog.filter(l => l.id !== id);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
         
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('added_stock_history')).set({
             payload: JSON.stringify(addedStockHistory)
@@ -17396,7 +17400,7 @@ async function saveUsedStock() {
     addedStockHistory.push(outRecord);
 
     try {
-        const userId = loggedInUser.id || loggedInUser.uid;
+        const userId = 'FJM_MASTER_DB';
 
         await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('pos_app_used_stock')).set({
             payload: JSON.stringify(usedStockLog)
