@@ -1254,61 +1254,90 @@ body,
     </div>
 </div>
 <!-- END NAYA RIDER MODULE 1 -->
-<!-- START NEW MODULE: USED STOCK -->
+<!-- START NEW MODULE: USED STOCK (MULTI-ITEM BATCH VERSION) -->
 <div id="UsedStock" class="module-content" style="display:none !important;">
     <h2 class="panel-title">📉 Used Stock Management</h2>
-    
+
     <div class="manage-form">
         <h3>Record Used Stock (Stock Use Karein)</h3>
+
+        <!-- Common Details Section (Selected ONCE) -->
         <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px; align-items: center;">
-            
-            <!-- Custom Searchable Dropdown with Search Bar -->
-            <label for="us-stock-search">Select Stock Item:</label>
-            <div class="custom-select-wrapper" style="position: relative; width: 100%; grid-column: 2 / 5;">
-                <!-- Visible Search Input acting as combobox -->
-                <input type="text" id="us-stock-search" class="form-control" placeholder="-- Select Available Stock --" onclick="toggleCustomSelect()" oninput="filterCustomSelect()" autocomplete="off" style="border: 1.5px solid var(--accent-color) !important; cursor: pointer; padding-right: 30px !important;">
-                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.7; font-size: 0.8rem;">▼</span>
-                
-                <!-- Hidden input to store actual values (With default attributes to avoid undefined errors) -->
-                <input type="hidden" id="us-stock-item" value="" data-remaining="0" data-category="">
-
-                <!-- Options List Container -->
-                <div id="us-stock-options-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                    <!-- Options will be populated dynamically -->
-                </div>
-            </div>
-
-            <!-- Assigned Worker Dropdown Selection -->
             <label for="us-worker-select">Assigned Worker:</label>
             <select id="us-worker-select" class="form-control">
                 <option value="">-- Select Worker --</option>
             </select>
 
-            <!-- Naya Code (Yeh Paste Karein): -->
-<label for="us-vehicle-select">Vehicle Number:</label>
-<select id="us-vehicle-select" class="form-control">
-    <option value="">-- Select Vehicle Number --</option>
-</select>
+            <label for="us-vehicle-select">Vehicle Number:</label>
+            <select id="us-vehicle-select" class="form-control">
+                <option value="">-- Select Vehicle Number --</option>
+            </select>
 
-            <!-- Quantity Taken -->
-            <label for="us-quantity">Quantity Taken:</label>
-            <input type="number" id="us-quantity" class="form-control" placeholder="0" oninput="calculateUsedStockTotal()">
-
-            <!-- Unit Price -->
-            <label for="us-unit-price">Unit Price (Rs.):</label>
-            <input type="number" id="us-unit-price" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
-
-            <!-- Total Price calculated automatically -->
-            <label>Total Value (Rs.):</label>
-            <input type="text" id="us-total-value" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; font-weight: bold; color: var(--success-color); cursor: not-allowed;">
-
-            <!-- Date -->
             <label for="us-date">Date:</label>
             <input type="date" id="us-date" class="form-control" style="grid-column: 2 / 5;">
         </div>
-        
+
+        <hr style="border-color: var(--border-color); margin: 20px 0;">
+
+        <!-- Item Selection Section -->
+        <h4 style="color: var(--accent-color); margin-bottom: 10px;">Select & Add Stock Items</h4>
+        <div class="form-grid" style="display: grid; grid-template-columns: 2fr 100px 120px 120px auto; gap: 10px; align-items: end;">
+            
+            <div style="position: relative;">
+                <label for="us-stock-search">Select Stock Item:</label>
+                <div class="custom-select-wrapper" style="position: relative; width: 100%;">
+                    <input type="text" id="us-stock-search" class="form-control" placeholder="-- Select Available Stock --" onclick="toggleCustomSelect()" oninput="filterCustomSelect()" autocomplete="off" style="border: 1.5px solid var(--accent-color) !important; cursor: pointer;">
+                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.7; font-size: 0.8rem;">▼</span>
+                    
+                    <input type="hidden" id="us-stock-item" value="" data-remaining="0" data-category="">
+
+                    <div id="us-stock-options-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="us-quantity">Qty Taken:</label>
+                <input type="number" id="us-quantity" class="form-control" placeholder="0" oninput="calculateUsedStockTotal()">
+            </div>
+
+            <div>
+                <label for="us-unit-price">Unit Price:</label>
+                <input type="number" id="us-unit-price" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; cursor: not-allowed;">
+            </div>
+
+            <div>
+                <label>Subtotal:</label>
+                <input type="text" id="us-total-value" class="form-control" readonly style="background: rgba(255,255,255,0.05) !important; font-weight: bold; color: var(--success-color); cursor: not-allowed;">
+            </div>
+
+            <div>
+                <button type="button" class="btn btn-primary" onclick="addUsedStockItemToCart()" style="white-space: nowrap;">+ Add Item</button>
+            </div>
+        </div>
+
+        <!-- Queued Items Table -->
+        <div class="table-container" style="margin-top: 20px;">
+            <h4>Items List to Deduct (Total Value: <span id="us-cart-grand-total" style="color: var(--success-color); font-weight: bold;">Rs. 0.00</span>)</h4>
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Product Name</th>
+                        <th>Qty Taken</th>
+                        <th>Unit Price</th>
+                        <th>Subtotal</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="us-cart-tbody">
+                    <tr><td colspan="6" style="text-align: center;">No items added to the list yet. Select an item above and click "+ Add Item".</td></tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="manage-buttons" style="margin-top: 20px;">
-            <button type="button" class="btn btn-success" onclick="saveUsedStock()" style="width: 100%;">Record Used Stock & Deduct</button>
+            <button type="button" class="btn btn-success" onclick="saveUsedStockBatch()" style="width: 100%; font-size: 1.1rem;">Record All Used Stock & Deduct</button>
         </div>
     </div>
 
@@ -1318,29 +1347,24 @@ body,
         <table class="cart-table">
             <thead>
                 <tr>
-                    <thead>
-    <tr>
-        <th>Date</th>
-        <th>Category</th>
-        <th>Product Name</th>
-        <th>Worker</th>
-<th>Vehicle Number</th>
-        <th>Qty Used</th>
-        <th style="color: #3B82F6;">Remaining Qty</th> <!-- YE NAYI HEADING HAI -->
-        <th>Unit Price</th>
-        <th>Total Value</th>
-        <th>Action</th>
-    </tr>
-</thead>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Product Name</th>
+                    <th>Worker</th>
+                    <th>Vehicle Number</th>
+                    <th>Qty Used</th>
+                    <th style="color: #3B82F6;">Remaining Qty</th>
+                    <th>Unit Price</th>
+                    <th>Total Value</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="used-stock-history-tbody">
-                <!-- Data will load dynamically -->
             </tbody>
         </table>
     </div>
 </div>
-<!-- END NEW MODULE: USED STOCK -->
+<!-- END MODULE: USED STOCK -->
 
 <!-- START MODULE: GATE PASS OPEN -->
 <div id="GatePass" class="module-content" style="display:none !important;">
@@ -3886,7 +3910,6 @@ function populateRecoveryWorkerDropdown() {
     }
 }
 
-// Select kiye gaye Worker ki report generate karne ka function
 function generateSelectedWorkerReport() {
     const workerId = document.getElementById('recovery-worker-select').value;
     
@@ -3895,20 +3918,53 @@ function generateSelectedWorkerReport() {
         return;
     }
 
-    const worker = demandWorkers.find(w => w.id === workerId);
+    const worker = (demandWorkers || []).find(w => w.id === workerId);
     if (!worker) return;
 
-    // Is worker se mutaliq tamam demands dhoondein
-    const workerDemands = (demandRecords || []).filter(rec =>
-        rec.worker && rec.worker.name === worker.name && rec.worker.phone === worker.phone
-    );
+    const workerNameClean = (worker.name || '').trim().toLowerCase();
+
+    // 1. Un tamam Customers ke naam nikalen jo is Worker se "Add Customer" mein linked hain
+    const workerCustomerNames = new Set();
+    if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+        savedCustomersList.forEach(c => {
+            if (c.worker) {
+                const wName = (typeof c.worker === 'object' && c.worker.name) ? c.worker.name : String(c.worker);
+                const wId = typeof c.worker === 'object' ? c.worker.id : null;
+                
+                if ((wId && wId === worker.id) || (wName && wName.trim().toLowerCase() === workerNameClean)) {
+                    if (c.name) workerCustomerNames.add(c.name.trim().toLowerCase());
+                }
+            }
+        });
+    }
+
+    // 2. Demands Filter Karein (Direct Demand Worker ya Customer Profile Worker)
+    const workerDemands = (demandRecords || []).filter(rec => {
+        if (!rec) return false;
+
+        // Check A: Direct match on demand record
+        if (rec.worker) {
+            const recWName = (typeof rec.worker === 'object' && rec.worker.name) ? rec.worker.name : String(rec.worker);
+            const recWId = typeof rec.worker === 'object' ? rec.worker.id : null;
+
+            if (recWId && recWId === worker.id) return true;
+            if (recWName && recWName.trim().toLowerCase() === workerNameClean) return true;
+        }
+
+        // Check B: Customer Directory match ("Add Customer" se match)
+        if (rec.customer && workerCustomerNames.has(rec.customer.trim().toLowerCase())) {
+            return true;
+        }
+
+        return false;
+    });
 
     if (workerDemands.length === 0) {
-        alert("Is worker ke naam par koi demands ya clients nahi hain.");
+        alert(`Worker "${worker.name}" ke naam par koi demands ya clients nahi hain.`);
         return;
     }
 
-    // Status aur totals calculate karein
+    // Status aur Totals calculate karein
     const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
 
     const totalClients = workerDemands.length;
@@ -3916,7 +3972,7 @@ function generateSelectedWorkerReport() {
     const unpaidClients = workerDemands.filter(rec => getStatus(rec) === 'unpaid').length;
     const totalOutstanding = workerDemands.reduce((sum, rec) => sum + (Number(rec.netBalance) || 0), 0);
 
-    // Pehle se mojood PDF generator function ka istemal karein
+    // PDF Generator Call
     generateWorkerReportPDF(worker, workerDemands, totalClients, paidClients, unpaidClients, totalOutstanding);
 }
 
@@ -4740,28 +4796,17 @@ async function submitNewDemand() {
         return; 
     }
 
-    // 3. Worker check (Agar Assign Worker delete ho gaya hai tou automatically null set ho jayega)
+    // Worker check (Customer Profile fallback ke sath)
     let selectedWorker = null;
     if (workerId && typeof demandWorkers !== 'undefined') {
         selectedWorker = demandWorkers.find(w => w.id === workerId);
     }
-    
-    // --- NAYA CODE: Customer ki baqi details dhoondna ---
-    let custPhone = 'N/A';
-    let custAddress = 'N/A';
-    let custCode = 'N/A';
-    let custPrice = 0;
-    let custWorker = null; // Worker detail nikalne ke liye naya variable
 
-
-    // Customer profile se data nikalna
-    if (typeof savedCustomersList !== 'undefined') {
-        const matchedCust = savedCustomersList.find(c => c.name.toLowerCase() === customer.toLowerCase());
-        if (matchedCust) {
-            custPhone = matchedCust.phone || 'N/A';
-            custAddress = matchedCust.address || 'N/A';
-            custCode = matchedCust.code || 'N/A';
-            custPrice = matchedCust.price || 0;
+    // Agar Demand Form mein worker select nahi kiya, to Customer Directory se auto-pick karein
+    if (!selectedWorker && typeof savedCustomersList !== 'undefined') {
+        const matchedCust = savedCustomersList.find(c => c.name && c.name.toLowerCase() === customer.toLowerCase());
+        if (matchedCust && matchedCust.worker) {
+            selectedWorker = matchedCust.worker;
         }
     }
 
@@ -4774,17 +4819,21 @@ async function submitNewDemand() {
         id: 'dem' + Date.now(),
         serialNo: currentSerial,
         customer: customer,
-        customerCode: custCode, // Nayi detail
-        phone: custPhone,       // Nayi detail
-        address: custAddress,   // Nayi detail
-        price: custPrice,       // Nayi detail
-        bill: calculatedBill,   // Nayi detail
+        customerCode: custCode,
+        phone: custPhone,
+        address: custAddress,
+        price: custPrice,
+        bill: calculatedBill,
+        recovery: 0,                           // Explicitly set recovery to 0
+        oldBalance: 0,                         // Explicitly set old balance
+        netBalance: calculatedBill,            // Net Balance pehle din poora Bill amount hoga
         itemName: itemName, 
         demand: demandAmount,
         worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
         date: new Date().toISOString(),
         materialStatus: 'In warehouse',
-        processed: false 
+        processed: false,
+        status: calculatedBill > 0 ? 'unpaid' : 'paid' // Default status Unpaid
     };
 
     // 5. Firebase Cloud mein Save karna
@@ -13776,42 +13825,152 @@ function downloadSearchResultPDF() {
 }
 
 
-function generateWorkerReportPDF(worker, demands, total, paid, unpaid, balance) {
+// 1. UPDATED generateSelectedWorkerReport
+function generateSelectedWorkerReport() {
+    const workerId = document.getElementById('recovery-worker-select').value;
+    
+    if (!workerId) {
+        alert("Meharbani karke pehle ek worker select karein!");
+        return;
+    }
+
+    const worker = (demandWorkers || []).find(w => w.id === workerId);
+    if (!worker) return;
+
+    const workerNameClean = (worker.name || '').trim().toLowerCase();
+
+    // 1. Un tamam Customers ke naam nikalen jo is Worker se "Add Customer" mein linked hain
+    const workerCustomerNames = new Set();
+    if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+        savedCustomersList.forEach(c => {
+            if (c.worker) {
+                const wName = (typeof c.worker === 'object' && c.worker.name) ? c.worker.name : String(c.worker);
+                const wId = typeof c.worker === 'object' ? c.worker.id : null;
+                
+                if ((wId && wId === worker.id) || (wName && wName.trim().toLowerCase() === workerNameClean)) {
+                    if (c.name) workerCustomerNames.add(c.name.trim().toLowerCase());
+                }
+            }
+        });
+    }
+
+    // 2. Demands Filter Karein
+    const workerDemands = (demandRecords || []).filter(rec => {
+        if (!rec) return false;
+
+        if (rec.worker) {
+            const recWName = (typeof rec.worker === 'object' && rec.worker.name) ? rec.worker.name : String(rec.worker);
+            const recWId = typeof rec.worker === 'object' ? rec.worker.id : null;
+
+            if (recWId && recWId === worker.id) return true;
+            if (recWName && recWName.trim().toLowerCase() === workerNameClean) return true;
+        }
+
+        if (rec.customer && workerCustomerNames.has(rec.customer.trim().toLowerCase())) {
+            return true;
+        }
+
+        return false;
+    });
+
+    if (workerDemands.length === 0) {
+        alert(`Worker "${worker.name}" ke naam par koi demands ya clients nahi hain.`);
+        return;
+    }
+
+    // PDF Generator Call (PDF khud dynamic summary calculate karega)
+    generateWorkerReportPDF(worker, workerDemands);
+}
+
+// 2. UPDATED generateWorkerReportPDF (Summary & Table Both Fully Synced)
+function generateWorkerReportPDF(worker, demands) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
+        return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     let yPos = 20;
 
-    const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+    const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
 
+    const safeDemands = Array.isArray(demands) ? demands : [];
+
+    // CALCULATE ALL SUMMARY STATS DIRECTLY & ACCURATELY FROM THE TABLE DATA
+    let totalBillValue = 0;
+    let totalItemsBought = 0;
+    let paidCount = 0;
+    let unpaidCount = 0;
+    let totalOutstandingBalance = 0;
+
+    const clientRows = safeDemands.map((rec, index) => {
+        let bill = Number(rec.bill) || 0;
+        let oldBal = Number(rec.oldBalance) || 0;
+        let recovery = Number(rec.recovery) || 0;
+        let calcBalance = (bill + oldBal) - recovery;
+        
+        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance)) 
+            ? Number(rec.netBalance) 
+            : calcBalance;
+
+        let st = getStatus(rec);
+
+        totalBillValue += bill;
+        totalItemsBought += (Number(rec.demand) || 0);
+
+        if (st === 'paid') {
+            paidCount++;
+        } else {
+            unpaidCount++;
+            totalOutstandingBalance += displayBalance;
+        }
+
+        let dateFormatted = '-';
+        if (rec.date) {
+            try { dateFormatted = new Date(rec.date).toLocaleDateString(); } catch(e) { dateFormatted = '-'; }
+        }
+
+        return [
+            index + 1,
+            dateFormatted,
+            rec.customer || 'N/A',
+            rec.phone || 'N/A',
+            rec.demand || 0,
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`,
+            st.toUpperCase()
+        ];
+    });
+
+    // Header
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    doc.text(appSettings.restaurantName || "EMAN FOODS", 105, yPos, { align: 'center' }); yPos += 8;
     
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
-    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 15;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 12;
 
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text("Worker Client Performance Report", 105, yPos, { align: 'center' }); yPos += 12;
+    doc.text("Worker Client Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
 
+    // Worker Details Box
     doc.setFontSize(11); doc.setFont('helvetica', 'bold');
     doc.text("Worker Details:", 14, yPos); yPos += 6;
     
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${worker.name}`, 14, yPos);
+    doc.text(`Name: ${worker ? worker.name || 'N/A' : 'N/A'}`, 14, yPos);
     doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 5;
-    doc.text(`Mobile: ${worker.phone}`, 14, yPos); yPos += 5;
-    doc.text(`Address: ${worker.address}`, 14, yPos); yPos += 15;
+    doc.text(`Mobile: ${worker ? worker.phone || 'N/A' : 'N/A'}`, 14, yPos); yPos += 5;
+    doc.text(`Address: ${worker ? worker.address || 'N/A' : 'N/A'}`, 14, yPos); yPos += 12;
 
-    // Safe variables scope declaration
-    const totalBill = demands.reduce((s, r) => s + (Number(r.bill) || 0), 0);
-    const totalItemsBought = demands.reduce((s, r) => s + (Number(r.demand) || 0), 0).toString();
-
+    // Summary Table (Now 100% Synced with Table Rows)
     const summaryTableData = [
-        ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBill.toFixed(2)}`],
-        ['Total Items Bought:', totalItemsBought],
-        ['Paid Clients / Demands', paid.toString()],
-        ['Unpaid Clients / Demands', unpaid.toString()],
-        ['Total Outstanding Balance', `${CURRENCY_SYMBOL} ${balance.toFixed(2)}`]
+        ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBillValue.toFixed(2)}`],
+        ['Total Items Bought:', totalItemsBought.toString()],
+        ['Paid Clients / Demands', paidCount.toString()],
+        ['Unpaid Clients / Demands', unpaidCount.toString()],
+        ['Total Outstanding Balance', `${CURRENCY_SYMBOL} ${totalOutstandingBalance.toFixed(2)}`]
     ];
 
     doc.autoTable({
@@ -13821,32 +13980,40 @@ function generateWorkerReportPDF(worker, demands, total, paid, unpaid, balance) 
         styles: { fontSize: 10, cellPadding: 3 },
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
     });
-    yPos = doc.previousAutoTable.finalY + 12;
 
-    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-    doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 5;
+    yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 12 : yPos + 45;
 
-    const clientRows = demands.map((rec, index) => [
-        index + 1,
-        new Date(rec.date).toLocaleDateString(),
-        rec.customer,
-        rec.phone || 'N/A',
-        rec.demand,
-        `${CURRENCY_SYMBOL}${(Number(rec.bill) || 0).toFixed(2)}`,
-        `${CURRENCY_SYMBOL}${(Number(rec.netBalance) || 0).toFixed(2)}`,
-        getStatus(rec).toUpperCase()
-    ]);
+    // Detailed Table Title
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 6;
 
+    if (clientRows.length === 0) {
+        clientRows.push(['-', '-', 'No detailed records found', '-', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
+    }
+
+    // Detailed Table Render
     doc.autoTable({
         startY: yPos,
         head: [['S.No', 'Date', 'Customer Name', 'Phone', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
         body: clientRows,
         theme: 'striped',
-        headStyles: { fillColor: [20, 184, 166], textColor: 255 },
-        styles: { fontSize: 9 }
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        bodyStyles: { fontSize: 8.5, cellPadding: 2.5, halign: 'center' },
+        columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 22 },
+            2: { halign: 'left', cellWidth: 50 },
+            3: { cellWidth: 28 },
+            4: { cellWidth: 12 },
+            5: { cellWidth: 22 },
+            6: { cellWidth: 22 },
+            7: { cellWidth: 18 }
+        },
+        margin: { left: 14, right: 14 }
     });
 
-    doc.save(`Worker_Report_${worker.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    const fileName = worker ? (worker.name || 'Worker').replace(/\s+/g, '_') : 'Worker';
+    doc.save(`Worker_Report_${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 
@@ -15751,15 +15918,14 @@ function renderRecoverySheetTable() {
     });
 }
 
-// PDF Generate karne ka function (Paid, Unpaid, All)
 function generateRecoveryReportPDF(reportType) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     let yPos = 20;
 
-    const getStatus = (r) => (r.status === 'paid' || (Number(r.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
+    // Updated Status Checker
+    const getStatus = (r) => getRecordStatus(r);
     
-    // Base data
     let reportData = (demandRecords || []).filter(r => r.bill > 0 || r.processed === true);
     
     let title = "All Customers Recovery Report";
@@ -15776,27 +15942,38 @@ function generateRecoveryReportPDF(reportType) {
         return;
     }
 
-    // Header Print karein
+    // Header Print
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    doc.text(appSettings.restaurantName || "EMAN FOODS", 105, yPos, { align: 'center' }); yPos += 8;
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, yPos, { align: 'center' }); yPos += 12;
 
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
     doc.text(title, 105, yPos, { align: 'center' }); yPos += 10;
 
-    // Table Data Set karein
-    const rows = reportData.map((rec, index) => [
-        index + 1,
-        rec.date ? new Date(rec.date).toLocaleDateString() : '-',
-        rec.customer || 'N/A',
-        `${CURRENCY_SYMBOL}${(Number(rec.bill) || 0).toFixed(2)}`,
-        `${CURRENCY_SYMBOL}${(Number(rec.recovery) || 0).toFixed(2)}`,
-        `${CURRENCY_SYMBOL}${(Number(rec.netBalance) || 0).toFixed(2)}`,
-        getStatus(rec).toUpperCase()
-    ]);
+    // Rows Data Processing
+    const rows = reportData.map((rec, index) => {
+        let bill = Number(rec.bill) || 0;
+        let oldBal = Number(rec.oldBalance) || 0;
+        let recovery = Number(rec.recovery) || 0;
+        let calcBalance = (bill + oldBal) - recovery;
+        
+        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance)) 
+            ? Number(rec.netBalance) 
+            : calcBalance;
 
-    // Table Design
+        return [
+            index + 1,
+            rec.date ? new Date(rec.date).toLocaleDateString() : '-',
+            rec.customer || 'N/A',
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${recovery.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`,
+            getStatus(rec).toUpperCase()
+        ];
+    });
+
+    // Table Creation
     doc.autoTable({
         startY: yPos,
         head: [['S.No', 'Date', 'Customer', 'Bill Amount', 'Recovery', 'Balance', 'Status']],
@@ -15813,14 +15990,19 @@ function generateRecoveryReportPDF(reportType) {
     const finalY = doc.previousAutoTable.finalY + 10;
     const totalBill = reportData.reduce((s, r) => s + (Number(r.bill) || 0), 0);
     const totalRec = reportData.reduce((s, r) => s + (Number(r.recovery) || 0), 0);
-    const totalBal = reportData.reduce((s, r) => s + (Number(r.netBalance) || 0), 0);
+    const totalBal = reportData.reduce((s, r) => {
+        let b = Number(r.bill) || 0;
+        let ob = Number(r.oldBalance) || 0;
+        let rec = Number(r.recovery) || 0;
+        let bal = (r.netBalance !== undefined && r.netBalance !== null) ? Number(r.netBalance) : (b + ob - rec);
+        return s + bal;
+    }, 0);
 
     doc.setFontSize(11); doc.setFont('helvetica', 'bold');
     doc.text(`Total Bill Generated: ${CURRENCY_SYMBOL}${totalBill.toFixed(2)}`, 14, finalY);
     doc.text(`Total Recovery Received: ${CURRENCY_SYMBOL}${totalRec.toFixed(2)}`, 14, finalY + 6);
     doc.text(`Total Remaining Balance: ${CURRENCY_SYMBOL}${totalBal.toFixed(2)}`, 14, finalY + 12);
 
-    // Save PDF file
     doc.save(`Recovery_Report_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
@@ -17929,6 +18111,212 @@ function sendDemandWhatsApp(id) {
     // NAYA HAL: window.location.href ke sath whatsapp:// scheme (Bug Fix)
     const url = `whatsapp://send?phone=${cleanedPhone}&text=${encodeURIComponent(msg)}`;
     window.location.href = url; // Current window redirect se app trigger hogi
+}
+
+function getRecordStatus(rec) {
+    if (!rec) return 'unpaid';
+
+    let bill = Number(rec.bill) || 0;
+    let oldBal = Number(rec.oldBalance) || 0;
+    let recovery = (Number(rec.recovery) || 0) + (Number(rec.onlineRec) || 0);
+    
+    // Asal Baqaya Balance Calculate Karein
+    let calculatedBalance = (bill + oldBal) - recovery;
+    
+    // Agar record mein netBalance pehle se saved hai to wo lein, warna calculatedBalance
+    let actualBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance)) 
+        ? Number(rec.netBalance) 
+        : calculatedBalance;
+
+    // Agar Recovery 0 hai aur Bill 0 se bara hai, to yeh LAZMI 'unpaid' hai
+    if (recovery === 0 && bill > 0) {
+        return 'unpaid';
+    }
+
+    // Agar baqaya balance 0 ya us se kam hai to Paid, warna Unpaid
+    if (actualBalance <= 0.01 && (recovery > 0 || bill === 0)) {
+        return 'paid';
+    } else {
+        return 'unpaid';
+    }
+}
+
+// Temporary Cart Array for Used Stock
+let usedStockCart = [];
+
+// 1. Function to add selected item to the temporary queue
+function addUsedStockItemToCart() {
+    const hiddenInput = document.getElementById('us-stock-item');
+    const itemName = hiddenInput ? hiddenInput.value : '';
+    const qtyTaken = parseInt(document.getElementById('us-quantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('us-unit-price').value) || 0;
+    const availableQty = parseInt(hiddenInput ? hiddenInput.getAttribute('data-remaining') : 0) || 0;
+    const category = hiddenInput ? hiddenInput.getAttribute('data-category') : '';
+
+    if (!itemName) {
+        alert("Please select a stock item from the list.");
+        return;
+    }
+    if (qtyTaken <= 0) {
+        alert("Please enter a valid quantity.");
+        return;
+    }
+
+    // Check existing item in cart
+    const existingIndex = usedStockCart.findIndex(i => i.name === itemName);
+    let qtyAlreadyInCart = existingIndex !== -1 ? usedStockCart[existingIndex].quantity : 0;
+
+    if (qtyAlreadyInCart + qtyTaken > availableQty) {
+        alert(`Error: Available stock for "${itemName}" is ${availableQty}. You cannot issue more than available.`);
+        return;
+    }
+
+    if (existingIndex !== -1) {
+        usedStockCart[existingIndex].quantity += qtyTaken;
+        usedStockCart[existingIndex].totalValue = usedStockCart[existingIndex].quantity * unitPrice;
+    } else {
+        usedStockCart.push({
+            name: itemName,
+            category: category,
+            quantity: qtyTaken,
+            price: unitPrice,
+            totalValue: qtyTaken * unitPrice
+        });
+    }
+
+    // Clear item inputs for the next item
+    document.getElementById('us-stock-search').value = '';
+    hiddenInput.value = '';
+    document.getElementById('us-quantity').value = '';
+    document.getElementById('us-unit-price').value = '';
+    document.getElementById('us-total-value').value = '';
+
+    renderUsedStockCart();
+}
+
+// 2. Remove item from temporary queue
+function removeUsedStockCartItem(index) {
+    usedStockCart.splice(index, 1);
+    renderUsedStockCart();
+}
+
+// 3. Render temporary items table
+function renderUsedStockCart() {
+    const tbody = document.getElementById('us-cart-tbody');
+    const grandTotalEl = document.getElementById('us-cart-grand-total');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    let grandTotal = 0;
+
+    if (usedStockCart.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">No items added to the list yet. Select an item above and click "+ Add Item".</td></tr>';
+        if (grandTotalEl) grandTotalEl.textContent = `${CURRENCY_SYMBOL}0.00`;
+        return;
+    }
+
+    usedStockCart.forEach((item, index) => {
+        grandTotal += item.totalValue;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><span style="background: rgba(20, 184, 166, 0.15); color: var(--accent-color); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; font-weight: bold;">${item.category}</span></td>
+            <td><strong>${item.name}</strong></td>
+            <td style="font-weight: bold; color: var(--danger-color);">${item.quantity}</td>
+            <td>${CURRENCY_SYMBOL}${item.price.toFixed(2)}</td>
+            <td style="font-weight: bold; color: var(--success-color);">${CURRENCY_SYMBOL}${item.totalValue.toFixed(2)}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeUsedStockCartItem(${index})">Remove</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    if (grandTotalEl) grandTotalEl.textContent = `${CURRENCY_SYMBOL}${grandTotal.toFixed(2)}`;
+}
+
+// 4. Save all queued items in one single batch click
+async function saveUsedStockBatch() {
+    const workerName = document.getElementById('us-worker-select').value;
+    const vehicleNumber = document.getElementById('us-vehicle-select').value;
+    const date = document.getElementById('us-date').value;
+
+    if ((!workerName && !vehicleNumber) || !date) {
+        alert("Please select Date and at least a Worker or Vehicle Number.");
+        return;
+    }
+
+    if (usedStockCart.length === 0) {
+        alert("Please add at least one stock item to the list before saving.");
+        return;
+    }
+
+    try {
+        const userId = 'FJM_MASTER_DB';
+
+        // Process all cart items in a single loop
+        usedStockCart.forEach((item, index) => {
+            const timeSuffix = Date.now() + '_' + index;
+            const logId = 'usl_' + timeSuffix;
+            const ashRefId = 'ash_out_' + timeSuffix;
+
+            // Add to Used Stock Log
+            usedStockLog.push({
+                id: logId,
+                ashRefId: ashRefId,
+                productName: item.name,
+                category: item.category,
+                workerName: workerName || '-',
+                vehicleNumber: vehicleNumber || '-',
+                quantity: item.quantity,
+                price: item.price,
+                totalValue: item.totalValue,
+                date: date
+            });
+
+            // Add OUT transaction to Stock Ledger
+            addedStockHistory.push({
+                id: ashRefId,
+                category: item.category,
+                productName: item.name,
+                type: 'out',
+                quantity: item.quantity,
+                price: item.price,
+                totalValue: item.totalValue,
+                date: date,
+                workerName: workerName || '-',
+                riderName: vehicleNumber || '-'
+            });
+        });
+
+        // Save to Firestore & Local Storage
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('pos_app_used_stock')).set({
+            payload: JSON.stringify(usedStockLog)
+        });
+
+        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('added_stock_history')).set({
+            payload: JSON.stringify(addedStockHistory)
+        });
+
+        localStorage.setItem(getUserSpecificKey('pos_app_used_stock'), JSON.stringify(usedStockLog));
+        localStorage.setItem(getUserSpecificKey('added_stock_history'), JSON.stringify(addedStockHistory));
+
+        alert(`Success: All ${usedStockCart.length} stock item(s) issued and deducted!`);
+
+        // Reset Cart and Dropdowns
+        usedStockCart = [];
+        renderUsedStockCart();
+
+        document.getElementById('us-worker-select').value = '';
+        document.getElementById('us-vehicle-select').value = '';
+
+        populateUsedStockDropdowns();
+        renderUsedStockTable();
+        if (typeof renderAddedStockHistoryTable === 'function') renderAddedStockHistoryTable();
+        refreshAll();
+
+    } catch (e) {
+        alert("Error saving batch used stock: " + e.message);
+    }
 }
 
 </script>
