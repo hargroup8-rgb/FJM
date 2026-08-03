@@ -18319,6 +18319,42 @@ async function saveUsedStockBatch() {
     }
 }
 
+// --- NEW DEMAND DELETE FUNCTION ---
+async function deleteDemandRecord(id) {
+    if (!confirm("Kya aap waqai is demand record ko delete karna chahte hain?")) return;
+
+    try {
+        const userId = 'FJM_MASTER_DB';
+        
+        // Array se record delete (filter) karein
+        demandRecords = demandRecords.filter(r => r.id !== id);
+
+        // Firebase Cloud aur Local Storage dono ko update karein
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        // Cashbook se bhi agar koi recovery transaction linked ho to saaf karein
+        if (typeof cashBookLog !== 'undefined') {
+            cashBookLog = cashBookLog.filter(log => log.id !== 'cb_dem_rec_' + id && log.id !== 'cb_dem_pay_' + id);
+            recalculateCashBookBalances();
+            saveCashBookLog();
+        }
+
+        alert("Demand record kamyabi se delete ho gaya!");
+        
+        // Tamam tables aur UI ko fresh data ke sath reload karein
+        if (typeof renderRecentDemands === 'function') renderRecentDemands();
+        if (typeof renderDemandRecord === 'function') renderDemandRecord();
+        if (typeof renderDemandRecordTable === 'function') renderDemandRecordTable();
+        refreshAll();
+
+    } catch (e) {
+        console.error("Delete Error:", e);
+        alert("Ghalti: Delete nahi ho saka. Error: " + e.message);
+    }
+}
+
 </script>
 <!-- EDIT CASH TRANSACTION MODAL -->
 <div id="edit-cash-modal" class="modal-backdrop">
