@@ -4777,8 +4777,9 @@ function runDemandMath() {
     document.getElementById('d-net-balance').value = netTotal.toFixed(2);
 }
 
+// --- FIXED SUBMIT NEW DEMAND FUNCTION ---
 async function submitNewDemand() {
-    // 1. Safe Inputs (Agar box HTML mein nahi hoga tou crash nahi hoga, khud handle kar lega)
+    // 1. Inputs get karein
     const customerEl = document.getElementById('d-customer');
     const demandQtyEl = document.getElementById('d-demand');
     const workerEl = document.getElementById('d-worker');
@@ -4787,7 +4788,6 @@ async function submitNewDemand() {
     const customer = customerEl ? customerEl.value.trim() : '';
     const demandQty = demandQtyEl ? demandQtyEl.value : '';
     const workerId = workerEl ? workerEl.value : '';
-    // YAHAN TABDEELI KI GAYI HAI: Default item ab hamesha 'Alo' hi jayega
     const itemName = itemEl ? itemEl.value : 'Alo';
 
     // 2. Validation
@@ -4796,24 +4796,34 @@ async function submitNewDemand() {
         return; 
     }
 
-    // Worker check (Customer Profile fallback ke sath)
+    // 3. Customer Profile se Price, Code, Phone, Address aur Worker auto-lookup (FIXED)
+    let custPrice = 0;
+    let custCode = 'CUST-000';
+    let custPhone = 'N/A';
+    let custAddress = 'N/A';
     let selectedWorker = null;
+
     if (workerId && typeof demandWorkers !== 'undefined') {
         selectedWorker = demandWorkers.find(w => w.id === workerId);
     }
 
-    // Agar Demand Form mein worker select nahi kiya, to Customer Directory se auto-pick karein
-    if (!selectedWorker && typeof savedCustomersList !== 'undefined') {
-        const matchedCust = savedCustomersList.find(c => c.name && c.name.toLowerCase() === customer.toLowerCase());
-        if (matchedCust && matchedCust.worker) {
-            selectedWorker = matchedCust.worker;
+    if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+        const matchedCust = savedCustomersList.find(c => c.name && c.name.trim().toLowerCase() === customer.toLowerCase());
+        if (matchedCust) {
+            custPrice = parseFloat(matchedCust.price) || 0;
+            custCode = matchedCust.code || 'CUST-000';
+            custPhone = matchedCust.phone || 'N/A';
+            custAddress = matchedCust.address || 'N/A';
+            if (!selectedWorker && matchedCust.worker) {
+                selectedWorker = matchedCust.worker;
+            }
         }
     }
 
     const demandAmount = parseFloat(demandQty);
-    const calculatedBill = demandAmount * custPrice; // Qty * Customer ki tay shuda price
+    const calculatedBill = demandAmount * custPrice; // Ab ReferenceError nahi aayega
 
-    // 4. Data tayar karna
+    // 4. Data Record tayar karna
     const currentSerial = appSettings.nextSerialNo || 101;
     const recordData = {
         id: 'dem' + Date.now(),
@@ -4824,19 +4834,19 @@ async function submitNewDemand() {
         address: custAddress,
         price: custPrice,
         bill: calculatedBill,
-        recovery: 0,                           // Explicitly set recovery to 0
-        oldBalance: 0,                         // Explicitly set old balance
-        netBalance: calculatedBill,            // Net Balance pehle din poora Bill amount hoga
+        recovery: 0,
+        oldBalance: 0,
+        netBalance: calculatedBill,
         itemName: itemName, 
         demand: demandAmount,
         worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
         date: new Date().toISOString(),
         materialStatus: 'In warehouse',
         processed: false,
-        status: calculatedBill > 0 ? 'unpaid' : 'paid' // Default status Unpaid
+        status: calculatedBill > 0 ? 'unpaid' : 'paid'
     };
 
-    // 5. Firebase Cloud mein Save karna
+    // 5. Cloud aur Database mein Save karna
     try {
         if (!loggedInUser || (!loggedInUser.id && !loggedInUser.uid)) {
             alert("Aapka session expire ho gaya hai. Barae meharbani page refresh kar ke dobara login karein.");
@@ -4848,7 +4858,9 @@ async function submitNewDemand() {
         appSettings.nextSerialNo = currentSerial + 1;
         await saveSettings(); 
 
+        if (!Array.isArray(demandRecords)) demandRecords = [];
         demandRecords.push(recordData);
+
         await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
             payload: JSON.stringify(demandRecords)
         });
@@ -4857,7 +4869,7 @@ async function submitNewDemand() {
         
         alert("Demand kamyabi se save ho gayi!");
         
-        // Form saaf karna aur table refresh karna
+        // Form clear aur table refresh
         if (typeof clearDemandForm === 'function') clearDemandForm();
         if (typeof renderDemandRecord === 'function') renderDemandRecord(); 
         if (typeof renderRecentDemands === 'function') renderRecentDemands(); 
