@@ -1626,21 +1626,21 @@ body,
     <div class="manage-form">
         <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px;">
             
-            <!-- Naya Code (Is se replace karein): -->
-<label>Customer Name:</label>
-<input type="text" id="d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off" onclick="try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}">
-<!-- YEH NEECHE WAALI LINE ADD KAREIN -->
-<datalist id="customer-names-list"></datalist>
+            <!-- NAYA DATE OPTION -->
+            <label>Date:</label>
+            <input type="date" id="d-date" class="form-control">
+
+            <label>Customer Name:</label>
+            <input type="text" id="d-customer" class="form-control" placeholder="Customer Name" list="customer-names-list" autocomplete="off" onclick="try{this.showPicker();}catch(e){}" onfocus="try{this.showPicker();}catch(e){}">
+            <datalist id="customer-names-list"></datalist>
         
-<!-- YAHAN NAYA FROZEN ITEM ADD KIYA GAYA HAI -->
-<label>Item Name:</label>
-<input type="text" id="d-item-name" class="form-control" value="Alo" readonly style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed; font-weight: bold; color: var(--accent-color);">
+            <label>Item Name:</label>
+            <input type="text" id="d-item-name" class="form-control" value="Alo" readonly style="background-color: rgba(255,255,255,0.05) !important; cursor: not-allowed; font-weight: bold; color: var(--accent-color);">
 
-<label>Demand (Qty):</label>
-<select id="d-demand" class="form-control">
-    <!-- options niche diye gaye JavaScript code se automatic generate ho kar add ho jayengi -->
-</select>
-
+            <label>Demand (Qty):</label>
+            <select id="d-demand" class="form-control">
+                <!-- options automatic generate honge -->
+            </select>
             
         </div>
 
@@ -4777,14 +4777,16 @@ function runDemandMath() {
     document.getElementById('d-net-balance').value = netTotal.toFixed(2);
 }
 
-// --- FIXED SUBMIT NEW DEMAND FUNCTION ---
 async function submitNewDemand() {
     // 1. Inputs get karein
+    const dateEl = document.getElementById('d-date');
     const customerEl = document.getElementById('d-customer');
     const demandQtyEl = document.getElementById('d-demand');
     const workerEl = document.getElementById('d-worker');
     const itemEl = document.getElementById('d-item-name'); 
 
+    // Selected Date read karein (agar blank ho to aaj ki date lein)
+    const selectedDateVal = dateEl && dateEl.value ? dateEl.value : new Date().toISOString().split('T')[0];
     const customer = customerEl ? customerEl.value.trim() : '';
     const demandQty = demandQtyEl ? demandQtyEl.value : '';
     const workerId = workerEl ? workerEl.value : '';
@@ -4796,7 +4798,7 @@ async function submitNewDemand() {
         return; 
     }
 
-    // 3. Customer Profile se Price, Code, Phone, Address aur Worker auto-lookup (FIXED)
+    // 3. Customer Profile se Price, Code, Phone, Address aur Worker auto-lookup
     let custPrice = 0;
     let custCode = 'CUST-000';
     let custPhone = 'N/A';
@@ -4821,7 +4823,10 @@ async function submitNewDemand() {
     }
 
     const demandAmount = parseFloat(demandQty);
-    const calculatedBill = demandAmount * custPrice; // Ab ReferenceError nahi aayega
+    const calculatedBill = demandAmount * custPrice;
+
+    // Selected date ko ISO format mein convert karein
+    const recordDateISO = new Date(selectedDateVal + 'T12:00:00.000Z').toISOString();
 
     // 4. Data Record tayar karna
     const currentSerial = appSettings.nextSerialNo || 101;
@@ -4840,7 +4845,7 @@ async function submitNewDemand() {
         itemName: itemName, 
         demand: demandAmount,
         worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
-        date: new Date().toISOString(),
+        date: recordDateISO, // Input ki gayi date save hogi
         materialStatus: 'In warehouse',
         processed: false,
         status: calculatedBill > 0 ? 'unpaid' : 'paid'
@@ -4867,7 +4872,7 @@ async function submitNewDemand() {
         
         if (typeof populateCustomerNamesDatalist === 'function') populateCustomerNamesDatalist();
         
-        alert("Demand kamyabi se save ho gayi!");
+        alert("Demand kamyabi se selected date par save ho gayi!");
         
         // Form clear aur table refresh
         if (typeof clearDemandForm === 'function') clearDemandForm();
@@ -4903,24 +4908,18 @@ function resetDemandInputs() {
 
 function clearDemandForm() {
     editingDemandId = null;
+    
+    if (document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
+    if (document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
+    if (document.getElementById('d-worker')) document.getElementById('d-worker').value = '';
+    if (document.getElementById('d-item-name')) document.getElementById('d-item-name').value = 'Alo';
+    if (document.getElementById('d-date')) document.getElementById('d-date').value = new Date().toISOString().split('T')[0];
+
     const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
     if (saveBtn) {
-        saveBtn.textContent = "Save Demand & Print PDF";
+        saveBtn.textContent = "Save Demand";
         saveBtn.className = "btn btn-success";
-        if(document.getElementById('d-material-status')) document.getElementById('d-material-status').value = 'In warehouse';
-
     }
-    if(document.getElementById('d-customer')) document.getElementById('d-customer').value = '';
-    if(document.getElementById('d-phone')) document.getElementById('d-phone').value = '';
-    if(document.getElementById('d-worker')) document.getElementById('d-worker').value = '';
-    if(document.getElementById('d-demand')) document.getElementById('d-demand').value = '';
-    if(document.getElementById('d-price')) document.getElementById('d-price').value = '';
-    if(document.getElementById('d-recovery')) document.getElementById('d-recovery').value = '';
-    if(document.getElementById('d-recovery-mode')) toggleDemandRecoveryMode('cash');
-    if(document.getElementById('d-old-balance')) document.getElementById('d-old-balance').value = '';
-    if(document.getElementById('d-balance')) document.getElementById('d-balance').value = '';
-    if(document.getElementById('d-bill')) document.getElementById('d-bill').value = '';
-    if(document.getElementById('d-net-balance')) document.getElementById('d-net-balance').value = '';
 }
 
 function generateSingleDemandPDF(record) {
