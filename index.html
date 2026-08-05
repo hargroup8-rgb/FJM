@@ -1012,6 +1012,73 @@ body,
     width: 100% !important;
 }
 
+.table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important; /* Horizontal scrollbar enable karega */
+    box-sizing: border-box !important;
+    padding-bottom: 12px !important;
+}
+
+/* 2. Demand Record Table ko phailana (min-width) */
+#DemandRecord .cart-table,
+.cart-table {
+    min-width: 1200px !important; /* Table ko 1200px chawra karega taake scrollbar laazmi aaye */
+    width: 100% !important;
+    border-collapse: collapse !important;
+}
+
+/* 3. Text Wrapping Rokna (Is se columns dabein ge nahi aur slide aayegi) */
+.cart-table th, 
+.cart-table td {
+    white-space: nowrap !important; /* Text ko ek hi line mein rakhega */
+}
+
+/* 4. Bottom Horizontal Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 10px !important;
+    height: 12px !important; /* Niche wale horizontal bar ki motai */
+    display: block !important;
+}
+
+::-webkit-scrollbar-track {
+    background-color: #0f172a !important; /* Dark Slate Track */
+    border-radius: 6px !important;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #14b8a6 !important; /* Bright Teal Handle */
+    border-radius: 6px !important;
+    border: 2px solid #0f172a !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: #0d9488 !important;
+}
+
+/* Firefox Browser Support */
+* {
+    scrollbar-width: thin !important;
+    scrollbar-color: #14b8a6 #0f172a !important;
+}
+
+/* Demand Record Forms Ko Compact/Chhota Karne Ka Code */
+#DemandRecord .manage-form {
+    padding: 12px 18px !important; /* Padding kam ki taake vertical jagah bache */
+    margin-bottom: 12px !important;
+}
+
+#DemandRecord .form-grid {
+    gap: 8px 12px !important; /* Inputs ke beech gap kam kiya */
+}
+
+#DemandRecord h3 {
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    font-size: 1rem !important;
+}
+
+
 
     </style>
 </head>
@@ -1197,7 +1264,7 @@ body,
             <!-- Center Panel: Module Content (Products, Manage, Reports, etc.) -->
             <div class="center-panel">
             <!-- START NEW MODULE: RECOVERY SHEET & REPORTS -->
-<!-- START NEW MODULE: RECOVERY SHEET & REPORTS -->
+<!-- START MODULE: RECOVERY SHEET & REPORTS -->
 <div id="RecoverySheet" class="module-content" style="display:none !important;">
     <h2 class="panel-title">📄 Recovery Sheet & Reports</h2>
     
@@ -1214,21 +1281,34 @@ body,
         </div>
     </div>
 
-    <!-- Worker Specific Report Section -->
+    <!-- Worker Specific Date-Wise Report Section -->
     <div class="manage-form" style="border-left: 5px solid var(--info-color);">
-        <h3>👷 Worker Performance Report</h3>
+        <h3>👷 Worker Performance Report (Date-Wise)</h3>
         <p style="color: var(--text-color); font-size: 0.9rem; margin-bottom: 15px;">
-            Kisi khaas worker ki recovery aur performance report download karne ke liye pehle worker select karein.
+            Worker select karein aur Date Range (Tareekh) chun kar Date-Wise performance report download karein.
         </p>
-        <div class="form-grid" style="grid-template-columns: 1fr auto; align-items: center; gap: 15px;">
-            <select id="recovery-worker-select" class="form-control">
-                <option value="">-- Select Worker --</option>
-            </select>
-            <button class="btn btn-info" onclick="generateSelectedWorkerReport()">Download Worker Report</button>
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: flex-end;">
+            <div>
+                <label for="recovery-worker-select">Select Worker:</label>
+                <select id="recovery-worker-select" class="form-control">
+                    <option value="">-- Select Worker --</option>
+                </select>
+            </div>
+            <div>
+                <label for="worker-report-from-date">From Date:</label>
+                <input type="date" id="worker-report-from-date" class="form-control">
+            </div>
+            <div>
+                <label for="worker-report-to-date">To Date:</label>
+                <input type="date" id="worker-report-to-date" class="form-control">
+            </div>
+            <div>
+                <button class="btn btn-info" onclick="generateSelectedWorkerReport()">Download Worker Report</button>
+            </div>
         </div>
     </div>
 </div>
-<!-- END NEW MODULE: RECOVERY SHEET -->
+<!-- END MODULE: RECOVERY SHEET -->
 
 
                 
@@ -1586,32 +1666,30 @@ body,
     </div>
 
     <!-- Detailed Demand Report -->
-    <div class="table-container" style="margin-top: 20px;">
-        
-        <!-- Demand Record Summary Card -->
-<div class="dashboard-card card-glow-teal" style="margin-bottom: 20px; max-width: 300px;">
-    <p class="card-title">Total Sale</p>
-    <h2 id="dr-total-sale-display" class="card-value sales">Rs. 0.00</h2>
-</div>
-        
+    <!-- Demand Record Summary Card (Bahar nikala gaya taake table ke sath slide na ho) -->
+    <div class="dashboard-card card-glow-teal" style="margin-top: 20px; margin-bottom: 15px; max-width: 300px;">
+        <p class="card-title">Total Sale</p>
+        <h2 id="dr-total-sale-display" class="card-value sales">Rs. 0.00</h2>
+    </div>
+
+    <div class="table-container">
         <h3>📋 Finalized Demand Record Report</h3>
         <table class="cart-table">
-            <!-- Table Header Update -->
-<thead>
-    <tr>
-        <th>Date</th>
-        <th>Customer Name</th>
-        <th>Item Name</th>
-        <th>Demand</th>
-        <th>Rate</th>
-        <th>Bill</th>
-        <th>Old Bal</th>
-        <th>Recovery</th>
-        <th>Received By</th> <!-- Naya column -->
-        <th>Net Bal</th>
-        <th>Actions</th>
-    </tr>
-</thead>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Customer Name</th>
+                    <th>Item Name</th>
+                    <th>Demand</th>
+                    <th>Rate</th>
+                    <th>Bill</th>
+                    <th>Old Bal</th>
+                    <th>Recovery</th>
+                    <th>Received By</th>
+                    <th>Net Bal</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
             <tbody id="dr-table-body">
                 <!-- Loaded dynamically -->
             </tbody>
@@ -3779,6 +3857,35 @@ body,
     </div>
 </div>
 
+<!-- PAY BILL / RECOVERY MODAL FOR DEMAND REPORT -->
+<div id="pay-bill-modal" class="modal-backdrop">
+    <div class="modal-content">
+        <h3 class="panel-title">💳 Pay Bill / Add Recovery</h3>
+        <input type="hidden" id="pb-demand-id">
+        <div class="form-grid" style="grid-template-columns: 140px 1fr; gap: 12px;">
+            <label>Customer Name:</label>
+            <span id="pb-customer-name" style="font-weight: bold; color: var(--accent-color); font-size: 1.05rem;"></span>
+
+            <label>Current Remaining:</label>
+            <span id="pb-remaining-balance" style="font-weight: bold; color: var(--danger-color); font-size: 1.1rem;">Rs. 0.00</span>
+
+            <label for="pb-amount">Payment Amount:</label>
+            <input type="number" id="pb-amount" class="form-control" placeholder="Enter payment amount (e.g. 15000)" oninput="calculatePayBillRemaining()">
+
+            <label>New Remaining Balance:</label>
+            <span id="pb-new-balance" style="font-weight: bold; color: var(--info-color); font-size: 1.1rem;">Rs. 0.00</span>
+
+            <label for="pb-received-by">Collected / Received By:</label>
+            <input type="text" id="pb-received-by" class="form-control" placeholder="Name of person collecting payment (e.g. Rider / Worker Name)">
+        </div>
+        <div class="manage-buttons" style="margin-top: 20px;">
+            <button class="btn btn-success" onclick="savePayBillPayment()">Save Payment & Update PDF</button>
+            <button class="btn btn-secondary" onclick="closePayBillModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
 <script>
 let myDashboardChart = null; // <-- Yahan is line ko add karein
 
@@ -3910,9 +4017,15 @@ function populateRecoveryWorkerDropdown() {
     }
 }
 
+// =========================================================
+// WORKER PERFORMANCE REPORT (DATE-WISE & NO CLIENT PHONE)
+// =========================================================
+
 function generateSelectedWorkerReport() {
     const workerId = document.getElementById('recovery-worker-select').value;
-    
+    const fromDateVal = document.getElementById('worker-report-from-date')?.value;
+    const toDateVal = document.getElementById('worker-report-to-date')?.value;
+
     if (!workerId) {
         alert("Meharbani karke pehle ek worker select karein!");
         return;
@@ -3923,14 +4036,14 @@ function generateSelectedWorkerReport() {
 
     const workerNameClean = (worker.name || '').trim().toLowerCase();
 
-    // 1. Un tamam Customers ke naam nikalen jo is Worker se "Add Customer" mein linked hain
+    // 1. Is Worker se linked Customers ke naam nikalen
     const workerCustomerNames = new Set();
     if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
         savedCustomersList.forEach(c => {
             if (c.worker) {
                 const wName = (typeof c.worker === 'object' && c.worker.name) ? c.worker.name : String(c.worker);
                 const wId = typeof c.worker === 'object' ? c.worker.id : null;
-                
+
                 if ((wId && wId === worker.id) || (wName && wName.trim().toLowerCase() === workerNameClean)) {
                     if (c.name) workerCustomerNames.add(c.name.trim().toLowerCase());
                 }
@@ -3938,11 +4051,10 @@ function generateSelectedWorkerReport() {
         });
     }
 
-    // 2. Demands Filter Karein (Direct Demand Worker ya Customer Profile Worker)
-    const workerDemands = (demandRecords || []).filter(rec => {
+    // 2. Demands Filter Karein
+    let workerDemands = (demandRecords || []).filter(rec => {
         if (!rec) return false;
 
-        // Check A: Direct match on demand record
         if (rec.worker) {
             const recWName = (typeof rec.worker === 'object' && rec.worker.name) ? rec.worker.name : String(rec.worker);
             const recWId = typeof rec.worker === 'object' ? rec.worker.id : null;
@@ -3951,7 +4063,6 @@ function generateSelectedWorkerReport() {
             if (recWName && recWName.trim().toLowerCase() === workerNameClean) return true;
         }
 
-        // Check B: Customer Directory match ("Add Customer" se match)
         if (rec.customer && workerCustomerNames.has(rec.customer.trim().toLowerCase())) {
             return true;
         }
@@ -3959,21 +4070,170 @@ function generateSelectedWorkerReport() {
         return false;
     });
 
+    // 3. Date-Wise Filter Logic
+    if (fromDateVal) {
+        const fromDate = new Date(fromDateVal + 'T00:00:00');
+        workerDemands = workerDemands.filter(rec => rec.date && new Date(rec.date) >= fromDate);
+    }
+    if (toDateVal) {
+        const toDate = new Date(toDateVal + 'T23:59:59');
+        workerDemands = workerDemands.filter(rec => rec.date && new Date(rec.date) <= toDate);
+    }
+
     if (workerDemands.length === 0) {
-        alert(`Worker "${worker.name}" ke naam par koi demands ya clients nahi hain.`);
+        const dateMsg = (fromDateVal || toDateVal) ? " is selected date range mein" : "";
+        alert(`Worker "${worker.name}" ke naam par${dateMsg} koi demands ya records nahi hain.`);
         return;
     }
 
-    // Status aur Totals calculate karein
-    const getStatus = (rec) => (rec.status === 'paid' || (Number(rec.netBalance) || 0) <= 0.01) ? 'paid' : 'unpaid';
-
-    const totalClients = workerDemands.length;
-    const paidClients = workerDemands.filter(rec => getStatus(rec) === 'paid').length;
-    const unpaidClients = workerDemands.filter(rec => getStatus(rec) === 'unpaid').length;
-    const totalOutstanding = workerDemands.reduce((sum, rec) => sum + (Number(rec.netBalance) || 0), 0);
+    const dateRange = {
+        from: fromDateVal || null,
+        to: toDateVal || null
+    };
 
     // PDF Generator Call
-    generateWorkerReportPDF(worker, workerDemands, totalClients, paidClients, unpaidClients, totalOutstanding);
+    generateWorkerReportPDF(worker, workerDemands, dateRange);
+}
+
+// =========================================================
+// WORKER PERFORMANCE REPORT (PHONE COLUMN COMPLETELY REMOVED)
+// =========================================================
+
+function generateWorkerReportPDF(worker, demands, dateRange = {}) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
+    const safeDemands = Array.isArray(demands) ? demands : [];
+
+    let totalBillValue = 0;
+    let totalItemsBought = 0;
+    let paidCount = 0;
+    let unpaidCount = 0;
+    let totalOutstandingBalance = 0;
+
+    // Table Rows: Total 7 Columns (Phone column bilkul hata diya gaya hai)
+    const clientRows = safeDemands.map((rec, index) => {
+        let bill = Number(rec.bill) || 0;
+        let oldBal = Number(rec.oldBalance) || 0;
+        let recovery = Number(rec.recovery) || 0;
+        let calcBalance = (bill + oldBal) - recovery;
+
+        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance))
+            ? Number(rec.netBalance)
+            : calcBalance;
+
+        let st = getStatus(rec);
+
+        totalBillValue += bill;
+        totalItemsBought += (Number(rec.demand) || 0);
+
+        if (st === 'paid') {
+            paidCount++;
+        } else {
+            unpaidCount++;
+            totalOutstandingBalance += displayBalance;
+        }
+
+        let dateFormatted = '-';
+        if (rec.date) {
+            try { dateFormatted = new Date(rec.date).toLocaleDateString(); } catch(e) { dateFormatted = '-'; }
+        }
+
+        return [
+            index + 1,                                        // 1. S.No
+            dateFormatted,                                    // 2. Date
+            rec.customer || 'N/A',                            // 3. Customer Name
+            rec.demand || 0,                                  // 4. Qty
+            `${CURRENCY_SYMBOL}${(bill).toFixed(2)}`,           // 5. Bill Amount
+            `${CURRENCY_SYMBOL}${(displayBalance).toFixed(2)}`, // 6. Net Balance
+            st.toUpperCase()                                  // 7. Status
+        ];
+    });
+
+    // Report Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 12;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Worker Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
+
+    // Worker Details Section
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Worker Details:", 14, yPos); yPos += 6;
+
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Name: ${worker ? worker.name || 'N/A' : 'N/A'}`, 14, yPos);
+
+    let periodStr = "All Time";
+    if (dateRange && (dateRange.from || dateRange.to)) {
+        const fStr = dateRange.from ? new Date(dateRange.from).toLocaleDateString() : 'Start';
+        const tStr = dateRange.to ? new Date(dateRange.to).toLocaleDateString() : 'End';
+        periodStr = `${fStr} to ${tStr}`;
+    }
+
+    doc.text(`Period Covered: ${periodStr}`, 120, yPos); yPos += 5;
+    doc.text(`Address: ${worker ? worker.address || 'N/A' : 'N/A'}`, 14, yPos);
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
+
+    // Summary Box
+    const summaryTableData = [
+        ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBillValue.toFixed(2)}`],
+        ['Total Items Bought:', totalItemsBought.toString()],
+        ['Paid Clients / Demands:', paidCount.toString()],
+        ['Unpaid Clients / Demands:', unpaidCount.toString()],
+        ['Total Outstanding Balance:', `${CURRENCY_SYMBOL} ${totalOutstandingBalance.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 10, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
+    });
+
+    yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 12 : yPos + 45;
+
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 6;
+
+    if (clientRows.length === 0) {
+        clientRows.push(['-', '-', 'No detailed records found', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
+    }
+
+    // Table Header: SIRF 7 COLUMNS (Phone Column Hata Diya Gaya Hai)
+    doc.autoTable({
+        startY: yPos,
+        head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
+        body: clientRows,
+        theme: 'striped',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        bodyStyles: { fontSize: 8.5, cellPadding: 2.5, halign: 'center' },
+        columnStyles: {
+            0: { cellWidth: 12 },
+            1: { cellWidth: 25 },
+            2: { halign: 'left', cellWidth: 68 }, // Customer Name Column ki width barha di gayi hai
+            3: { cellWidth: 15 },
+            4: { cellWidth: 28 },
+            5: { cellWidth: 28 },
+            6: { cellWidth: 22 }
+        },
+        margin: { left: 14, right: 14 }
+    });
+
+    const fileName = worker ? (worker.name || 'Worker').replace(/\s+/g, '_') : 'Worker';
+    doc.save(`Worker_Report_${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
    function populateCustomerNamesDatalist() {
@@ -13942,16 +14202,15 @@ function generateWorkerReportPDF(worker, demands) {
             try { dateFormatted = new Date(rec.date).toLocaleDateString(); } catch(e) { dateFormatted = '-'; }
         }
 
-        return [
-            index + 1,
-            dateFormatted,
-            rec.customer || 'N/A',
-            rec.phone || 'N/A',
-            rec.demand || 0,
-            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
-            `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`,
-            st.toUpperCase()
-        ];
+       return [
+    index + 1,
+    dateFormatted,
+    rec.customer || 'N/A',
+    rec.demand || 0,
+    `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+    `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`,
+    st.toUpperCase()
+];
     });
 
     // Header
@@ -14005,21 +14264,20 @@ function generateWorkerReportPDF(worker, demands) {
     // Detailed Table Render
     doc.autoTable({
         startY: yPos,
-        head: [['S.No', 'Date', 'Customer Name', 'Phone', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
+head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
         body: clientRows,
         theme: 'striped',
         headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center' },
         bodyStyles: { fontSize: 8.5, cellPadding: 2.5, halign: 'center' },
         columnStyles: {
-            0: { cellWidth: 10 },
-            1: { cellWidth: 22 },
-            2: { halign: 'left', cellWidth: 50 },
-            3: { cellWidth: 28 },
-            4: { cellWidth: 12 },
-            5: { cellWidth: 22 },
-            6: { cellWidth: 22 },
-            7: { cellWidth: 18 }
-        },
+    0: { cellWidth: 12 },
+    1: { cellWidth: 25 },
+    2: { halign: 'left', cellWidth: 68 },
+    3: { cellWidth: 15 },
+    4: { cellWidth: 28 },
+    5: { cellWidth: 28 },
+    6: { cellWidth: 22 }
+},
         margin: { left: 14, right: 14 }
     });
 
@@ -15434,7 +15692,6 @@ function renderDemandRecordTable() {
 
     let filtered = (demandRecords || []).filter(r => r.processed || r.bill);
 
-    // Filter Logic...
     if (fromDateVal) {
         const fromDateObj = new Date(fromDateVal + 'T00:00:00');
         filtered = filtered.filter(r => new Date(r.date) >= fromDateObj);
@@ -15451,13 +15708,11 @@ function renderDemandRecordTable() {
         );
     }
 
-    // --- NAYA CODE: Total Sale (Tamam Bills ka sum) Calculate karna ---
     const totalSale = filtered.reduce((sum, rec) => sum + (Number(rec.bill) || 0), 0);
     const totalSaleEl = document.getElementById('dr-total-sale-display');
     if (totalSaleEl) {
         totalSaleEl.textContent = `${CURRENCY_SYMBOL}${totalSale.toFixed(2)}`;
     }
-    // ----------------------------------------------------------------
 
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
         const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
@@ -15478,6 +15733,8 @@ function renderDemandRecordTable() {
                     <div style="display: flex; gap: 5px;">
                         <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
                         <button class="btn btn-sm btn-success" onclick="sendDemandWhatsApp('${rec.id}')">WhatsApp</button>
+                        <!-- PAY BILL BUTTON (WhatsApp ke baad) -->
+                        <button class="btn btn-sm btn-warning" onclick="openPayBillModal('${rec.id}')">Pay Bill</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
                     </div>
                 </td>
@@ -18363,6 +18620,136 @@ async function deleteDemandRecord(id) {
     } catch (e) {
         console.error("Delete Error:", e);
         alert("Ghalti: Delete nahi ho saka. Error: " + e.message);
+    }
+}
+
+// =========================================================
+// PAY BILL / RECOVERY MODAL LOGIC FOR DEMAND REPORT
+// =========================================================
+
+function openPayBillModal(id) {
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) {
+        alert("Record nahi mila!");
+        return;
+    }
+
+    const currentNetBal = (record.netBalance !== undefined && record.netBalance !== null && !isNaN(record.netBalance))
+        ? Number(record.netBalance)
+        : ((Number(record.bill) || 0) + (Number(record.oldBalance) || 0) - (Number(record.recovery) || 0));
+
+    if (currentNetBal <= 0) {
+        alert("Is customer ka koi remaining balance baqi nahi hai (Fully Paid).");
+        return;
+    }
+
+    document.getElementById('pb-demand-id').value = id;
+    document.getElementById('pb-customer-name').textContent = record.customer || 'N/A';
+    document.getElementById('pb-remaining-balance').textContent = `${CURRENCY_SYMBOL} ${currentNetBal.toFixed(2)}`;
+    document.getElementById('pb-amount').value = '';
+    document.getElementById('pb-new-balance').textContent = `${CURRENCY_SYMBOL} ${currentNetBal.toFixed(2)}`;
+    document.getElementById('pb-received-by').value = record.receivedBy && record.receivedBy !== 'N/A' ? record.receivedBy : '';
+
+    document.getElementById('pay-bill-modal').style.display = 'flex';
+}
+
+function calculatePayBillRemaining() {
+    const id = document.getElementById('pb-demand-id').value;
+    const record = demandRecords.find(r => r.id === id);
+    if (!record) return;
+
+    const currentNetBal = (record.netBalance !== undefined && record.netBalance !== null && !isNaN(record.netBalance))
+        ? Number(record.netBalance)
+        : ((Number(record.bill) || 0) + (Number(record.oldBalance) || 0) - (Number(record.recovery) || 0));
+
+    const enteredAmount = parseFloat(document.getElementById('pb-amount').value) || 0;
+    const newBal = currentNetBal - enteredAmount;
+
+    const newBalSpan = document.getElementById('pb-new-balance');
+    newBalSpan.textContent = `${CURRENCY_SYMBOL} ${newBal.toFixed(2)}`;
+
+    if (newBal < 0) {
+        newBalSpan.style.color = 'var(--warning-color)';
+    } else if (newBal === 0) {
+        newBalSpan.style.color = 'var(--success-color)';
+    } else {
+        newBalSpan.style.color = 'var(--info-color)';
+    }
+}
+
+function closePayBillModal() {
+    document.getElementById('pay-bill-modal').style.display = 'none';
+}
+
+async function savePayBillPayment() {
+    const id = document.getElementById('pb-demand-id').value;
+    const amount = parseFloat(document.getElementById('pb-amount').value) || 0;
+    const receivedBy = document.getElementById('pb-received-by').value.trim() || 'N/A';
+
+    if (amount <= 0) {
+        alert("Meharbani karke sahi payment amount darj karein!");
+        return;
+    }
+
+    const recordIndex = demandRecords.findIndex(r => r.id === id);
+    if (recordIndex === -1) return;
+
+    const record = demandRecords[recordIndex];
+    const currentNetBal = (record.netBalance !== undefined && record.netBalance !== null && !isNaN(record.netBalance))
+        ? Number(record.netBalance)
+        : ((Number(record.bill) || 0) + (Number(record.oldBalance) || 0) - (Number(record.recovery) || 0));
+
+    if (amount > currentNetBal + 0.01) {
+        alert(`Ghalti: Payment amount baqaya balance (${CURRENCY_SYMBOL} ${currentNetBal.toFixed(2)}) se zyada nahi ho sakti!`);
+        return;
+    }
+
+    // Amount ko Recovery mein add karein aur Remaining Balance update karein
+    record.recovery = (Number(record.recovery) || 0) + amount;
+    record.netBalance = currentNetBal - amount;
+    if (record.netBalance <= 0.01) {
+        record.netBalance = 0;
+        record.status = 'paid';
+    } else {
+        record.status = 'unpaid';
+    }
+    record.receivedBy = receivedBy;
+    record.processed = true;
+
+    try {
+        const userId = 'FJM_MASTER_DB';
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        // Cash Book mein entry shamil karein
+        if (typeof addTransactionToCashBook === 'function') {
+            addTransactionToCashBook(
+                `Recovery Rcvd (S.No #${record.serialNo}) - ${record.customer} (By: ${receivedBy})`,
+                'in',
+                amount,
+                new Date().toISOString(),
+                'cb_dem_rec_' + Date.now()
+            );
+        }
+
+        alert(`Payment ${CURRENCY_SYMBOL} ${amount.toFixed(2)} successful! Updated PDF auto-download ho raha hai...`);
+
+        closePayBillModal();
+
+        // PDF Auto-Download
+        if (typeof generateDemandRecordPDF === 'function') {
+            generateDemandRecordPDF(record);
+        }
+
+        // Tables & UI Refresh
+        if (typeof renderDemandRecordTable === 'function') renderDemandRecordTable();
+        if (typeof renderDemandRecord === 'function') renderDemandRecord();
+        if (typeof refreshAll === 'function') refreshAll();
+
+    } catch (e) {
+        console.error("Pay Bill Save Error: ", e);
+        alert("Payment save karne mein masla aaya: " + e.message);
     }
 }
 
