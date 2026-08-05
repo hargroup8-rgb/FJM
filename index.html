@@ -14096,10 +14096,15 @@ function downloadSearchResultPDF() {
 }
 
 
-// 1. UPDATED generateSelectedWorkerReport
+// =========================================================
+// WORKER PERFORMANCE REPORT (DATE-WISE & ALL-TIME SUPPORT)
+// =========================================================
+
 function generateSelectedWorkerReport() {
     const workerId = document.getElementById('recovery-worker-select').value;
-    
+    const fromDateVal = document.getElementById('worker-report-from-date')?.value;
+    const toDateVal = document.getElementById('worker-report-to-date')?.value;
+
     if (!workerId) {
         alert("Meharbani karke pehle ek worker select karein!");
         return;
@@ -14110,14 +14115,14 @@ function generateSelectedWorkerReport() {
 
     const workerNameClean = (worker.name || '').trim().toLowerCase();
 
-    // 1. Un tamam Customers ke naam nikalen jo is Worker se "Add Customer" mein linked hain
+    // 1. Is Worker se linked Customers ke naam nikalen
     const workerCustomerNames = new Set();
     if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
         savedCustomersList.forEach(c => {
             if (c.worker) {
                 const wName = (typeof c.worker === 'object' && c.worker.name) ? c.worker.name : String(c.worker);
                 const wId = typeof c.worker === 'object' ? c.worker.id : null;
-                
+
                 if ((wId && wId === worker.id) || (wName && wName.trim().toLowerCase() === workerNameClean)) {
                     if (c.name) workerCustomerNames.add(c.name.trim().toLowerCase());
                 }
@@ -14125,8 +14130,8 @@ function generateSelectedWorkerReport() {
         });
     }
 
-    // 2. Demands Filter Karein
-    const workerDemands = (demandRecords || []).filter(rec => {
+    // 2. Demands Filter Karein by Selected Worker
+    let workerDemands = (demandRecords || []).filter(rec => {
         if (!rec) return false;
 
         if (rec.worker) {
@@ -14144,17 +14149,32 @@ function generateSelectedWorkerReport() {
         return false;
     });
 
+    // 3. Date Range Filtering (Agar Tareekh Select ki Gayi Ho)
+    if (fromDateVal) {
+        const fromDate = new Date(fromDateVal + 'T00:00:00');
+        workerDemands = workerDemands.filter(rec => rec.date && new Date(rec.date) >= fromDate);
+    }
+    if (toDateVal) {
+        const toDate = new Date(toDateVal + 'T23:59:59');
+        workerDemands = workerDemands.filter(rec => rec.date && new Date(rec.date) <= toDate);
+    }
+
     if (workerDemands.length === 0) {
-        alert(`Worker "${worker.name}" ke naam par koi demands ya clients nahi hain.`);
+        const dateMsg = (fromDateVal || toDateVal) ? " selected date range mein" : "";
+        alert(`Worker "${worker.name}" ke naam par${dateMsg} koi demands ya records nahi hain.`);
         return;
     }
 
-    // PDF Generator Call (PDF khud dynamic summary calculate karega)
-    generateWorkerReportPDF(worker, workerDemands);
+    const dateRange = {
+        from: fromDateVal || null,
+        to: toDateVal || null
+    };
+
+    // PDF Generator Call
+    generateWorkerReportPDF(worker, workerDemands, dateRange);
 }
 
-// 2. UPDATED generateWorkerReportPDF (Summary & Table Both Fully Synced)
-function generateWorkerReportPDF(worker, demands) {
+function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
         alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
         return;
@@ -14165,24 +14185,23 @@ function generateWorkerReportPDF(worker, demands) {
     let yPos = 20;
 
     const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
-
     const safeDemands = Array.isArray(demands) ? demands : [];
 
-    // CALCULATE ALL SUMMARY STATS DIRECTLY & ACCURATELY FROM THE TABLE DATA
     let totalBillValue = 0;
     let totalItemsBought = 0;
     let paidCount = 0;
     let unpaidCount = 0;
     let totalOutstandingBalance = 0;
 
+    // Filtered Demands ke mutabiq Table Data aur Summary calculation
     const clientRows = safeDemands.map((rec, index) => {
         let bill = Number(rec.bill) || 0;
         let oldBal = Number(rec.oldBalance) || 0;
         let recovery = Number(rec.recovery) || 0;
         let calcBalance = (bill + oldBal) - recovery;
-        
-        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance)) 
-            ? Number(rec.netBalance) 
+
+        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance))
+            ? Number(rec.netBalance)
             : calcBalance;
 
         let st = getStatus(rec);
@@ -14202,45 +14221,54 @@ function generateWorkerReportPDF(worker, demands) {
             try { dateFormatted = new Date(rec.date).toLocaleDateString(); } catch(e) { dateFormatted = '-'; }
         }
 
-       return [
-    index + 1,
-    dateFormatted,
-    rec.customer || 'N/A',
-    rec.demand || 0,
-    `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
-    `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`,
-    st.toUpperCase()
-];
+        return [
+            index + 1,
+            dateFormatted,
+            rec.customer || 'N/A',
+            rec.demand || 0,
+            `${CURRENCY_SYMBOL}${(bill).toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${(displayBalance).toFixed(2)}`,
+            st.toUpperCase()
+        ];
     });
 
     // Header
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "EMAN FOODS", 105, yPos, { align: 'center' }); yPos += 8;
-    
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
     doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 12;
 
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text("Worker Client Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
+    doc.text("Worker Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
 
-    // Worker Details Box
+    // Worker Details Section
     doc.setFontSize(11); doc.setFont('helvetica', 'bold');
     doc.text("Worker Details:", 14, yPos); yPos += 6;
-    
+
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`Name: ${worker ? worker.name || 'N/A' : 'N/A'}`, 14, yPos);
-    doc.text(`Date Generated: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 5;
-    doc.text(`Mobile: ${worker ? worker.phone || 'N/A' : 'N/A'}`, 14, yPos); yPos += 5;
-    doc.text(`Address: ${worker ? worker.address || 'N/A' : 'N/A'}`, 14, yPos); yPos += 12;
 
-    // Summary Table (Now 100% Synced with Table Rows)
+    // Period Covered (Tareekh ki maloomat PDF par display karna)
+    let periodStr = "All Time";
+    if (dateRange && (dateRange.from || dateRange.to)) {
+        const fStr = dateRange.from ? new Date(dateRange.from).toLocaleDateString() : 'Start';
+        const tStr = dateRange.to ? new Date(dateRange.to).toLocaleDateString() : 'End';
+        periodStr = `${fStr} to ${tStr}`;
+    }
+
+    doc.text(`Period Covered: ${periodStr}`, 120, yPos); yPos += 5;
+    doc.text(`Address: ${worker ? worker.address || 'N/A' : 'N/A'}`, 14, yPos);
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
+
+    // Summary Box (Only for selected dates)
     const summaryTableData = [
         ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBillValue.toFixed(2)}`],
         ['Total Items Bought:', totalItemsBought.toString()],
-        ['Paid Clients / Demands', paidCount.toString()],
-        ['Unpaid Clients / Demands', unpaidCount.toString()],
-        ['Total Outstanding Balance', `${CURRENCY_SYMBOL} ${totalOutstandingBalance.toFixed(2)}`]
+        ['Paid Clients / Demands:', paidCount.toString()],
+        ['Unpaid Clients / Demands:', unpaidCount.toString()],
+        ['Total Outstanding Balance:', `${CURRENCY_SYMBOL} ${totalOutstandingBalance.toFixed(2)}`]
     ];
 
     doc.autoTable({
@@ -14253,31 +14281,30 @@ function generateWorkerReportPDF(worker, demands) {
 
     yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 12 : yPos + 45;
 
-    // Detailed Table Title
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
     doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 6;
 
     if (clientRows.length === 0) {
-        clientRows.push(['-', '-', 'No detailed records found', '-', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
+        clientRows.push(['-', '-', 'No detailed records found', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
     }
 
-    // Detailed Table Render
+    // AutoTable Output
     doc.autoTable({
         startY: yPos,
-head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
+        head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
         body: clientRows,
         theme: 'striped',
         headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center' },
         bodyStyles: { fontSize: 8.5, cellPadding: 2.5, halign: 'center' },
         columnStyles: {
-    0: { cellWidth: 12 },
-    1: { cellWidth: 25 },
-    2: { halign: 'left', cellWidth: 68 },
-    3: { cellWidth: 15 },
-    4: { cellWidth: 28 },
-    5: { cellWidth: 28 },
-    6: { cellWidth: 22 }
-},
+            0: { cellWidth: 12 },
+            1: { cellWidth: 25 },
+            2: { halign: 'left', cellWidth: 68 },
+            3: { cellWidth: 15 },
+            4: { cellWidth: 28 },
+            5: { cellWidth: 28 },
+            6: { cellWidth: 22 }
+        },
         margin: { left: 14, right: 14 }
     });
 
