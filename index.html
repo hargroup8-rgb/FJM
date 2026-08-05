@@ -12,10 +12,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <!-- Chart.js Library Graph Rendering ke liye -->
-     <!-- Chart.js DataLabels Plugin (Displays values directly on bars) -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+   
+   <!-- 1. Chart.js Library (Ye Pehle Load Hogi) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- 2. Chart.js DataLabels Plugin (Ye Chart.js ke Baad Load Hoga) -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     
     <!-- Google Fonts for modern typography -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -5038,27 +5040,23 @@ function runDemandMath() {
 }
 
 async function submitNewDemand() {
-    // 1. Inputs get karein
     const dateEl = document.getElementById('d-date');
     const customerEl = document.getElementById('d-customer');
     const demandQtyEl = document.getElementById('d-demand');
     const workerEl = document.getElementById('d-worker');
     const itemEl = document.getElementById('d-item-name'); 
 
-    // Selected Date read karein (agar blank ho to aaj ki date lein)
     const selectedDateVal = dateEl && dateEl.value ? dateEl.value : new Date().toISOString().split('T')[0];
     const customer = customerEl ? customerEl.value.trim() : '';
     const demandQty = demandQtyEl ? demandQtyEl.value : '';
     const workerId = workerEl ? workerEl.value : '';
     const itemName = itemEl ? itemEl.value : 'Alo';
 
-    // 2. Validation
     if (!customer || !demandQty) { 
         alert("Customer Name aur Demand Qty lazmi likhein!"); 
         return; 
     }
 
-    // 3. Customer Profile se Price, Code, Phone, Address aur Worker auto-lookup
     let custPrice = 0;
     let custCode = 'CUST-000';
     let custPhone = 'N/A';
@@ -5084,11 +5082,8 @@ async function submitNewDemand() {
 
     const demandAmount = parseFloat(demandQty);
     const calculatedBill = demandAmount * custPrice;
-
-    // Selected date ko ISO format mein convert karein
     const recordDateISO = new Date(selectedDateVal + 'T12:00:00.000Z').toISOString();
 
-    // 4. Data Record tayar karna
     const currentSerial = appSettings.nextSerialNo || 101;
     const recordData = {
         id: 'dem' + Date.now(),
@@ -5098,6 +5093,7 @@ async function submitNewDemand() {
         phone: custPhone,
         address: custAddress,
         price: custPrice,
+        rate: custPrice, // <-- YAHAN FIX KIYA GAYA HAI (Rate ab lazmi save hoga)
         bill: calculatedBill,
         recovery: 0,
         oldBalance: 0,
@@ -5105,13 +5101,12 @@ async function submitNewDemand() {
         itemName: itemName, 
         demand: demandAmount,
         worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
-        date: recordDateISO, // Input ki gayi date save hogi
+        date: recordDateISO,
         materialStatus: 'In warehouse',
         processed: false,
         status: calculatedBill > 0 ? 'unpaid' : 'paid'
     };
 
-    // 5. Cloud aur Database mein Save karna
     try {
         if (!loggedInUser || (!loggedInUser.id && !loggedInUser.uid)) {
             alert("Aapka session expire ho gaya hai. Barae meharbani page refresh kar ke dobara login karein.");
@@ -5119,7 +5114,6 @@ async function submitNewDemand() {
         }
         
         const userId = 'FJM_MASTER_DB';
-        
         appSettings.nextSerialNo = currentSerial + 1;
         await saveSettings(); 
 
@@ -5134,7 +5128,6 @@ async function submitNewDemand() {
         
         alert("Demand kamyabi se selected date par save ho gayi!");
         
-        // Form clear aur table refresh
         if (typeof clearDemandForm === 'function') clearDemandForm();
         if (typeof renderDemandRecord === 'function') renderDemandRecord(); 
         if (typeof renderRecentDemands === 'function') renderRecentDemands(); 
@@ -12596,6 +12589,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('login-button').addEventListener('click', handleLogin);
         document.getElementById('register-button').addEventListener('click', handleRegistration);
     }
+
+
+
+    
 });
 
 document.getElementById('stk-btn-generate-pdf')?.addEventListener('click', () => generateProductStockPDF(currentStockReportType));
@@ -12617,7 +12614,9 @@ async function initializeApp() {
     // Dropdowns ko bina kisi network delay ke furan generate karein
     populateDemandQtyDropdown();
     populateCustomerNamesDatalist();
-// initializeApp() ke end mein, jahan data fetch ho raha hai:
+
+
+
     await dbFetchAddedStockHistory();
     await dbFetchUsedStock();
     if (!appSettings.permissions) {
@@ -12627,6 +12626,12 @@ async function initializeApp() {
         };
         await saveSettings();
     }
+
+// initializeApp() function ke bilkul end mein ye line shamil karein:
+if (typeof recalculateCustomerDemandLedgers === 'function') {
+    await recalculateCustomerDemandLedgers();
+}
+
 
     if (loggedInUser.role !== 'admin') {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
@@ -14623,6 +14628,9 @@ function renderMaalPurchaseTable() {
     <button class="btn btn-info btn-sm" onclick="generateMaalPurchasePDF('${item.id}')">PDF</button>
     <button class="btn btn-success btn-sm" onclick="sendMaalPurchaseWhatsApp('${item.id}')">WhatsApp</button>
     <button class="btn btn-danger btn-sm" onclick="deleteMaalPurchase('${item.id}')">Delete</button>
+    <button class="btn btn-warning" onclick="syncAllCustomerBalancesManual()">
+    🔄 Sync & Fix All Old Balances
+</button>
 </div>
             </td>
         `;
@@ -15593,7 +15601,6 @@ function handlePendingDemandSelection() {
     const selectedId = select ? select.value : '';
 
     if (!selectedId) {
-        // Clear all form input fields if no customer is selected
         if (document.getElementById('dr-display-date')) document.getElementById('dr-display-date').value = '';
         if (document.getElementById('dr-display-customer')) document.getElementById('dr-display-customer').value = '';
         if (document.getElementById('dr-display-item')) document.getElementById('dr-display-item').value = '';
@@ -15614,37 +15621,75 @@ function handlePendingDemandSelection() {
         document.getElementById('dr-display-item').value = record.itemName || '';
         document.getElementById('dr-display-qty').value = record.demand || 0;
 
-        let autoRate = 0;
-        if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
-            const customerProfile = savedCustomersList.find(c => c.name.toLowerCase() === (record.customer || '').toLowerCase());
+        // 1. Rate Auto-Fetch
+        let autoRate = record.rate || record.price || 0;
+        if (!autoRate && typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+            const customerProfile = savedCustomersList.find(c => c.name && c.name.trim().toLowerCase() === (record.customer || '').trim().toLowerCase());
             if (customerProfile && customerProfile.price) {
-                autoRate = customerProfile.price; 
+                autoRate = parseFloat(customerProfile.price) || 0; 
             }
         }
-        
         document.getElementById('dr-rate').value = autoRate.toFixed(2);
+
+        // 2. OLD BALANCE FETCH FROM HISTORY (Bina kisi shart ke purana balance uthayega)
+        let autoOldBalance = 0;
+        const custNameClean = (record.customer || '').trim().toLowerCase();
+
+        // Customer ke tamam pichle records (Current selected record ke ilawa)
+        const previousRecords = (demandRecords || []).filter(r => 
+            r.id !== record.id && 
+            r.customer && 
+            r.customer.trim().toLowerCase() === custNameClean
+        );
+
+        if (previousRecords.length > 0) {
+            // Sort by date / serial
+            previousRecords.sort((a, b) => {
+                const dateA = new Date(a.date).getTime() || 0;
+                const dateB = new Date(b.date).getTime() || 0;
+                if (dateA !== dateB) return dateA - dateB;
+                return (a.serialNo || 0) - (b.serialNo || 0);
+            });
+
+            // Is record se pehle wale records mein se sab se last Net Balance uthayen
+            const currentRecordTime = new Date(record.date).getTime() || Date.now();
+            const earlierRecords = previousRecords.filter(r => (new Date(r.date).getTime() || 0) <= currentRecordTime);
+            
+            if (earlierRecords.length > 0) {
+                const lastRecord = earlierRecords[earlierRecords.length - 1];
+                autoOldBalance = Number(lastRecord.netBalance) || 0;
+            } else {
+                const lastRecord = previousRecords[previousRecords.length - 1];
+                autoOldBalance = Number(lastRecord.netBalance) || 0;
+            }
+        } else {
+            autoOldBalance = Number(record.oldBalance) || 0;
+        }
+
+        document.getElementById('dr-old-balance').value = autoOldBalance.toFixed(2);
+        document.getElementById('dr-recovery').value = record.recovery || '';
+
         calculateDemandRecordMath();
     }
 }
 
-// 3. Automatic Multiplication (Qty * Rate) aur Balance Calculations
+// 2. Bill aur Net Balance Auto-Calculation Function
 function calculateDemandRecordMath() {
     const qty = parseFloat(document.getElementById('dr-display-qty').value) || 0;
-    const rate = parseFloat(document.getElementById('dr-rate').value) || 0; // Ye ab auto-fill ho kar yahan aayega
+    const rate = parseFloat(document.getElementById('dr-rate').value) || 0;
     const oldBalance = parseFloat(document.getElementById('dr-old-balance').value) || 0;
     const recovery = parseFloat(document.getElementById('dr-recovery').value) || 0;
 
-    const bill = qty * rate; // Bill update ho jayega
+    const bill = qty * rate;
     const netBalance = (bill + oldBalance) - recovery; 
 
     document.getElementById('dr-bill').value = bill.toFixed(2);
     document.getElementById('dr-net-balance').value = netBalance.toFixed(2);
 }
 
-// 4. Record ko Save karna, Cloud par sync karna, Cash book entry dalna aur PDF download karna
 async function submitDemandRecord() {
     const select = document.getElementById('dr-pending-select');
-    const selectedId = select.value;
+    const selectedId = select ? select.value : '';
 
     if (!selectedId) {
         alert("Pehle list se ek pending demand select karein!");
@@ -15656,6 +15701,7 @@ async function submitDemandRecord() {
     const oldBalance = parseFloat(document.getElementById('dr-old-balance').value) || 0;
     const recovery = parseFloat(document.getElementById('dr-recovery').value) || 0;
     const netBalance = parseFloat(document.getElementById('dr-net-balance').value) || 0;
+    const receivedBy = document.getElementById('dr-received-by') ? document.getElementById('dr-received-by').value.trim() : 'N/A';
 
     if (isNaN(rate) || rate <= 0) {
         alert("Meharbani karke Rate darj karein!");
@@ -15668,40 +15714,67 @@ async function submitDemandRecord() {
         return;
     }
 
+    // Record Data Update
     const record = demandRecords[recordIndex];
     record.rate = rate;
+    record.price = rate; // Rate aur Price dono sync kar diye gaye hain
     record.bill = bill;
     record.oldBalance = oldBalance;
     record.recovery = recovery;
     record.netBalance = netBalance;
-    record.receivedBy = document.getElementById('dr-received-by').value.trim() || 'N/A'; 
+    record.receivedBy = receivedBy || 'N/A'; 
     record.processed = true;
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
     try {
-        const userId = 'FJM_MASTER_DB';
-
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
-
-        if (recovery > 0) {
-            addTransactionToCashBook(`Recovery Rcvd (S.No #${record.serialNo}) - ${record.customer}`, 'in', recovery, record.date, 'cb_dem_rec_' + record.id);
+        // 1. Customer ke tamam historical balances ko aapas mein chain aur recalculate karein
+        if (typeof recalculateCustomerDemandLedgers === 'function') {
+            await recalculateCustomerDemandLedgers();
         }
 
-        alert("Demand Record kamyabi se save ho gaya!");
+        // 2. Firebase Cloud Firestore mein updated payload save karein
+        const userId = 'FJM_MASTER_DB';
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+                payload: JSON.stringify(demandRecords)
+            });
+        }
 
-        // Auto download PDF
-        generateDemandRecordPDF(record);
+        // Local Storage Backup
+        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
 
-        // Populate dropdowns & clear form inputs
-        populatePendingDemandsDropdown();
-        resetDemandRecordForm(); // <--- THIS CLEARS ALL FIELDS AUTOMATICALLY
-        renderDemandRecordTable();
-        resetDemandRecordForm(); 
+        // 3. Agar Recovery mil chuki hai to Cash Book mein Cash In darj karein
+        if (recovery > 0 && typeof addTransactionToCashBook === 'function') {
+            addTransactionToCashBook(
+                `Recovery Rcvd (S.No #${record.serialNo}) - ${record.customer} (By: ${record.receivedBy})`, 
+                'in', 
+                recovery, 
+                record.date || new Date().toISOString(), 
+                'cb_dem_rec_' + record.id
+            );
+        }
 
+        alert("Demand Record kamyabi se save ho gaya aur purane balances sync ho gaye!");
 
-        refreshAll();
+        // 4. Invoice PDF Auto-Download
+        if (typeof generateDemandRecordPDF === 'function') {
+            generateDemandRecordPDF(record);
+        }
+
+        // 5. Dropdowns & UI Reset
+        if (typeof populatePendingDemandsDropdown === 'function') {
+            populatePendingDemandsDropdown();
+        }
+        if (typeof resetDemandRecordForm === 'function') {
+            resetDemandRecordForm();
+        }
+        if (typeof renderDemandRecordTable === 'function') {
+            renderDemandRecordTable();
+        }
+        if (typeof refreshAll === 'function') {
+            refreshAll();
+        }
+
     } catch (e) {
         console.error("Save Error:", e);
         alert("Error saving processed demand: " + e.message);
@@ -15743,14 +15816,16 @@ function renderDemandRecordTable() {
 
     filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
         const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
-        
+        // FIX: rec.rate na milne par rec.price uthaye ga
+        const displayRate = rec.rate || rec.price || 0; 
+
         tbody.innerHTML += `
             <tr>
                 <td>${dateStr}</td>
                 <td><strong>${rec.customer}</strong></td>
                 <td>${rec.itemName || '-'}</td>
                 <td>${rec.demand}</td>
-                <td>${CURRENCY_SYMBOL}${(rec.rate || 0).toFixed(2)}</td>
+                <td>${CURRENCY_SYMBOL}${Number(displayRate).toFixed(2)}</td>
                 <td><strong>${CURRENCY_SYMBOL}${(rec.bill || 0).toFixed(2)}</strong></td>
                 <td>${CURRENCY_SYMBOL}${(rec.oldBalance || 0).toFixed(2)}</td>
                 <td style="color:#10b981; font-weight:bold;">${CURRENCY_SYMBOL}${(rec.recovery || 0).toFixed(2)}</td>
@@ -15760,7 +15835,6 @@ function renderDemandRecordTable() {
                     <div style="display: flex; gap: 5px;">
                         <button class="btn btn-sm btn-info" onclick="generateDemandRecordPDFById('${rec.id}')">PDF</button>
                         <button class="btn btn-sm btn-success" onclick="sendDemandWhatsApp('${rec.id}')">WhatsApp</button>
-                        <!-- PAY BILL BUTTON (WhatsApp ke baad) -->
                         <button class="btn btn-sm btn-warning" onclick="openPayBillModal('${rec.id}')">Pay Bill</button>
                         <button class="btn btn-sm btn-danger" onclick="deleteDemandRecordFromTable('${rec.id}')">Delete</button>
                     </div>
@@ -18777,6 +18851,86 @@ async function savePayBillPayment() {
     } catch (e) {
         console.error("Pay Bill Save Error: ", e);
         alert("Payment save karne mein masla aaya: " + e.message);
+    }
+}
+
+// TAMAM PURANE AUR NAYE RECORDS KO AAPAS MEIN JODNE (CHAIN KARNE) KA FUNCTION
+async function recalculateCustomerDemandLedgers() {
+    if (!Array.isArray(demandRecords) || demandRecords.length === 0) return;
+
+    // 1. Customer wise group karein
+    const customerGroups = {};
+
+    demandRecords.forEach(rec => {
+        if (!rec || !rec.customer) return;
+        const cName = rec.customer.trim().toLowerCase();
+        if (!customerGroups[cName]) {
+            customerGroups[cName] = [];
+        }
+        customerGroups[cName].push(rec);
+    });
+
+    // 2. Har customer ke purane aur naye records ko tareekh ke mutabiq chain karein
+    for (const cName in customerGroups) {
+        const list = customerGroups[cName];
+        
+        // Tareekh aur Serial No ke hisab se Purana Pehle, Naya Baad Mein sort karein
+        list.sort((a, b) => {
+            const dateA = new Date(a.date).getTime() || 0;
+            const dateB = new Date(b.date).getTime() || 0;
+            if (dateA !== dateB) return dateA - dateB;
+            return (a.serialNo || 0) - (b.serialNo || 0);
+        });
+
+        let runningBalance = 0;
+
+        list.forEach((rec, index) => {
+            // Pehle record ka old balance 0, us ke baad purana netBalance hi agla oldBalance banega
+            if (index === 0) {
+                rec.oldBalance = Number(rec.oldBalance) || 0;
+            } else {
+                rec.oldBalance = runningBalance;
+            }
+
+            const qty = Number(rec.demand) || 0;
+            const rate = Number(rec.rate || rec.price) || 0;
+            const bill = Number(rec.bill) || (qty * rate);
+            rec.bill = bill;
+            rec.rate = rate;
+            rec.price = rate;
+            
+            const recovery = (Number(rec.recovery) || 0) + (Number(rec.onlineRec) || 0);
+            
+            // Formula: Bill + Old Balance - Recovery
+            rec.netBalance = (bill + rec.oldBalance) - recovery;
+
+            // Agle record ke liye running balance update karein
+            runningBalance = rec.netBalance;
+            rec.status = rec.netBalance <= 0.01 ? 'paid' : 'unpaid';
+        });
+    }
+
+    // 3. Updated Chain Ko Cloud Firestore aur Local Memory mein Sync Karein
+    try {
+        const userId = 'FJM_MASTER_DB';
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+                payload: JSON.stringify(demandRecords)
+            });
+        }
+        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
+        console.log("Tamam Customer Ledgers Auto-Calculated aur Chain Ho Gaye Hain!");
+    } catch (e) {
+        console.error("Ledger Recalculation Error:", e);
+    }
+}
+
+async function syncAllCustomerBalancesManual() {
+    if (confirm("Kya aap tamam purane aur naye customer balances ko auto-fix aur sync karna chahte hain?")) {
+        await recalculateCustomerDemandLedgers();
+        alert("Mubarak! Tamam customer balances aapas mein sync aur fix ho gaye hain.");
+        if (typeof renderDemandRecordTable === 'function') renderDemandRecordTable();
+        if (typeof refreshAll === 'function') refreshAll();
     }
 }
 
