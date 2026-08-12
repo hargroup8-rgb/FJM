@@ -1266,10 +1266,55 @@ body,
             <!-- Center Panel: Module Content (Products, Manage, Reports, etc.) -->
             <div class="center-panel">
             <!-- START NEW MODULE: RECOVERY SHEET & REPORTS -->
-<!-- START MODULE: RECOVERY SHEET & REPORTS -->
+
+
+
+
+            <!-- START MODULE: RECOVERY SHEET & REPORTS -->
 <div id="RecoverySheet" class="module-content" style="display:none !important;">
     <h2 class="panel-title">📄 Recovery Sheet & Reports</h2>
-    
+  
+    <!-- NAYA SECTION: Customer Monthly Recovery Report -->
+    <div class="manage-form" style="border-left: 5px solid var(--warning-color); margin-top: 20px;">
+        <h3>👤 Customer Monthly Recovery Statement</h3>
+        <p style="color: var(--text-color); font-size: 0.9rem; margin-bottom: 15px;">
+            Customer ka naam ya number search karein aur mahina (month) select kar ke unki monthly recovery sheet nikalein.
+        </p>
+        <div class="form-grid" style="grid-template-columns: 2fr 1fr auto; gap: 15px; align-items: flex-end;">
+            
+            <!-- Smart Custom Dropdown for Customer / Mobile -->
+            <div style="position: relative;">
+                <label>Search Customer (Name or Mobile):</label>
+                <input type="text" id="rs-cust-search" class="form-control" 
+                    placeholder="-- Type Name or Mobile --" 
+                    onclick="toggleRSCustSelect()" 
+                    oninput="filterRSCustSelect()" 
+                    autocomplete="off" 
+                    style="border: 1.5px solid var(--warning-color) !important; cursor: pointer;">
+                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.7; font-size: 0.8rem;">▼</span>
+                
+                <!-- Hidden inputs to hold exact selected customer data -->
+                <input type="hidden" id="rs-cust-name">
+                <input type="hidden" id="rs-cust-phone">
+
+                <!-- Dropdown list menu -->
+                <div id="rs-cust-options-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 250px; overflow-y: auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                </div>
+            </div>
+
+            <!-- Month Selector -->
+            <div>
+                <label>Select Month:</label>
+                <input type="month" id="rs-month-select" class="form-control">
+            </div>
+
+            <!-- Download Button -->
+            <div>
+                <button class="btn btn-warning" onclick="generateCustomerMonthlyRecoveryPDF()">📥 Download Monthly PDF</button>
+            </div>
+        </div>
+    </div>
+
     <!-- General Report Generation Buttons -->
     <div class="manage-form" style="margin-bottom: 20px;">
         <h3>📊 Generate General Recovery Reports</h3>
@@ -1300,16 +1345,24 @@ body,
                 <label for="worker-report-from-date">From Date:</label>
                 <input type="date" id="worker-report-from-date" class="form-control">
             </div>
+
+
+            
             <div>
                 <label for="worker-report-to-date">To Date:</label>
                 <input type="date" id="worker-report-to-date" class="form-control">
             </div>
             <div>
                 <button class="btn btn-info" onclick="generateSelectedWorkerReport()">Download Worker Report</button>
+
             </div>
+
+            
         </div>
     </div>
 </div>
+
+
 <!-- END MODULE: RECOVERY SHEET -->
 
 
@@ -1601,11 +1654,26 @@ body,
         <h3>Process Pending Demand</h3>
         <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px; align-items: center;">
             
-            <!-- 1. Customer/Demand Select Option -->
-            <label style="font-weight: bold; color: var(--accent-color);">Select Customer:</label>
-            <select id="dr-pending-select" class="form-control" onchange="handlePendingDemandSelection()" style="grid-column: 2 / 5; border: 1.5px solid var(--accent-color) !important;">
-                <option value="">-- Select Pending Demand --</option>
-            </select>
+           <label style="font-weight: bold; color: var(--accent-color);">Select Customer:</label>
+<div style="grid-column: 2 / 5; position: relative;">
+    <!-- Naya Custom Smart Input Box -->
+    <input type="text" id="dr-pending-search" class="form-control" 
+        placeholder="-- Search Name or Phone Number --" 
+        onclick="togglePendingDemandSelect()" 
+        oninput="filterPendingDemandSelect()" 
+        autocomplete="off" 
+        style="width: 100%; border: 1.5px solid var(--accent-color) !important; cursor: pointer;">
+    
+    <!-- Dropdown Arrow ka Nishan -->
+    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.7; font-size: 0.8rem;">▼</span>
+    
+    <!-- Hidden ID Field -->
+    <input type="hidden" id="dr-pending-select">
+
+    <!-- Nayi Custom Dropdown List -->
+    <div id="dr-pending-options-list" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 250px; overflow-y: auto; background-color: #1e293b; border: 1px solid #334155; border-radius: 8px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+    </div>
+</div>
             
             <!-- 2. Automatic Read-only Displays -->
             <label>Date:</label>
@@ -3889,6 +3957,48 @@ body,
 
 
 <script>
+
+function safeParseDate(dateStr) {
+    if (!dateStr) return 0;
+    if (typeof dateStr !== 'string') {
+        let t = new Date(dateStr).getTime();
+        return isNaN(t) ? 0 : t;
+    }
+
+    dateStr = dateStr.trim();
+
+    // 1. Agar date ISO format mein shuru ho (e.g., 2026-08-07...)
+    if (/^\d{4}/.test(dateStr)) {
+        let t = Date.parse(dateStr);
+        if (!isNaN(t)) return t;
+    }
+
+    // 2. Agar date regional format mein ho (e.g., 06/08/2026)
+    let parts = dateStr.split(/[\/\-\sT:]/);
+    if (parts.length >= 3) {
+        let p0 = parseInt(parts[0], 10);
+        let p1 = parseInt(parts[1], 10);
+        let p2 = parseInt(parts[2], 10);
+
+        if (parts[2].length === 4) { // DD/MM/YYYY
+            let day = p0;
+            let month = p1 - 1;
+            let year = p2;
+            return new Date(year, month, day).getTime();
+        }
+        if (parts[0].length === 4) { // YYYY/MM/DD
+            let year = p0;
+            let month = p1 - 1;
+            let day = p2;
+            return new Date(year, month, day).getTime();
+        }
+    }
+
+    // Fallback
+    let t = Date.parse(dateStr);
+    return isNaN(t) ? 0 : t;
+}
+
 let myDashboardChart = null; // <-- Yahan is line ko add karein
 
 let currentStockReportType = 'daily'; // Default filter state
@@ -4415,7 +4525,7 @@ function renderRecentDemands() {
     const safeRecords = Array.isArray(demandRecords) ? demandRecords : [];
 
     // Latest demands ko sabse upar dikhane ke liye reverse sort kiya hai
-    [...safeRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+    [...safeRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
         
         // ---- YEH LINE MISSING THI ----
         const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
@@ -5084,6 +5194,23 @@ async function submitNewDemand() {
     const calculatedBill = demandAmount * custPrice;
     const recordDateISO = new Date(selectedDateVal + 'T12:00:00.000Z').toISOString();
 
+    // --- Pichle Unpaid Balance (Old Balance) Ko safeParseDate Se Dhoondhein ---
+    let previousUnpaidBalance = 0;
+    const custNameClean = customer.trim().toLowerCase();
+    const customerRecords = (demandRecords || []).filter(r => 
+        r.customer && r.customer.trim().toLowerCase() === custNameClean
+    );
+    if (customerRecords.length > 0) {
+        customerRecords.sort((a, b) => {
+            const dateA = safeParseDate(a.date);
+            const dateB = safeParseDate(b.date);
+            if (dateA !== dateB) return dateA - dateB;
+            return (a.serialNo || 0) - (b.serialNo || 0);
+        });
+        const latestRecord = customerRecords[customerRecords.length - 1];
+        previousUnpaidBalance = Number(latestRecord.netBalance) || 0;
+    }
+
     const currentSerial = appSettings.nextSerialNo || 101;
     const recordData = {
         id: 'dem' + Date.now(),
@@ -5093,18 +5220,18 @@ async function submitNewDemand() {
         phone: custPhone,
         address: custAddress,
         price: custPrice,
-        rate: custPrice, // <-- YAHAN FIX KIYA GAYA HAI (Rate ab lazmi save hoga)
+        rate: custPrice, 
         bill: calculatedBill,
         recovery: 0,
-        oldBalance: 0,
-        netBalance: calculatedBill,
+        oldBalance: previousUnpaidBalance, 
+        netBalance: calculatedBill + previousUnpaidBalance, 
         itemName: itemName, 
         demand: demandAmount,
         worker: selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null,
         date: recordDateISO,
         materialStatus: 'In warehouse',
         processed: false,
-        status: calculatedBill > 0 ? 'unpaid' : 'paid'
+        status: (calculatedBill + previousUnpaidBalance) > 0 ? 'unpaid' : 'paid'
     };
 
     try {
@@ -5120,10 +5247,8 @@ async function submitNewDemand() {
         if (!Array.isArray(demandRecords)) demandRecords = [];
         demandRecords.push(recordData);
 
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
-        
+        await recalculateCustomerDemandLedgers();
+
         if (typeof populateCustomerNamesDatalist === 'function') populateCustomerNamesDatalist();
         
         alert("Demand kamyabi se selected date par save ho gayi!");
@@ -5264,7 +5389,7 @@ function renderDemandRecord() {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    [...demandRecords].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+    [...demandRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
         // Ab hum object access kar rahe hain
         const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
         
@@ -5360,7 +5485,7 @@ function renderDemandList(filter = 'all') {
         });
     }
 
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+    filtered.sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
         const recordStatus = getRecordStatus(rec);
         const statusHTML = recordStatus === 'paid' ? 
             '<span style="color:#10b981; font-weight:bold;">✅ PAID</span>' : 
@@ -12611,11 +12736,9 @@ async function initializeApp() {
     // 2. Direct online settings load karein
     await loadUserSettingsOnline();
 
-    // Dropdowns ko bina kisi network delay ke furan generate karein
+    // Dropdowns ko furan generate karein
     populateDemandQtyDropdown();
     populateCustomerNamesDatalist();
-
-
 
     await dbFetchAddedStockHistory();
     await dbFetchUsedStock();
@@ -12627,26 +12750,18 @@ async function initializeApp() {
         await saveSettings();
     }
 
-// initializeApp() function ke bilkul end mein ye line shamil karein:
-if (typeof recalculateCustomerDemandLedgers === 'function') {
-    await recalculateCustomerDemandLedgers();
-}
-
-
     if (loggedInUser.role !== 'admin') {
         document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     }
 
     document.getElementById('user-session-info').innerHTML = `Welcome, <strong>${loggedInUser.name}</strong>! <button class="btn btn-danger btn-sm" onclick="handleLogout()">Logout</button>`;
 
-    // Demand records load karein
+    // A. Demand records load karein
     const userId = 'FJM_MASTER_DB';
     try {
         const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
         if (doc.exists) {
             demandRecords = JSON.parse(doc.data().payload);
-            renderDemandRecord(); 
-            populateCustomerNamesDatalist();
         }
     } catch (e) {
         console.error("Demand data load nahi hua:", e);
@@ -12658,7 +12773,7 @@ if (typeof recalculateCustomerDemandLedgers === 'function') {
     populatePaymentMethods();
     populateExpenseCategoryDropdowns();
 
-    // Event Listeners bind karein (Safe with Optional Chaining '?.' to prevent crashes)
+    // Event Listeners bind karein
     document.getElementById('search-input')?.addEventListener('input', renderProductGrid);
     document.getElementById('user-search-input')?.addEventListener('input', renderAllUsersTable);
     document.getElementById('setting-logo-upload')?.addEventListener('change', handleLogoUpload);
@@ -12783,7 +12898,6 @@ if (typeof recalculateCustomerDemandLedgers === 'function') {
             savedRiders = JSON.parse(docRiders.data().payload) || [];
         }
 
-        // ✅ NAYA: App start hote hi Vehicles list bhi cloud se fetch karein
         const docVehicles = await db.collection('appData').doc(userId).collection('datasets').doc('vehicles_list').get();
         if (docVehicles.exists) {
             savedVehicles = JSON.parse(docVehicles.data().payload) || [];
@@ -12801,6 +12915,11 @@ if (typeof recalculateCustomerDemandLedgers === 'function') {
     if (typeof populateDemandWorkersDropdown === 'function') populateDemandWorkersDropdown();
     if (typeof populateRecoveryWorkerDropdown === 'function') populateRecoveryWorkerDropdown();
     if (typeof populateCustomerWorkerDropdown === 'function') populateCustomerWorkerDropdown();
+
+    // ★ FIX: Tamam database load hone ke baad recalculation run karein ★
+    if (typeof recalculateCustomerDemandLedgers === 'function') {
+        await recalculateCustomerDemandLedgers();
+    }
 
     // UI elements ko final refresh dena
     refreshAll();
@@ -12879,7 +12998,7 @@ if (actualModuleName === 'RiderDetailsModule') {
         button.innerHTML = "⏳ Loading...";
         button.disabled = true;
 
-        if (actualModuleName === 'DemandRecord') {
+       if (actualModuleName === 'DemandRecord') {
             await dbFetchDemandWorkers(); // Safe worker fetch
 
             // Cloud se updated demand lists aur riders ko dobara fetch karein
@@ -12890,9 +13009,14 @@ if (actualModuleName === 'RiderDetailsModule') {
                     const data = doc.data();
                     const parsed = (data && data.payload) ? JSON.parse(data.payload) : [];
                     demandRecords = Array.isArray(parsed) ? parsed : [];
+                    
+                    // Naya: Module open hote hi chain dynamic update karein
+                    if (typeof recalculateCustomerDemandLedgers === 'function') {
+                        await recalculateCustomerDemandLedgers();
+                    }
                 }
 
-                // NAYA CODE: Riders ka data load karein
+                // Riders ka data load karein
                 const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
                 if (docRiders.exists) {
                     savedRiders = JSON.parse(docRiders.data().payload) || [];
@@ -12903,7 +13027,7 @@ if (actualModuleName === 'RiderDetailsModule') {
 
             // Automated Dropdowns load karein
             populatePendingDemandsDropdown();
-            populateDemandRecordRiderDropdown(); // <-- NAYA: Rider Dropdown ko fill karega
+            populateDemandRecordRiderDropdown(); 
             handlePendingDemandSelection(); // reset inputs
             renderDemandRecordTable();
         }
@@ -14027,7 +14151,7 @@ function downloadSearchResultPDF() {
         return;
     }
 
-    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+filtered.sort((a, b) => safeParseDate(a.date) - safeParseDate(b.date));
 
     // Receipt Brand Header
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
@@ -15582,24 +15706,31 @@ function generateStockOutVoucherPDF(id) {
 }
 
 function populatePendingDemandsDropdown() {
-    const select = document.getElementById('dr-pending-select');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Select Pending Customer/Demand --</option>';
-
-    // Unprocessed entries ko filter karega (chahe processed field false ho ya bilkul blank/undefined ho)
-    const pendingDemands = (demandRecords || []).filter(rec => rec.processed !== true);
-    
-    pendingDemands.forEach(rec => {
-        const option = document.createElement('option');
-        option.value = rec.id;
-        option.textContent = `S.No: ${rec.serialNo || '-'} | Client: ${rec.customer} | Item: ${rec.itemName} | Qty: ${rec.demand}`;
-        select.appendChild(option);
-    });
+    // Ab ye function direct humari nayi custom list ko fill karega
+    renderPendingDemandOptions("");
 }
 function handlePendingDemandSelection() {
-    const select = document.getElementById('dr-pending-select');
-    const selectedId = select ? select.value : '';
+    const searchInput = document.getElementById('dr-pending-search').value;
+    const datalist = document.getElementById('dr-pending-datalist');
+    const hiddenSelect = document.getElementById('dr-pending-select');
+let selectedId = hiddenSelect ? hiddenSelect.value : '';
 
+    // Datalist mein se typed text ko match karein aur ID nikalein
+    if (datalist && datalist.options) {
+        for (let option of datalist.options) {
+            if (option.value === searchInput) {
+                selectedId = option.dataset.id;
+                break;
+            }
+        }
+    }
+
+    // Hidden field mein ID save karein taake submit function ko id mil sake
+    if (hiddenSelect) {
+        hiddenSelect.value = selectedId;
+    }
+
+    // Agar ID nahi mili (yani user abhi type kar raha hai ya galat type kiya hai) toh boxes clear kar dein
     if (!selectedId) {
         if (document.getElementById('dr-display-date')) document.getElementById('dr-display-date').value = '';
         if (document.getElementById('dr-display-customer')) document.getElementById('dr-display-customer').value = '';
@@ -15614,6 +15745,7 @@ function handlePendingDemandSelection() {
         return;
     }
 
+    // Agar ID mil gayi hai toh normal data fill karein (Yeh aapke code ka hissa hai)
     const record = demandRecords.find(r => r.id === selectedId);
     if (record) {
         document.getElementById('dr-display-date').value = record.date ? new Date(record.date).toLocaleDateString() : '';
@@ -15621,7 +15753,6 @@ function handlePendingDemandSelection() {
         document.getElementById('dr-display-item').value = record.itemName || '';
         document.getElementById('dr-display-qty').value = record.demand || 0;
 
-        // 1. Rate Auto-Fetch
         let autoRate = record.rate || record.price || 0;
         if (!autoRate && typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
             const customerProfile = savedCustomersList.find(c => c.name && c.name.trim().toLowerCase() === (record.customer || '').trim().toLowerCase());
@@ -15631,11 +15762,9 @@ function handlePendingDemandSelection() {
         }
         document.getElementById('dr-rate').value = autoRate.toFixed(2);
 
-        // 2. OLD BALANCE FETCH FROM HISTORY (Bina kisi shart ke purana balance uthayega)
         let autoOldBalance = 0;
         const custNameClean = (record.customer || '').trim().toLowerCase();
 
-        // Customer ke tamam pichle records (Current selected record ke ilawa)
         const previousRecords = (demandRecords || []).filter(r => 
             r.id !== record.id && 
             r.customer && 
@@ -15643,17 +15772,15 @@ function handlePendingDemandSelection() {
         );
 
         if (previousRecords.length > 0) {
-            // Sort by date / serial
             previousRecords.sort((a, b) => {
-                const dateA = new Date(a.date).getTime() || 0;
-                const dateB = new Date(b.date).getTime() || 0;
+                const dateA = safeParseDate(a.date);
+                const dateB = safeParseDate(b.date);
                 if (dateA !== dateB) return dateA - dateB;
                 return (a.serialNo || 0) - (b.serialNo || 0);
             });
 
-            // Is record se pehle wale records mein se sab se last Net Balance uthayen
-            const currentRecordTime = new Date(record.date).getTime() || Date.now();
-            const earlierRecords = previousRecords.filter(r => (new Date(r.date).getTime() || 0) <= currentRecordTime);
+            const currentRecordTime = safeParseDate(record.date) || Date.now();
+            const earlierRecords = previousRecords.filter(r => (safeParseDate(r.date) || 0) <= currentRecordTime);
             
             if (earlierRecords.length > 0) {
                 const lastRecord = earlierRecords[earlierRecords.length - 1];
@@ -18179,13 +18306,13 @@ function generateStockHistoryPDF(reportType) {
 }
 
 function resetDemandRecordForm() {
-    // 1. Find the top "Select Customer" dropdown box
-    const select = document.getElementById('dr-pending-select');
-
-    // 2. Unselect the customer (set dropdown back to blank)
-    if (select) select.value = '';
-
-    // 3. Trigger Step 1's function so it clears all text boxes
+    const searchInput = document.getElementById('dr-pending-search');
+    const hiddenSelect = document.getElementById('dr-pending-select');
+    
+    // Dono ko khali karein
+    if (searchInput) searchInput.value = '';
+    if (hiddenSelect) hiddenSelect.value = '';
+    
     handlePendingDemandSelection();
 }
 
@@ -18854,7 +18981,6 @@ async function savePayBillPayment() {
     }
 }
 
-// TAMAM PURANE AUR NAYE RECORDS KO AAPAS MEIN JODNE (CHAIN KARNE) KA FUNCTION
 async function recalculateCustomerDemandLedgers() {
     if (!Array.isArray(demandRecords) || demandRecords.length === 0) return;
 
@@ -18874,10 +19000,10 @@ async function recalculateCustomerDemandLedgers() {
     for (const cName in customerGroups) {
         const list = customerGroups[cName];
         
-        // Tareekh aur Serial No ke hisab se Purana Pehle, Naya Baad Mein sort karein
+        // Firefox compatibility ke sath safe sorting (Purana pehle, Naya baad mein)
         list.sort((a, b) => {
-            const dateA = new Date(a.date).getTime() || 0;
-            const dateB = new Date(b.date).getTime() || 0;
+            const dateA = safeParseDate(a.date);
+            const dateB = safeParseDate(b.date);
             if (dateA !== dateB) return dateA - dateB;
             return (a.serialNo || 0) - (b.serialNo || 0);
         });
@@ -18885,7 +19011,7 @@ async function recalculateCustomerDemandLedgers() {
         let runningBalance = 0;
 
         list.forEach((rec, index) => {
-            // Pehle record ka old balance 0, us ke baad purana netBalance hi agla oldBalance banega
+            // Pehle record ka old balance 0 rahega, uske baad pichla net balance agle ka oldBalance banega
             if (index === 0) {
                 rec.oldBalance = Number(rec.oldBalance) || 0;
             } else {
@@ -18894,12 +19020,12 @@ async function recalculateCustomerDemandLedgers() {
 
             const qty = Number(rec.demand) || 0;
             const rate = Number(rec.rate || rec.price) || 0;
-            const bill = Number(rec.bill) || (qty * rate);
+            const bill = qty * rate;
             rec.bill = bill;
             rec.rate = rate;
             rec.price = rate;
             
-            const recovery = (Number(rec.recovery) || 0) + (Number(rec.onlineRec) || 0);
+            const recovery = Number(rec.recovery) || 0;
             
             // Formula: Bill + Old Balance - Recovery
             rec.netBalance = (bill + rec.oldBalance) - recovery;
@@ -18925,14 +19051,289 @@ async function recalculateCustomerDemandLedgers() {
     }
 }
 
-async function syncAllCustomerBalancesManual() {
-    if (confirm("Kya aap tamam purane aur naye customer balances ko auto-fix aur sync karna chahte hain?")) {
-        await recalculateCustomerDemandLedgers();
-        alert("Mubarak! Tamam customer balances aapas mein sync aur fix ho gaye hain.");
-        if (typeof renderDemandRecordTable === 'function') renderDemandRecordTable();
-        if (typeof refreshAll === 'function') refreshAll();
+// 1. Dropdown ko kholne aur band karne ka function
+function togglePendingDemandSelect() {
+    const list = document.getElementById('dr-pending-options-list');
+    if (!list) return;
+    list.style.display = (list.style.display === 'none' || list.style.display === '') ? 'block' : 'none';
+}
+
+// 2. Screen par kahin aur click karne se list ko band karna
+document.addEventListener('click', function(e) {
+    const input = document.getElementById('dr-pending-search');
+    const list = document.getElementById('dr-pending-options-list');
+    if (input && list && !input.contains(e.target) && !list.contains(e.target)) {
+        list.style.display = 'none';
+    }
+});
+
+// 3. Dropdown list mein Customers aur unke number banane ka function
+function renderPendingDemandOptions(query = "") {
+    const listContainer = document.getElementById('dr-pending-options-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+    const lowercaseQuery = query.toLowerCase().trim();
+    let matchCount = 0;
+
+    const pendingDemands = (demandRecords || []).filter(rec => rec.processed !== true);
+
+    pendingDemands.forEach(rec => {
+        const phoneTxt = rec.phone && rec.phone !== 'N/A' ? rec.phone : 'No Phone';
+        const displayText = `${rec.customer} - ${phoneTxt}`;
+        
+        // Search Match Logic (Name ya Phone dono mein se kuch bhi ho)
+        if (!lowercaseQuery || displayText.toLowerCase().includes(lowercaseQuery)) {
+            matchCount++;
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.95rem; transition: background 0.2s;';
+            
+            div.innerHTML = `<strong>${rec.customer}</strong> <span style="font-size:0.85rem; opacity:0.7; float:right;">📞 ${phoneTxt}</span>`;
+            
+            div.onmouseover = () => div.style.backgroundColor = 'rgba(255,255,255,0.05)';
+            div.onmouseout = () => div.style.backgroundColor = 'transparent';
+            
+            // Jab click ho tou select kare
+            div.onclick = () => selectPendingDemandItem(rec.id, displayText);
+            
+            listContainer.appendChild(div);
+        }
+    });
+
+    if (matchCount === 0) {
+        listContainer.innerHTML = '<div style="padding: 12px; text-align: center; color: #94a3b8; font-size: 0.85rem;">Koi matching customer ya phone nahi mila.</div>';
     }
 }
+
+// 4. Type karte waqt List ko Live filter karna
+function filterPendingDemandSelect() {
+    const query = document.getElementById('dr-pending-search').value;
+    renderPendingDemandOptions(query);
+    document.getElementById('dr-pending-options-list').style.display = 'block';
+    
+    // Agar box khali ho jaye toh ID aur baqi fields bhi clear kar dein
+    if (!query) {
+        document.getElementById('dr-pending-select').value = '';
+        handlePendingDemandSelection(); // Box clear karne ke liye isay chalayein
+    }
+}
+
+// 5. Item Select karne par chalne wala function
+function selectPendingDemandItem(id, displayText) {
+    document.getElementById('dr-pending-search').value = displayText;
+    document.getElementById('dr-pending-select').value = id;
+    document.getElementById('dr-pending-options-list').style.display = 'none';
+    
+    // Asal Calculation aur Data fill karne wala function call karein
+    handlePendingDemandSelection();
+}
+
+// =========================================================
+// CUSTOMER MONTHLY RECOVERY SHEET (PDF GENERATOR)
+// =========================================================
+
+// 1. Dropdown toggle karna
+function toggleRSCustSelect() {
+    const list = document.getElementById('rs-cust-options-list');
+    if (!list) return;
+    if (list.style.display === 'none' || list.style.display === '') {
+        renderRSCustOptions(""); // Jab khule to tamam list render ho
+        list.style.display = 'block';
+    } else {
+        list.style.display = 'none';
+    }
+}
+
+// 2. Bahar click karne par dropdown band ho jaye
+document.addEventListener('click', function(e) {
+    const input = document.getElementById('rs-cust-search');
+    const list = document.getElementById('rs-cust-options-list');
+    if (input && list && !input.contains(e.target) && !list.contains(e.target)) {
+        list.style.display = 'none';
+    }
+});
+
+// 3. Dropdown list mein saare customers load karna (Live Filter)
+function renderRSCustOptions(query = "") {
+    const listContainer = document.getElementById('rs-cust-options-list');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+    
+    const lowercaseQuery = query.toLowerCase().trim();
+    let matchCount = 0;
+
+    // Duplicates ko rokne ke liye ek temporary object
+    const uniqueCusts = {};
+
+    // 1st: Demand Records se data uthana (taake unke bhi naam aa jayein jo baghair profile banaye records me hain)
+    (demandRecords || []).forEach(r => {
+        if (r.customer) {
+            const cname = r.customer.trim();
+            if (!uniqueCusts[cname.toLowerCase()]) {
+                uniqueCusts[cname.toLowerCase()] = { name: cname, phone: r.phone || 'N/A' };
+            } else if (r.phone && r.phone !== 'N/A') {
+                uniqueCusts[cname.toLowerCase()].phone = r.phone; // Update with actual phone
+            }
+        }
+    });
+
+    // 2nd: Customer Profile list se data uthana
+    (savedCustomersList || []).forEach(c => {
+        if (c.name) {
+            const cname = c.name.trim();
+            if (!uniqueCusts[cname.toLowerCase()]) {
+                uniqueCusts[cname.toLowerCase()] = { name: cname, phone: c.phone || 'N/A' };
+            }
+        }
+    });
+
+    // Ab list ko search aur print karna
+    Object.values(uniqueCusts).forEach(cust => {
+        const displayText = `${cust.name} - ${cust.phone}`;
+        
+        // Agar naam ya mobile number search ke mutabiq hai
+        if (!lowercaseQuery || displayText.toLowerCase().includes(lowercaseQuery)) {
+            matchCount++;
+            const div = document.createElement('div');
+            div.style.cssText = 'padding: 12px 14px; cursor: pointer; color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.95rem; transition: background 0.2s;';
+            div.innerHTML = `<strong>${cust.name}</strong> <span style="font-size:0.85rem; opacity:0.7; float:right;">📞 ${cust.phone}</span>`;
+            
+            div.onmouseover = () => div.style.backgroundColor = 'rgba(255,255,255,0.05)';
+            div.onmouseout = () => div.style.backgroundColor = 'transparent';
+            
+            // Item par click karne ki logic
+            div.onclick = () => {
+                document.getElementById('rs-cust-search').value = displayText;
+                document.getElementById('rs-cust-name').value = cust.name;
+                document.getElementById('rs-cust-phone').value = cust.phone;
+                document.getElementById('rs-cust-options-list').style.display = 'none';
+            };
+            listContainer.appendChild(div);
+        }
+    });
+
+    if (matchCount === 0) {
+        listContainer.innerHTML = '<div style="padding: 12px; text-align: center; color: #94a3b8; font-size: 0.85rem;">Koi matching customer nahi mila.</div>';
+    }
+}
+
+// 4. Type karte waqt live filter apply karna
+function filterRSCustSelect() {
+    const query = document.getElementById('rs-cust-search').value;
+    renderRSCustOptions(query);
+    document.getElementById('rs-cust-options-list').style.display = 'block';
+    if (!query) {
+        document.getElementById('rs-cust-name').value = '';
+        document.getElementById('rs-cust-phone').value = '';
+    }
+}
+
+// 5. Asal PDF Generate karne wala mukammal function
+function generateCustomerMonthlyRecoveryPDF() {
+    const custName = document.getElementById('rs-cust-name').value;
+    const custPhone = document.getElementById('rs-cust-phone').value;
+    const monthVal = document.getElementById('rs-month-select').value; // Example: "2026-08"
+
+    if (!custName) {
+        alert("Meharbani karke pehle list mein se ek customer select karein!");
+        return;
+    }
+    if (!monthVal) {
+        alert("Meharbani karke mahina (Month) select karein!");
+        return;
+    }
+
+    const cleanName = custName.toLowerCase().trim();
+    
+    // Sirf is customer aur is month ka record filter karein
+    let monthRecords = (demandRecords || []).filter(r => {
+        const matchesName = r.customer && r.customer.toLowerCase().trim() === cleanName;
+        const matchesMonth = r.date && r.date.startsWith(monthVal);
+        return matchesName && matchesMonth;
+    });
+
+    // Tareekh (Date) ke hisaab se seedha sort karein (Purana pehle)
+    monthRecords.sort((a, b) => safeParseDate(a.date) - safeParseDate(b.date));
+
+    if (monthRecords.length === 0) {
+        alert(`Is customer ka mahina "${monthVal}" mein koi bill ya recovery record nahi mila.`);
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    let yPos = 20;
+
+    // Report Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    
+    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Monthly Recovery Statement", 105, yPos, { align: 'center' }); yPos += 12;
+
+    // Customer Details Block
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Details:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Name: ${custName}`, 14, yPos);
+    doc.text(`Month / Year: ${monthVal}`, 120, yPos); yPos += 5;
+    doc.text(`Mobile Number: ${custPhone !== 'N/A' ? custPhone : '-'}`, 14, yPos);
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
+
+    let totalBill = 0;
+    let totalRecovery = 0;
+
+    // Table Data Creation
+    const tableRows = monthRecords.map((r, index) => {
+        let bill = Number(r.bill) || 0;
+        let recov = Number(r.recovery) || 0;
+        let bal = Number(r.netBalance) || 0;
+
+        totalBill += bill;
+        totalRecovery += recov;
+
+        let dateStr = r.date ? new Date(r.date).toLocaleDateString() : '-';
+
+        return [
+            index + 1,
+            dateStr,
+            r.serialNo || '-',
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${recov.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${bal.toFixed(2)}`
+        ];
+    });
+
+    // Draw AutoTable
+    doc.autoTable({
+        startY: yPos,
+        head: [['S.No', 'Date', 'Invoice S.No', 'Bill Amount', 'Recovery / Deposit', 'Net Balance']],
+        body: tableRows,
+        theme: 'grid',
+        headStyles: { fillColor: [245, 158, 11], textColor: 255 }, // Amber Warning Header
+        styles: { fontSize: 9 }
+    });
+
+    yPos = doc.previousAutoTable.finalY + 12;
+
+    // Footer Statement Totals
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0); // Black
+    doc.text(`Total Bill Generated this Month: ${CURRENCY_SYMBOL}${totalBill.toFixed(2)}`, 14, yPos); yPos += 6;
+    
+    doc.setTextColor(16, 185, 129); // Green
+    doc.text(`Total Recovery / Deposits this Month: ${CURRENCY_SYMBOL}${totalRecovery.toFixed(2)}`, 14, yPos); yPos += 6;
+    
+    const lastRec = monthRecords[monthRecords.length - 1];
+    const finalBal = Number(lastRec.netBalance) || 0;
+    doc.setTextColor(239, 68, 68); // Red
+    doc.text(`Closing Net Balance (Baqaya): ${CURRENCY_SYMBOL}${finalBal.toFixed(2)}`, 14, yPos);
+
+    // Save PDF Download
+    doc.save(`Monthly_Recovery_${custName.replace(/\s+/g, '_')}_${monthVal}.pdf`);
+}
+
 
 </script>
 <!-- EDIT CASH TRANSACTION MODAL -->
