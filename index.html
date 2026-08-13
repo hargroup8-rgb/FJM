@@ -1772,8 +1772,12 @@ body,
 <div id="DemandForm" class="module-content">
     <h2 class="panel-title">📝 Add New Demand</h2>
     <div class="manage-form">
-        <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px;">
-            
+
+
+
+
+
+        <div class="form-grid" style="display: grid; grid-template-columns: 150px 1fr 150px 1fr; gap: 15px;">            
             <!-- NAYA DATE OPTION -->
             <label>Date:</label>
             <input type="date" id="d-date" class="form-control">
@@ -1793,6 +1797,32 @@ body,
         </div>
 
         <button class="btn btn-success" onclick="submitNewDemand()" style="margin-top:20px; width: 100%;">Save Demand</button>
+       
+       <!-- === YAHAN SE NAYA SEARCH BAR ADD KAREIN === -->
+        <div class="table-container" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
+                <h3 style="margin: 0;">🕒 Recent Customer History</h3>
+                <!-- Naya Search Bar Input -->
+                <input type="text" id="recent-demand-search" class="form-control" placeholder="🔍 Search customer name..." oninput="renderRecentDemands()" style="max-width: 280px;">
+            </div>
+            
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer Name</th>
+                        <th>Demand</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-demand-body">
+                    <!-- Data yahan JavaScript se aayega -->
+                </tbody>
+            </table>
+        </div>
+        <!-- === END SEARCH BAR SECTION === -->
+       
+       
         <!-- NAYA CODE YAHAN SE SHURU KAREIN -->
     <div class="table-container" style="margin-top: 30px;">
         <h3>🕒 Recent Customer History</h3>
@@ -4515,25 +4545,39 @@ async function saveUpdatedDemand() {
 }
 
 
-// Add New Demand Form ke andar table show karne ka function
+// Add New Demand Form ke andar table show karne aur live search karne ka function
 function renderRecentDemands() {
     const tbody = document.getElementById('recent-demand-body');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    // Error se bachne ke liye safe array check lagaya gaya
+    // Search bar ki value uthana
+    const searchInput = document.getElementById('recent-demand-search');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+    // Error se bachne ke liye safe array check
     const safeRecords = Array.isArray(demandRecords) ? demandRecords : [];
 
-    // Latest demands ko sabse upar dikhane ke liye reverse sort kiya hai
-    [...safeRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
-        
-        // ---- YEH LINE MISSING THI ----
-        const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
-        // ------------------------------
+    // Filter by customer name if search query is entered
+    let filteredRecords = safeRecords;
+    if (query) {
+        filteredRecords = safeRecords.filter(rec => 
+            rec.customer && rec.customer.toLowerCase().includes(query)
+        );
+    }
 
+    if (filteredRecords.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 15px;">Koi record nahi mila.</td></tr>';
+        return;
+    }
+
+    // Latest demands ko sabse upar dikhane ke liye sort kiya hai
+    [...filteredRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
+        const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
+        
         tbody.innerHTML += `<tr>
             <td>${rec.date ? new Date(rec.date).toLocaleDateString() : '-'}</td>
-            <td>${rec.customer || '-'}</td>
+            <td><strong>${rec.customer || '-'}</strong></td>
             <td>${rec.demand || 0}</td>
             <td>
                 <div style="display: flex; gap: 5px;">
@@ -19228,7 +19272,6 @@ function filterRSCustSelect() {
     }
 }
 
-// 5. Asal PDF Generate karne wala mukammal function
 function generateCustomerMonthlyRecoveryPDF() {
     const custName = document.getElementById('rs-cust-name').value;
     const custPhone = document.getElementById('rs-cust-phone').value;
@@ -19252,7 +19295,7 @@ function generateCustomerMonthlyRecoveryPDF() {
         return matchesName && matchesMonth;
     });
 
-    // Tareekh (Date) ke hisaab se seedha sort karein (Purana pehle)
+    // Tareekh (Date) ke hisaab se seedha sort karein
     monthRecords.sort((a, b) => safeParseDate(a.date) - safeParseDate(b.date));
 
     if (monthRecords.length === 0) {
@@ -19260,77 +19303,136 @@ function generateCustomerMonthlyRecoveryPDF() {
         return;
     }
 
+    // Worker ka naam dhoondna (Assigned Worker ke liye)
+    let assignedWorker = 'N/A';
+    const matchedCust = savedCustomersList.find(c => c.name.toLowerCase().trim() === cleanName);
+    if (matchedCust && matchedCust.worker && matchedCust.worker.name) {
+        assignedWorker = matchedCust.worker.name;
+    } else if (monthRecords[0].worker && monthRecords[0].worker.name) {
+        assignedWorker = monthRecords[0].worker.name;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('p', 'mm', 'a4');
     let yPos = 20;
 
-    // Report Header
+    // ==========================================
+    // 1. HEADER (Tasveer ke mutabiq)
+    // ==========================================
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
-    
-    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-    doc.text("Customer Monthly Recovery Statement", 105, yPos, { align: 'center' }); yPos += 12;
-
-    // Customer Details Block
-    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-    doc.text("Customer Details:", 14, yPos); yPos += 6;
+    doc.text(appSettings.restaurantName || "FJM Social Media", 105, yPos, { align: 'center' }); yPos += 8;
     
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${custName}`, 14, yPos);
-    doc.text(`Month / Year: ${monthVal}`, 120, yPos); yPos += 5;
+    doc.text(appSettings.restaurantAddress || "123 Main Street, Your City", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || "+92 123 4567890"}`, 105, yPos, { align: 'center' }); yPos += 15;
+
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Customer Monthly Recovery Statement", 105, yPos, { align: 'center' }); yPos += 12;
+
+    // ==========================================
+    // 2. BILL TO SECTION (Tasveer Jaisa)
+    // ==========================================
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+    doc.text("Bill To:", 14, yPos); yPos += 6;
+    
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(`Customer Name: ${custName}`, 14, yPos);
+    doc.text(`Month / Year: ${monthVal}`, 120, yPos); yPos += 6;
+    
     doc.text(`Mobile Number: ${custPhone !== 'N/A' ? custPhone : '-'}`, 14, yPos);
+    doc.text(`Assigned Worker: ${assignedWorker}`, 120, yPos); yPos += 6;
+    
     doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
 
-    let totalBill = 0;
+    let currentMonthBill = 0;
     let totalRecovery = 0;
 
-    // Table Data Creation
-    const tableRows = monthRecords.map((r, index) => {
+    // ==========================================
+    // 3. MAIN TABLE (Item, Qty, Rate, Bill, Rcvd)
+    // ==========================================
+    const tableRows = monthRecords.map((r) => {
         let bill = Number(r.bill) || 0;
         let recov = Number(r.recovery) || 0;
         let bal = Number(r.netBalance) || 0;
+        let rate = Number(r.rate || r.price || 0);
+        let qty = Number(r.demand || 0);
 
-        totalBill += bill;
+        currentMonthBill += bill;
         totalRecovery += recov;
 
         let dateStr = r.date ? new Date(r.date).toLocaleDateString() : '-';
+        let rcvdBy = r.receivedBy && r.receivedBy !== 'N/A' ? r.receivedBy : '-';
 
         return [
-            index + 1,
             dateStr,
             r.serialNo || '-',
-            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
-            `${CURRENCY_SYMBOL}${recov.toFixed(2)}`,
-            `${CURRENCY_SYMBOL}${bal.toFixed(2)}`
+            r.itemName || 'Alo',
+            qty,
+            rate.toFixed(2),
+            bill.toFixed(2),
+            recov.toFixed(2),
+            bal.toFixed(2),
+            rcvdBy
         ];
     });
 
-    // Draw AutoTable
     doc.autoTable({
         startY: yPos,
-        head: [['S.No', 'Date', 'Invoice S.No', 'Bill Amount', 'Recovery / Deposit', 'Net Balance']],
+        head: [['Date', 'Inv #', 'Item Description', 'Demand (Qty)', 'Unit Rate', 'Bill', 'Received', 'Balance', 'Rcvd By']],
         body: tableRows,
         theme: 'grid',
-        headStyles: { fillColor: [245, 158, 11], textColor: 255 }, // Amber Warning Header
-        styles: { fontSize: 9 }
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, halign: 'center' }, // Teal Color
+        bodyStyles: { halign: 'center', fontSize: 9 },
+        columnStyles: {
+            0: { cellWidth: 20 },
+            2: { halign: 'left' } // Item description left align
+        }
     });
 
     yPos = doc.previousAutoTable.finalY + 12;
 
-    // Footer Statement Totals
-    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0); // Black
-    doc.text(`Total Bill Generated this Month: ${CURRENCY_SYMBOL}${totalBill.toFixed(2)}`, 14, yPos); yPos += 6;
-    
-    doc.setTextColor(16, 185, 129); // Green
-    doc.text(`Total Recovery / Deposits this Month: ${CURRENCY_SYMBOL}${totalRecovery.toFixed(2)}`, 14, yPos); yPos += 6;
-    
+    // ==========================================
+    // 4. SUMMARY BOX (Bilkul Tasveer Ke Mutabiq)
+    // ==========================================
+    const firstRec = monthRecords[0];
     const lastRec = monthRecords[monthRecords.length - 1];
-    const finalBal = Number(lastRec.netBalance) || 0;
-    doc.setTextColor(239, 68, 68); // Red
-    doc.text(`Closing Net Balance (Baqaya): ${CURRENCY_SYMBOL}${finalBal.toFixed(2)}`, 14, yPos);
+    
+    // Mahine ka shuruwati (Opening) balance
+    const openingBalance = Number(firstRec.oldBalance) || 0;
+    
+    // Total Bill = Pichla Baqaya + Is mahine ka naya bill
+    const totalBillWithPrev = openingBalance + currentMonthBill;
+    
+    // Mahine ka aakhri balance
+    const closingBalance = Number(lastRec.netBalance) || 0;
 
-    // Save PDF Download
+    const summaryTableData = [
+        ['Current Bill:', `Rs. ${currentMonthBill.toFixed(2)}`],
+        ['Previous Balance:', `Rs. ${openingBalance.toFixed(2)}`],
+        ['Total Bill:', `Rs. ${totalBillWithPrev.toFixed(2)}`],
+        ['Total Received:', `Rs. ${totalRecovery.toFixed(2)}`],
+        ['Current Balance:', `Rs. ${closingBalance.toFixed(2)}`]
+    ];
+
+    doc.autoTable({
+        startY: yPos,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 11, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        didParseCell: function(data) {
+            // "Total Bill:" ko bold karne ke liye (Row 3)
+            if (data.row.index === 2) {
+                data.cell.styles.fontStyle = 'bold';
+            }
+            // "Current Balance:" ko bold aur Red karne ke liye (Row 5)
+            if (data.row.index === 4) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62]; // Lal Rang
+            }
+        }
+    });
+
     doc.save(`Monthly_Recovery_${custName.replace(/\s+/g, '_')}_${monthVal}.pdf`);
 }
 
