@@ -1799,29 +1799,7 @@ body,
         <button class="btn btn-success" onclick="submitNewDemand()" style="margin-top:20px; width: 100%;">Save Demand</button>
        
        <!-- === YAHAN SE NAYA SEARCH BAR ADD KAREIN === -->
-        <div class="table-container" style="margin-top: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
-                <h3 style="margin: 0;">🕒 Recent Customer History</h3>
-                <!-- Naya Search Bar Input -->
-                <input type="text" id="recent-demand-search" class="form-control" placeholder="🔍 Search customer name..." oninput="renderRecentDemands()" style="max-width: 280px;">
-            </div>
-            
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Customer Name</th>
-                        <th>Demand</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="recent-demand-body">
-                    <!-- Data yahan JavaScript se aayega -->
-                </tbody>
-            </table>
-        </div>
-        <!-- === END SEARCH BAR SECTION === -->
-       
+        
        
         <!-- NAYA CODE YAHAN SE SHURU KAREIN -->
     <div class="table-container" style="margin-top: 30px;">
@@ -4545,20 +4523,15 @@ async function saveUpdatedDemand() {
 }
 
 
-// Add New Demand Form ke andar table show karne aur live search karne ka function
 function renderRecentDemands() {
     const tbody = document.getElementById('recent-demand-body');
     if (!tbody) return;
-    tbody.innerHTML = '';
 
-    // Search bar ki value uthana
     const searchInput = document.getElementById('recent-demand-search');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-    // Error se bachne ke liye safe array check
     const safeRecords = Array.isArray(demandRecords) ? demandRecords : [];
 
-    // Filter by customer name if search query is entered
     let filteredRecords = safeRecords;
     if (query) {
         filteredRecords = safeRecords.filter(rec => 
@@ -4571,12 +4544,16 @@ function renderRecentDemands() {
         return;
     }
 
-    // Latest demands ko sabse upar dikhane ke liye sort kiya hai
-    [...filteredRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
-        const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
-        
-        tbody.innerHTML += `<tr>
-            <td>${rec.date ? new Date(rec.date).toLocaleDateString() : '-'}</td>
+    const sorted = [...filteredRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date));
+    
+    // Agar search na chal rahi ho to sirf recent 50 records render karein (Ultra Fast)
+    const recordsToRender = query ? sorted : sorted.slice(0, 50);
+
+    let rowsHtml = '';
+    recordsToRender.forEach(rec => {
+        const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
+        rowsHtml += `<tr>
+            <td>${dateStr}</td>
             <td><strong>${rec.customer || '-'}</strong></td>
             <td>${rec.demand || 0}</td>
             <td>
@@ -4588,6 +4565,8 @@ function renderRecentDemands() {
             </td>
         </tr>`;
     });
+
+    tbody.innerHTML = rowsHtml;
 }
 
 async function updateMaterialStatus(id, newStatus) {
@@ -13043,36 +13022,10 @@ if (actualModuleName === 'RiderDetailsModule') {
         button.disabled = true;
 
        if (actualModuleName === 'DemandRecord') {
-            await dbFetchDemandWorkers(); // Safe worker fetch
-
-            // Cloud se updated demand lists aur riders ko dobara fetch karein
-            const userId = 'FJM_MASTER_DB';
-            try {
-                const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    const parsed = (data && data.payload) ? JSON.parse(data.payload) : [];
-                    demandRecords = Array.isArray(parsed) ? parsed : [];
-                    
-                    // Naya: Module open hote hi chain dynamic update karein
-                    if (typeof recalculateCustomerDemandLedgers === 'function') {
-                        await recalculateCustomerDemandLedgers();
-                    }
-                }
-
-                // Riders ka data load karein
-                const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
-                if (docRiders.exists) {
-                    savedRiders = JSON.parse(docRiders.data().payload) || [];
-                }
-            } catch (e) {
-                console.error("Demand records/Riders reload error:", e);
-            }
-
-            // Automated Dropdowns load karein
+            // Local memory se foran UI populate karein (0 ms delay)
             populatePendingDemandsDropdown();
             populateDemandRecordRiderDropdown(); 
-            handlePendingDemandSelection(); // reset inputs
+            handlePendingDemandSelection();
             renderDemandRecordTable();
         }
 
@@ -13094,28 +13047,19 @@ if (actualModuleName === 'RiderDetailsModule') {
 
     try {
         // --- LAZY LOADING ACCORDING TO SELECTED TAB ---
-        if (actualModuleName === 'Dashboard') {
-            await dbFetchInvoices();
-            await dbFetchExpenses();
-            await dbFetchPurchaseLog();
-            await dbFetchProducts();
-            await dbFetchPurchasers();
+       if (actualModuleName === 'Dashboard') {
             renderDashboard();
         }
 
-        // AddCustomer lazy loading block (with proper closing brackets)
         if (actualModuleName === 'AddCustomer') {
-            await dbFetchDemandWorkers(); 
-            await dbFetchCustomers();     
             populateCustomerWorkerDropdown(); 
             renderCustomerTable();        
         }
 
         if (actualModuleName === 'RecoverySheet') {
-            await dbFetchDemandWorkers(); // Cloud se workers fresh load karein
-            populateRecoveryWorkerDropdown(); // Dropdown mein data dalein
+            populateRecoveryWorkerDropdown();
+            renderRecoverySheetTable();
         }
-
         if (actualModuleName === 'RecoverySheet') {
             renderRecoverySheetTable();
         }
@@ -13336,16 +13280,12 @@ if (actualModuleName === 'ExpenseStock' || actualModuleName === 'UsedStock') {
     populateSettingsForm();
 }
         if (actualModuleName === 'DemandForm') {
-            await dbFetchMaalPurchases(); // Safe fetch method
-            await dbFetchDemandWorkers();
-            await dbFetchCustomers();
-            
+            // Local memory se foran dropdowns aur UI render karein (0 ms delay)
             populateDemandWorkersDropdown();
             populateCustomerNamesDatalist();
             populateDemandItemDropdown();
-            
-            renderRecentDemands();
             populateDemandQtyDropdown();
+            renderRecentDemands();
         }
 
         if (actualModuleName === 'DemandWorkers') {
@@ -15897,13 +15837,16 @@ async function submitDemandRecord() {
     record.processed = true;
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
-    try {
-        // 1. Customer ke tamam historical balances ko aapas mein chain aur recalculate karein
+   try {
+        // 1. Memory mein calculation run karein
         if (typeof recalculateCustomerDemandLedgers === 'function') {
-            await recalculateCustomerDemandLedgers();
+            recalculateCustomerDemandLedgers();
         }
 
-        // 2. Firebase Cloud Firestore mein updated payload save karein
+        // 2. Local memory update karein (Fast UI response)
+        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
+
+        // 3. Firestore ko background mein update karein
         const userId = 'FJM_MASTER_DB';
         if (typeof db !== 'undefined' && db.collection) {
             await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
@@ -15955,7 +15898,6 @@ async function submitDemandRecord() {
 function renderDemandRecordTable() {
     const tbody = document.getElementById('dr-table-body');
     if (!tbody) return;
-    tbody.innerHTML = '';
 
     const searchQuery = (document.getElementById('dr-search')?.value || '').trim().toLowerCase();
     const fromDateVal = document.getElementById('dr-filter-from')?.value;
@@ -15985,12 +15927,18 @@ function renderDemandRecordTable() {
         totalSaleEl.textContent = `${CURRENCY_SYMBOL}${totalSale.toFixed(2)}`;
     }
 
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
-        const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
-        // FIX: rec.rate na milne par rec.price uthaye ga
-        const displayRate = rec.rate || rec.price || 0; 
+    // Fast Batch HTML generation
+    let rowsHtml = '';
+    const sorted = [...filtered].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date));
 
-        tbody.innerHTML += `
+    // Limit to latest 100 entries for ultra-fast rendering (agar search na ho)
+    const recordsToRender = searchQuery ? sorted : sorted.slice(0, 100);
+
+    recordsToRender.forEach(rec => {
+        const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
+        const displayRate = rec.rate || rec.price || 0;
+
+        rowsHtml += `
             <tr>
                 <td>${dateStr}</td>
                 <td><strong>${rec.customer}</strong></td>
@@ -16013,6 +15961,8 @@ function renderDemandRecordTable() {
             </tr>
         `;
     });
+
+    tbody.innerHTML = rowsHtml || '<tr><td colspan="11" style="text-align:center;">Koi record nahi mila.</td></tr>';
 }
 
 // 6. ID ke mutabiq invoice reprint karne ka helper function
@@ -19025,26 +18975,21 @@ async function savePayBillPayment() {
     }
 }
 
-async function recalculateCustomerDemandLedgers() {
+function recalculateCustomerDemandLedgers() {
     if (!Array.isArray(demandRecords) || demandRecords.length === 0) return;
 
-    // 1. Customer wise group karein
     const customerGroups = {};
 
     demandRecords.forEach(rec => {
         if (!rec || !rec.customer) return;
         const cName = rec.customer.trim().toLowerCase();
-        if (!customerGroups[cName]) {
-            customerGroups[cName] = [];
-        }
+        if (!customerGroups[cName]) customerGroups[cName] = [];
         customerGroups[cName].push(rec);
     });
 
-    // 2. Har customer ke purane aur naye records ko tareekh ke mutabiq chain karein
     for (const cName in customerGroups) {
         const list = customerGroups[cName];
         
-        // Firefox compatibility ke sath safe sorting (Purana pehle, Naya baad mein)
         list.sort((a, b) => {
             const dateA = safeParseDate(a.date);
             const dateB = safeParseDate(b.date);
@@ -19055,43 +19000,17 @@ async function recalculateCustomerDemandLedgers() {
         let runningBalance = 0;
 
         list.forEach((rec, index) => {
-            // Pehle record ka old balance 0 rahega, uske baad pichla net balance agle ka oldBalance banega
-            if (index === 0) {
-                rec.oldBalance = Number(rec.oldBalance) || 0;
-            } else {
-                rec.oldBalance = runningBalance;
-            }
-
+            rec.oldBalance = (index === 0) ? (Number(rec.oldBalance) || 0) : runningBalance;
             const qty = Number(rec.demand) || 0;
             const rate = Number(rec.rate || rec.price) || 0;
-            const bill = qty * rate;
-            rec.bill = bill;
+            rec.bill = qty * rate;
             rec.rate = rate;
             rec.price = rate;
-            
             const recovery = Number(rec.recovery) || 0;
-            
-            // Formula: Bill + Old Balance - Recovery
-            rec.netBalance = (bill + rec.oldBalance) - recovery;
-
-            // Agle record ke liye running balance update karein
+            rec.netBalance = (rec.bill + rec.oldBalance) - recovery;
             runningBalance = rec.netBalance;
             rec.status = rec.netBalance <= 0.01 ? 'paid' : 'unpaid';
         });
-    }
-
-    // 3. Updated Chain Ko Cloud Firestore aur Local Memory mein Sync Karein
-    try {
-        const userId = 'FJM_MASTER_DB';
-        if (typeof db !== 'undefined' && db.collection) {
-            await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-                payload: JSON.stringify(demandRecords)
-            });
-        }
-        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
-        console.log("Tamam Customer Ledgers Auto-Calculated aur Chain Ho Gaye Hain!");
-    } catch (e) {
-        console.error("Ledger Recalculation Error:", e);
     }
 }
 
