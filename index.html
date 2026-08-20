@@ -1315,16 +1315,31 @@ body,
         </div>
     </div>
 
-    <!-- General Report Generation Buttons -->
-    <div class="manage-form" style="margin-bottom: 20px;">
-        <h3>📊 Generate General Recovery Reports</h3>
+<!-- General Report Generation with Date Range -->
+    <div class="manage-form" style="margin-bottom: 20px; border-left: 5px solid var(--accent-color);">
+        <h3>📊 Generate General Recovery Reports (Date-Wise)</h3>
         <p style="color: var(--text-color); font-size: 0.9rem; margin-bottom: 15px;">
-            Yahan se aap kisi bhi qisam ke customer (Paid, Unpaid ya All) ki recovery report PDF mein download kar sakte hain.
+            Date Range (Tareekh) select karein aur Paid, Unpaid ya All customers ki report PDF mein download karein (Agar tareekh select na karein to All Time report banegi).
         </p>
+        
+        <!-- Date Range Filter Inputs -->
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <div>
+                <label for="general-recovery-from-date">From Date (Shuru ki Tareekh):</label>
+                <input type="date" id="general-recovery-from-date" class="form-control">
+            </div>
+            <div>
+                <label for="general-recovery-to-date">To Date (Aakhri Tareekh):</label>
+                <input type="date" id="general-recovery-to-date" class="form-control">
+            </div>
+        </div>
+
+        <!-- Download Action Buttons -->
         <div class="report-buttons" style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button class="btn btn-success" onclick="generateRecoveryReportPDF('paid')">✅ Paid Customers</button>
             <button class="btn btn-danger" onclick="generateRecoveryReportPDF('unpaid')">❌ Unpaid Customers</button>
             <button class="btn btn-primary" onclick="generateRecoveryReportPDF('all')">📋 All Customers</button>
+            <button class="btn btn-secondary" onclick="resetGeneralRecoveryDates()">🔄 Clear Dates</button>
         </div>
     </div>
 
@@ -1799,7 +1814,29 @@ body,
         <button class="btn btn-success" onclick="submitNewDemand()" style="margin-top:20px; width: 100%;">Save Demand</button>
        
        <!-- === YAHAN SE NAYA SEARCH BAR ADD KAREIN === -->
-        
+        <div class="table-container" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px; flex-wrap: wrap;">
+                <h3 style="margin: 0;">🕒 Recent Customer History</h3>
+                <!-- Naya Search Bar Input -->
+                <input type="text" id="recent-demand-search" class="form-control" placeholder="🔍 Search customer name..." oninput="renderRecentDemands()" style="max-width: 280px;">
+            </div>
+            
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Customer Name</th>
+                        <th>Demand</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-demand-body">
+                    <!-- Data yahan JavaScript se aayega -->
+                </tbody>
+            </table>
+        </div>
+        <!-- === END SEARCH BAR SECTION === -->
+       
        
         <!-- NAYA CODE YAHAN SE SHURU KAREIN -->
     <div class="table-container" style="margin-top: 30px;">
@@ -1941,44 +1978,49 @@ body,
 <!-- END NEW MODULE: CASH BOOK HISTORY -->
                 
                 <!-- START ENHANCED DASHBOARD MODULE -->
+<!-- START ENHANCED DASHBOARD MODULE -->
 <div id="Dashboard" class="module-content active">
-    <h2 class="panel-title">Dashboard</h2>
+    <h2 class="panel-title">📊 Dashboard</h2>
     
     <!-- 1. Stock & Purchase Summary Cards -->
-<div class="dashboard-section">
-    <h3 class="section-title">Stock & Purchase Summary</h3>
-    <div class="dashboard-grid">
-        <!-- NAYA CARD: Total Sale -->
-        <div class="dashboard-card card-glow-teal">
-            <p class="card-title">Total Sale</p>
-            <h2 id="dashboard-total-sale" class="card-value sales">Rs. 0.00</h2>
-        </div>
-        <div class="dashboard-card card-glow-teal">
-            <p class="card-title">Total Purchaser Amount</p>
-            <h2 id="dashboard-today-purchases" class="card-value purchases">Rs. 0.00</h2>
-        </div>
-        <div class="dashboard-card card-glow-blue">
-            <p class="card-title">Purchased Stock Amount</p>
-            <h2 id="dashboard-purchased-stock-amount" class="card-value sales">Rs. 0.00</h2>
-        </div>
-        <div class="dashboard-card card-glow-amber">
-            <p class="card-title">Total Stock Amount</p>
-            <h2 id="dashboard-total-stock-amount" class="card-value profit">Rs. 0.00</h2>
+    <div class="dashboard-section">
+        <h3 class="section-title">Overview & Summary</h3>
+        <div class="dashboard-grid">
+            <!-- 1. Per Day Sale (Aaj Ki Sale) -->
+            <div class="dashboard-card card-glow-teal">
+                <p class="card-title">📅 Per Day Sale (Today)</p>
+                <h2 id="dashboard-today-sale" class="card-value sales">Rs. 0.00</h2>
+            </div>
+            
+            <!-- 2. Total Purchase Maal -->
+            <div class="dashboard-card card-glow-blue">
+                <p class="card-title">🛒 Total Purchase Maal</p>
+                <h2 id="dashboard-total-purchase-maal" class="card-value purchases">Rs. 0.00</h2>
+            </div>
+            
+            <!-- 3. Used Maal (Stock Out) -->
+            <div class="dashboard-card card-glow-amber">
+                <p class="card-title">📉 Used Maal (Stock Out)</p>
+                <h2 id="dashboard-used-maal" class="card-value warning">Rs. 0.00</h2>
+            </div>
+            
+            <!-- 4. Used Stock -->
+            <div class="dashboard-card card-glow-teal">
+                <p class="card-title">📦 Used Stock</p>
+                <h2 id="dashboard-used-stock" class="card-value expenses">Rs. 0.00</h2>
+            </div>
         </div>
     </div>
-</div>
 
-
-
-    
     <!-- 2. Professional Executive Chart Section -->
     <div class="dashboard-section" style="margin-top: 25px;">
         <div class="chart-header-container">
-            <h3 class="section-title" style="margin: 0;">📊 Stock & Financial Overview</h3>
+            <h3 class="section-title" style="margin: 0;">📊 Business Overview Graph</h3>
             <div class="chart-legend-badges">
-                <span class="legend-badge badge-teal"><i class="dot"></i> Purchaser Amount</span>
-                <span class="legend-badge badge-blue"><i class="dot"></i> Purchased Stock</span>
-                <span class="legend-badge badge-amber"><i class="dot"></i> Total Stock</span>
+                <span class="legend-badge badge-teal"><i class="dot"></i> Per Day Sale</span>
+                <span class="legend-badge badge-blue"><i class="dot"></i> Total Purchase Maal</span>
+                <span class="legend-badge badge-amber"><i class="dot"></i> Used Maal</span>
+                <span class="legend-badge" style="border-color: rgba(239, 68, 68, 0.4);"><i class="dot" style="background-color: #ef4444;"></i> Used Stock</span>
             </div>
         </div>
         
@@ -1986,7 +2028,6 @@ body,
             <canvas id="dashboardStockChart"></canvas>
         </div>
     </div>
-
 </div>
 <!-- END ENHANCED DASHBOARD MODULE -->
 
@@ -4232,13 +4273,15 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
     const safeDemands = Array.isArray(demands) ? demands : [];
 
-    let totalBillValue = 0;
-    let totalItemsBought = 0;
+    // Variables for Calculations
+    let totalCurrentBill = 0;
+    let totalPreviousBalance = 0;
+    let totalItems = 0;
     let paidCount = 0;
     let unpaidCount = 0;
-    let totalOutstandingBalance = 0;
+    let totalCurrentBalance = 0;
 
-    // Table Rows: Total 7 Columns (Phone column bilkul hata diya gaya hai)
+    // Table Rows
     const clientRows = safeDemands.map((rec, index) => {
         let bill = Number(rec.bill) || 0;
         let oldBal = Number(rec.oldBalance) || 0;
@@ -4250,15 +4293,18 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
             : calcBalance;
 
         let st = getStatus(rec);
+        let qty = Number(rec.demand) || 0;
 
-        totalBillValue += bill;
-        totalItemsBought += (Number(rec.demand) || 0);
+        // Sum calculations
+        totalCurrentBill += bill;
+        totalPreviousBalance += oldBal;
+        totalItems += qty;
+        totalCurrentBalance += displayBalance;
 
         if (st === 'paid') {
             paidCount++;
         } else {
             unpaidCount++;
-            totalOutstandingBalance += displayBalance;
         }
 
         let dateFormatted = '-';
@@ -4267,17 +4313,19 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
         }
 
         return [
-            index + 1,                                        // 1. S.No
-            dateFormatted,                                    // 2. Date
-            rec.customer || 'N/A',                            // 3. Customer Name
-            rec.demand || 0,                                  // 4. Qty
-            `${CURRENCY_SYMBOL}${(bill).toFixed(2)}`,           // 5. Bill Amount
-            `${CURRENCY_SYMBOL}${(displayBalance).toFixed(2)}`, // 6. Net Balance
-            st.toUpperCase()                                  // 7. Status
+            index + 1,
+            dateFormatted,
+            rec.customer || 'N/A',
+            qty,
+            `${CURRENCY_SYMBOL}${(bill).toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${(displayBalance).toFixed(2)}`,
+            st.toUpperCase()
         ];
     });
 
-    // Report Header
+    const totalBillCombined = totalCurrentBill + totalPreviousBalance;
+
+    // 1. Report Header
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
     doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
 
@@ -4288,7 +4336,7 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
     doc.text("Worker Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
 
-    // Worker Details Section
+    // 2. Worker Details Section (Overlapping Fix Kiya Gaya Hai)
     doc.setFontSize(11); doc.setFont('helvetica', 'bold');
     doc.text("Worker Details:", 14, yPos); yPos += 6;
 
@@ -4302,17 +4350,25 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
         periodStr = `${fStr} to ${tStr}`;
     }
 
-    doc.text(`Period Covered: ${periodStr}`, 120, yPos); yPos += 5;
-    doc.text(`Address: ${worker ? worker.address || 'N/A' : 'N/A'}`, 14, yPos);
-    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
+    doc.text(`Period Covered: ${periodStr}`, 120, yPos); yPos += 6;
 
-    // Summary Box
+    // Address text wrap handling taake overlap na ho
+    const addressStr = `Address: ${worker ? worker.address || 'N/A' : 'N/A'}`;
+    const splitAddress = doc.splitTextToSize(addressStr, 100);
+    doc.text(splitAddress, 14, yPos);
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos);
+    
+    yPos += Math.max(splitAddress.length * 5, 6) + 6;
+
+    // 3. Updated Summary Box (Aapke Mutabiq Exact 7 Fields)
     const summaryTableData = [
-        ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBillValue.toFixed(2)}`],
-        ['Total Items Bought:', totalItemsBought.toString()],
+        ['Current Bill:', `${CURRENCY_SYMBOL} ${totalCurrentBill.toFixed(2)}`],
+        ['Previous Balance:', `${CURRENCY_SYMBOL} ${totalPreviousBalance.toFixed(2)}`],
+        ['Total Bill:', `${CURRENCY_SYMBOL} ${totalBillCombined.toFixed(2)}`],
+        ['Current Balance:', `${CURRENCY_SYMBOL} ${totalCurrentBalance.toFixed(2)}`],
+        ['Total Items:', totalItems.toString()],
         ['Paid Clients / Demands:', paidCount.toString()],
-        ['Unpaid Clients / Demands:', unpaidCount.toString()],
-        ['Total Outstanding Balance:', `${CURRENCY_SYMBOL} ${totalOutstandingBalance.toFixed(2)}`]
+        ['Unpaid Clients / Demands:', unpaidCount.toString()]
     ];
 
     doc.autoTable({
@@ -4320,11 +4376,23 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
         body: summaryTableData,
         theme: 'grid',
         styles: { fontSize: 10, cellPadding: 3 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        didParseCell: function(data) {
+            // Total Bill Bold
+            if (data.row.index === 2) {
+                data.cell.styles.fontStyle = 'bold';
+            }
+            // Current Balance Bold & Red
+            if (data.row.index === 3) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62];
+            }
+        }
     });
 
     yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 12 : yPos + 45;
 
+    // 4. Demands Table Heading
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
     doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 6;
 
@@ -4332,7 +4400,7 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
         clientRows.push(['-', '-', 'No detailed records found', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
     }
 
-    // Table Header: SIRF 7 COLUMNS (Phone Column Hata Diya Gaya Hai)
+    // 5. Demands Table
     doc.autoTable({
         startY: yPos,
         head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
@@ -4343,7 +4411,7 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
         columnStyles: {
             0: { cellWidth: 12 },
             1: { cellWidth: 25 },
-            2: { halign: 'left', cellWidth: 68 }, // Customer Name Column ki width barha di gayi hai
+            2: { halign: 'left', cellWidth: 68 },
             3: { cellWidth: 15 },
             4: { cellWidth: 28 },
             5: { cellWidth: 28 },
@@ -4523,15 +4591,20 @@ async function saveUpdatedDemand() {
 }
 
 
+// Add New Demand Form ke andar table show karne aur live search karne ka function
 function renderRecentDemands() {
     const tbody = document.getElementById('recent-demand-body');
     if (!tbody) return;
+    tbody.innerHTML = '';
 
+    // Search bar ki value uthana
     const searchInput = document.getElementById('recent-demand-search');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
+    // Error se bachne ke liye safe array check
     const safeRecords = Array.isArray(demandRecords) ? demandRecords : [];
 
+    // Filter by customer name if search query is entered
     let filteredRecords = safeRecords;
     if (query) {
         filteredRecords = safeRecords.filter(rec => 
@@ -4544,16 +4617,12 @@ function renderRecentDemands() {
         return;
     }
 
-    const sorted = [...filteredRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date));
-    
-    // Agar search na chal rahi ho to sirf recent 50 records render karein (Ultra Fast)
-    const recordsToRender = query ? sorted : sorted.slice(0, 50);
-
-    let rowsHtml = '';
-    recordsToRender.forEach(rec => {
-        const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
-        rowsHtml += `<tr>
-            <td>${dateStr}</td>
+    // Latest demands ko sabse upar dikhane ke liye sort kiya hai
+    [...filteredRecords].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date)).forEach(rec => {
+        const workerName = (rec.worker && rec.worker.name) ? rec.worker.name : 'N/A';
+        
+        tbody.innerHTML += `<tr>
+            <td>${rec.date ? new Date(rec.date).toLocaleDateString() : '-'}</td>
             <td><strong>${rec.customer || '-'}</strong></td>
             <td>${rec.demand || 0}</td>
             <td>
@@ -4565,8 +4634,6 @@ function renderRecentDemands() {
             </td>
         </tr>`;
     });
-
-    tbody.innerHTML = rowsHtml;
 }
 
 async function updateMaterialStatus(id, newStatus) {
@@ -5325,76 +5392,96 @@ function clearDemandForm() {
 
 function generateSingleDemandPDF(record) {
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new jsPDF('p', 'mm', 'a4');
     let yPos = 20;
 
-    // --- NAYA LOGIC: Customer Profile se Assigned Worker dhoondna ---
+    // 1. Customer Profile se Assigned Worker ka naam dhoondna
     let assignedWorkerName = 'N/A';
-    if (typeof savedCustomersList !== 'undefined') {
-        const profile = savedCustomersList.find(c => c.name.toLowerCase() === (record.customer || '').toLowerCase());
+    if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
+        const profile = savedCustomersList.find(c => c.name && c.name.toLowerCase() === (record.customer || '').toLowerCase());
         if (profile && profile.worker) {
-            assignedWorkerName = profile.worker.name;
+            assignedWorkerName = typeof profile.worker === 'object' ? profile.worker.name : profile.worker;
         } else if (record.worker) {
-            // Agar profile mein nahi mila toh purane record se backup uthaye
-            assignedWorkerName = record.worker.name;
+            assignedWorkerName = typeof record.worker === 'object' ? record.worker.name : record.worker;
         }
     }
 
-    // Header Details
-    doc.setFontSize(24); doc.setFont('helvetica', 'bold');
+    // 2. Receipt Header
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
     doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
     
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
-    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 15;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 12;
 
-    doc.setFontSize(18); doc.text("Demand Receipt", 105, yPos, { align: 'center' }); yPos += 10;
+    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
+    doc.text("Demand Receipt", 105, yPos, { align: 'center' }); yPos += 10;
 
-    // Customer Details Section
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+    // 3. Customer Details Section
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
     doc.text("Customer Details:", 14, yPos); yPos += 6;
     
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(`Name: ${record.customer || 'N/A'}`, 14, yPos);
-    doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 120, yPos); yPos += 6;
+    doc.text(`Date: ${record.date ? new Date(record.date).toLocaleDateString() : 'N/A'}`, 120, yPos); yPos += 5;
     
     doc.text(`Customer Code: ${record.customerCode || 'N/A'}`, 14, yPos);
-    doc.text(`Receipt Serial: ${record.serialNo || 'N/A'}`, 120, yPos); yPos += 6;
+    doc.text(`Receipt Serial: #${record.serialNo || 'N/A'}`, 120, yPos); yPos += 5;
     
     doc.text(`Phone: ${record.phone || 'N/A'}`, 14, yPos);
-    // --- YAHAN ASSIGNED WORKER SHOW HOGA ---
     doc.setFont('helvetica', 'bold');
     doc.text(`Assigned Worker: ${assignedWorkerName}`, 120, yPos); 
-    doc.setFont('helvetica', 'normal'); yPos += 6;
+    doc.setFont('helvetica', 'normal'); yPos += 5;
     
-    doc.text(`Address: ${record.address || 'N/A'}`, 14, yPos); yPos += 15;
+    doc.text(`Address: ${record.address || 'N/A'}`, 14, yPos); yPos += 12;
 
-    // Transaction Details Table
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-    doc.text("Transaction Details:", 14, yPos); yPos += 6;
+    // 4. Calculations (Rate, Qty, Bill, Recovery & Balances)
+    const rateVal = Number(record.rate || record.price || 0);
+    const qtyVal = Number(record.demand || 0);
+    const billVal = Number(record.bill !== undefined ? record.bill : (qtyVal * rateVal));
+    const prevBal = Number(record.oldBalance || 0);
+    const totalBillVal = billVal + prevBal;
+    const rcvdVal = Number(record.recovery || record.onlineRec || 0);
+    const outstandingVal = (record.netBalance !== undefined && record.netBalance !== null && !isNaN(record.netBalance))
+        ? Number(record.netBalance)
+        : (totalBillVal - rcvdVal);
 
-    const tableData = [
-        ['Demand Quantity', record.demand || 0],
-        ['Unit Price', `${CURRENCY_SYMBOL} ${(record.price || 0).toFixed(2)}`],
-        ['Current Bill', `${CURRENCY_SYMBOL} ${(record.bill || 0).toFixed(2)}`],
-        ['Net Balance Due', `${CURRENCY_SYMBOL} ${(record.netBalance || 0).toFixed(2)}`]
+    const receivedPerson = record.receivedBy && record.receivedBy !== 'N/A' ? record.receivedBy : assignedWorkerName;
+
+    // 5. MUKAMMAL 7-ROWS WALA SUMMARY BOX
+    const summaryTableData = [
+        ['Demand Quantity:', `${qtyVal}`],
+        ['Unit Price:', `Rs. ${rateVal.toFixed(2)}`],
+        ['Current Bill:', `Rs. ${billVal.toFixed(2)}`],
+        ['Previous Balance:', `Rs. ${prevBal.toFixed(2)}`],
+        ['Total Bill:', `Rs. ${totalBillVal.toFixed(2)}`],
+        [`Received (By: ${receivedPerson}):`, `Rs. ${rcvdVal.toFixed(2)}`],
+        ['Current Balance:', `Rs. ${outstandingVal.toFixed(2)}`]
     ];
 
     doc.autoTable({
         startY: yPos,
-        body: tableData,
+        body: summaryTableData,
         theme: 'grid',
-        styles: { fontSize: 11, cellPadding: 4 },
-        columnStyles: { 0: { fontStyle: 'bold' } },
+        styles: { fontSize: 10.5, cellPadding: 3.5 },
+        columnStyles: { 
+            0: { fontStyle: 'bold', cellWidth: 85 },
+            1: { fontStyle: 'normal', cellWidth: 95 }
+        },
         didParseCell: function(data) {
-            if (data.row.index === 3) { 
+            // "Total Bill:" ko bold karna (Row Index 4)
+            if (data.row.index === 4) {
                 data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.textColor = [216, 69, 62]; 
+            }
+            // "Current Balance:" ko Bold aur Red (Laal) karna (Row Index 6)
+            if (data.row.index === 6) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62]; // Red Highlight
             }
         }
     });
 
-    doc.save(`Demand_Receipt_${record.customer || 'Customer'}.pdf`);
+    doc.save(`Demand_Receipt_${(record.customer || 'Customer').replace(/\s+/g, '_')}_#${record.serialNo || 'Rec'}.pdf`);
 }
 
 
@@ -5922,6 +6009,14 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
+// --- FAST CACHE PERSISTENCE ---
+db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+    if (err.code === 'failed-precondition') {
+        console.warn("Persistence tab limit.");
+    } else if (err.code === 'unimplemented') {
+        console.warn("Browser persistence not supported.");
+    }
+});
 
     // --- Global Configuration & Variables ---
 const SETTINGS_KEY = "pos_app_settings", PRODUCTS_KEY = "pos_app_products", SALES_LOG_KEY = "pos_app_sales_log", USERS_KEY = "pos_app_users", SESSIONS_KEY = "pos_app_sessions", NOTIFICATIONS_KEY = "pos_app_notifications", EXPENSES_KEY = "pos_app_expenses", EXPENSE_CATEGORIES_KEY = "pos_app_expense_categories";
@@ -6402,49 +6497,55 @@ function refreshAll() {
 }
 
 function renderDashboard() {
-    // 0. Total Sale (Demand Records ke tamam bills ka sum)
-    const totalSale = (demandRecords || []).reduce((sum, rec) => sum + (Number(rec.bill) || 0), 0);
+    const todayDateStr = (typeof getLocalDateString === 'function') 
+        ? getLocalDateString(getCloudDate()) 
+        : new Date().toISOString().split('T')[0];
 
-    // 1. Total Purchaser Amount
-    const totalMaalBill = (maalPurchases || []).reduce((sum, p) => sum + (Number(p.bill) || 0), 0);
-    const totalRegularBill = (purchaseLog || []).reduce((sum, log) => sum + (Number(log.grandTotal || log.totalCost) || 0), 0);
-    const totalPurchaserAmount = totalMaalBill + totalRegularBill;
+    // 1. Per Day Sale (Aaj ki date ke mutabiq Demand records ka total bill)
+    const perDaySale = (demandRecords || []).reduce((sum, rec) => {
+        if (!rec.date) return sum;
+        const recDateStr = (typeof getLocalDateString === 'function') 
+            ? getLocalDateString(rec.date) 
+            : rec.date.split('T')[0];
+        if (recDateStr === todayDateStr) {
+            return sum + (Number(rec.bill) || 0);
+        }
+        return sum;
+    }, 0);
 
-    // 2. Purchased Stock Amount
-    const totalAddedStockVal = (addedStockHistory || [])
-        .filter(h => h.type === 'in')
-        .reduce((sum, h) => sum + (Number(h.totalValue) || 0), 0);
-    const totalPurchasedStockAmount = totalMaalBill + totalAddedStockVal;
+    // 2. Total Purchase Maal (Maal Purchase ke tamam bills ka sum)
+    const totalPurchaseMaal = (maalPurchases || []).reduce((sum, p) => sum + (Number(p.bill) || 0), 0);
 
-    // 3. Total Stock Amount
-    const productsVal = (products || []).reduce((sum, p) => sum + ((p.quantity || 0) * (p.costPrice || p.price || 0)), 0);
-    const availableStock = typeof getAvailableStockList === 'function' ? getAvailableStockList() : [];
-    const rawStockVal = availableStock.reduce((sum, item) => sum + (item.remaining * item.lastPrice), 0);
-    const totalStockAmount = productsVal + rawStockVal;
+    // 3. Used Maal (Stock Out Module se dispatched maal ki total amount)
+    const totalUsedMaal = (maalStockOutLog || []).reduce((sum, so) => sum + (Number(so.dispatchedAmount) || 0), 0);
 
-    // Update Dashboard Cards
-    const totalSaleCard = document.getElementById('dashboard-total-sale');
-    if (totalSaleCard) totalSaleCard.textContent = `${CURRENCY_SYMBOL}${totalSale.toFixed(2)}`;
+    // 4. Used Stock (Used Stock Module / Stock OUT se use hone wale stock ki total value)
+    let totalUsedStock = (usedStockLog || []).reduce((sum, u) => sum + (Number(u.totalValue) || 0), 0);
+    if (totalUsedStock === 0 && Array.isArray(addedStockHistory)) {
+        totalUsedStock = addedStockHistory
+            .filter(h => h.type === 'out')
+            .reduce((sum, h) => sum + (Number(h.totalValue) || 0), 0);
+    }
 
-    const purchasesCard = document.getElementById('dashboard-today-purchases');
-    if (purchasesCard) purchasesCard.textContent = `${CURRENCY_SYMBOL}${totalPurchaserAmount.toFixed(2)}`;
+    // Update Dashboard Card Displays
+    const todaySaleCard = document.getElementById('dashboard-today-sale');
+    if (todaySaleCard) todaySaleCard.textContent = `${CURRENCY_SYMBOL}${perDaySale.toFixed(2)}`;
 
-    const stockAmtCard = document.getElementById('dashboard-purchased-stock-amount');
-    if (stockAmtCard) stockAmtCard.textContent = `${CURRENCY_SYMBOL}${totalPurchasedStockAmount.toFixed(2)}`;
+    const purchaseMaalCard = document.getElementById('dashboard-total-purchase-maal');
+    if (purchaseMaalCard) purchaseMaalCard.textContent = `${CURRENCY_SYMBOL}${totalPurchaseMaal.toFixed(2)}`;
 
-    const totalStockCard = document.getElementById('dashboard-total-stock-amount');
-    if (totalStockCard) totalStockCard.textContent = `${CURRENCY_SYMBOL}${totalStockAmount.toFixed(2)}`;
+    const usedMaalCard = document.getElementById('dashboard-used-maal');
+    if (usedMaalCard) usedMaalCard.textContent = `${CURRENCY_SYMBOL}${totalUsedMaal.toFixed(2)}`;
 
-    // --- CHART GRAPH UPDATES ---
+    const usedStockCard = document.getElementById('dashboard-used-stock');
+    if (usedStockCard) usedStockCard.textContent = `${CURRENCY_SYMBOL}${totalUsedStock.toFixed(2)}`;
+
+    // --- CHART GRAPH UPDATE ---
     const canvas = document.getElementById('dashboardStockChart');
     if (canvas) {
         const ctx = canvas.getContext('2d');
 
         // Color Gradients
-        const gradientGreen = ctx.createLinearGradient(0, 0, 0, 350);
-        gradientGreen.addColorStop(0, 'rgba(16, 185, 129, 0.95)');
-        gradientGreen.addColorStop(1, 'rgba(5, 150, 105, 0.15)');
-
         const gradientTeal = ctx.createLinearGradient(0, 0, 0, 350);
         gradientTeal.addColorStop(0, 'rgba(20, 184, 166, 0.95)');
         gradientTeal.addColorStop(1, 'rgba(13, 148, 136, 0.15)');
@@ -6457,6 +6558,10 @@ function renderDashboard() {
         gradientAmber.addColorStop(0, 'rgba(245, 158, 11, 0.95)');
         gradientAmber.addColorStop(1, 'rgba(217, 119, 6, 0.15)');
 
+        const gradientRed = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientRed.addColorStop(0, 'rgba(239, 68, 68, 0.95)');
+        gradientRed.addColorStop(1, 'rgba(220, 38, 38, 0.15)');
+
         if (myDashboardChart) {
             myDashboardChart.destroy();
         }
@@ -6467,12 +6572,12 @@ function renderDashboard() {
             type: 'bar',
             plugins: pluginsList,
             data: {
-                labels: ['Total Sale', 'Total Purchaser Amount', 'Purchased Stock Amount', 'Total Stock Amount'],
+                labels: ['Per Day Sale', 'Total Purchase Maal', 'Used Maal', 'Used Stock'],
                 datasets: [{
                     label: 'Amount (Rs.)',
-                    data: [totalSale, totalPurchaserAmount, totalPurchasedStockAmount, totalStockAmount],
-                    backgroundColor: [gradientGreen, gradientTeal, gradientBlue, gradientAmber],
-                    borderColor: ['#10b981', '#14b8a6', '#3b82f6', '#f59e0b'],
+                    data: [perDaySale, totalPurchaseMaal, totalUsedMaal, totalUsedStock],
+                    backgroundColor: [gradientTeal, gradientBlue, gradientAmber, gradientRed],
+                    borderColor: ['#14b8a6', '#3b82f6', '#f59e0b', '#ef4444'],
                     borderWidth: 2,
                     borderRadius: 8,
                     borderSkipped: false,
@@ -6483,7 +6588,7 @@ function renderDashboard() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 1200, easing: 'easeOutQuart' },
+                animation: { duration: 1000, easing: 'easeOutQuart' },
                 layout: { padding: { top: 35, bottom: 10, left: 10, right: 15 } },
                 plugins: {
                     legend: { display: false },
@@ -6507,9 +6612,7 @@ function renderDashboard() {
                         bodyFont: { family: 'Inter', size: 12 },
                         borderColor: 'rgba(255, 255, 255, 0.12)',
                         borderWidth: 1,
-                        padding: 14,
-                        boxPadding: 6,
-                        usePointStyle: true,
+                        padding: 12,
                         callbacks: {
                             label: function(context) {
                                 return ` Amount: Rs. ${Number(context.parsed.y).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -6630,15 +6733,31 @@ function handleNewProductImageUpload(event) {
     const preview = document.getElementById('new-product-preview');
     if (!file) {
         currentImageBase64 = null;
-        preview.src = '';
-        preview.style.display = 'none';
+        if (preview) {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
         return;
     }
     const reader = new FileReader();
     reader.onload = (e) => {
-        currentImageBase64 = e.target.result;
-        preview.src = currentImageBase64;
-        preview.style.display = 'block';
+        const img = new Image();
+        img.onload = () => {
+            // Image Compress & Resize Logic (1MB Database limit se bachane ke liye)
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 80;
+            canvas.height = 80;
+            ctx.drawImage(img, 0, 0, 80, 80);
+
+            // Light-weight JPEG string
+            currentImageBase64 = canvas.toDataURL('image/jpeg', 0.5);
+            if (preview) {
+                preview.src = currentImageBase64;
+                preview.style.display = 'block';
+            }
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
@@ -12897,21 +13016,11 @@ async function initializeApp() {
 
     updateUserNav();
     
-    // 6. Dashboard aur tamam logs ka data seedha Firebase se load karein
-    await dbFetchInvoices();
-    await dbFetchExpenses();
-    await dbFetchPurchaseLog();
+    // 6. Sirf Dashboard ke liye zaroori data shuru mein load karein (Baqi tabs par click karne se load honge)
     await dbFetchProducts();
-    await dbFetchPurchasers();
-    await dbFetchCashBook();
-    await dbFetchGatePasses();
-    await dbFetchStockUpdates();
-    await dbFetchSellReturns();
-    await dbFetchMaalPurchases(); 
-    await dbFetchExpenseStockInventory();
-    await dbFetchExpenseStockLog();
     await dbFetchDemandWorkers();
     await dbFetchCustomers();
+    await dbFetchMaalPurchases();
     await dbFetchLaborData();
 
     // B. Riders aur Vehicles database se load karein (UPDATED)
@@ -13022,10 +13131,36 @@ if (actualModuleName === 'RiderDetailsModule') {
         button.disabled = true;
 
        if (actualModuleName === 'DemandRecord') {
-            // Local memory se foran UI populate karein (0 ms delay)
+            await dbFetchDemandWorkers(); // Safe worker fetch
+
+            // Cloud se updated demand lists aur riders ko dobara fetch karein
+            const userId = 'FJM_MASTER_DB';
+            try {
+                const doc = await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const parsed = (data && data.payload) ? JSON.parse(data.payload) : [];
+                    demandRecords = Array.isArray(parsed) ? parsed : [];
+                    
+                    // Naya: Module open hote hi chain dynamic update karein
+                    if (typeof recalculateCustomerDemandLedgers === 'function') {
+                        await recalculateCustomerDemandLedgers();
+                    }
+                }
+
+                // Riders ka data load karein
+                const docRiders = await db.collection('appData').doc(userId).collection('datasets').doc('riders_list').get();
+                if (docRiders.exists) {
+                    savedRiders = JSON.parse(docRiders.data().payload) || [];
+                }
+            } catch (e) {
+                console.error("Demand records/Riders reload error:", e);
+            }
+
+            // Automated Dropdowns load karein
             populatePendingDemandsDropdown();
             populateDemandRecordRiderDropdown(); 
-            handlePendingDemandSelection();
+            handlePendingDemandSelection(); // reset inputs
             renderDemandRecordTable();
         }
 
@@ -13047,19 +13182,28 @@ if (actualModuleName === 'RiderDetailsModule') {
 
     try {
         // --- LAZY LOADING ACCORDING TO SELECTED TAB ---
-       if (actualModuleName === 'Dashboard') {
+        if (actualModuleName === 'Dashboard') {
+            await dbFetchInvoices();
+            await dbFetchExpenses();
+            await dbFetchPurchaseLog();
+            await dbFetchProducts();
+            await dbFetchPurchasers();
             renderDashboard();
         }
 
+        // AddCustomer lazy loading block (with proper closing brackets)
         if (actualModuleName === 'AddCustomer') {
+            await dbFetchDemandWorkers(); 
+            await dbFetchCustomers();     
             populateCustomerWorkerDropdown(); 
             renderCustomerTable();        
         }
 
         if (actualModuleName === 'RecoverySheet') {
-            populateRecoveryWorkerDropdown();
-            renderRecoverySheetTable();
+            await dbFetchDemandWorkers(); // Cloud se workers fresh load karein
+            populateRecoveryWorkerDropdown(); // Dropdown mein data dalein
         }
+
         if (actualModuleName === 'RecoverySheet') {
             renderRecoverySheetTable();
         }
@@ -13280,12 +13424,16 @@ if (actualModuleName === 'ExpenseStock' || actualModuleName === 'UsedStock') {
     populateSettingsForm();
 }
         if (actualModuleName === 'DemandForm') {
-            // Local memory se foran dropdowns aur UI render karein (0 ms delay)
+            await dbFetchMaalPurchases(); // Safe fetch method
+            await dbFetchDemandWorkers();
+            await dbFetchCustomers();
+            
             populateDemandWorkersDropdown();
             populateCustomerNamesDatalist();
             populateDemandItemDropdown();
-            populateDemandQtyDropdown();
+            
             renderRecentDemands();
+            populateDemandQtyDropdown();
         }
 
         if (actualModuleName === 'DemandWorkers') {
@@ -14287,144 +14435,6 @@ function generateSelectedWorkerReport() {
     generateWorkerReportPDF(worker, workerDemands, dateRange);
 }
 
-function generateWorkerReportPDF(worker, demands, dateRange = {}) {
-    if (!window.jspdf || !window.jspdf.jsPDF) {
-        alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
-        return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    let yPos = 20;
-
-    const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
-    const safeDemands = Array.isArray(demands) ? demands : [];
-
-    let totalBillValue = 0;
-    let totalItemsBought = 0;
-    let paidCount = 0;
-    let unpaidCount = 0;
-    let totalOutstandingBalance = 0;
-
-    // Filtered Demands ke mutabiq Table Data aur Summary calculation
-    const clientRows = safeDemands.map((rec, index) => {
-        let bill = Number(rec.bill) || 0;
-        let oldBal = Number(rec.oldBalance) || 0;
-        let recovery = Number(rec.recovery) || 0;
-        let calcBalance = (bill + oldBal) - recovery;
-
-        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance))
-            ? Number(rec.netBalance)
-            : calcBalance;
-
-        let st = getStatus(rec);
-
-        totalBillValue += bill;
-        totalItemsBought += (Number(rec.demand) || 0);
-
-        if (st === 'paid') {
-            paidCount++;
-        } else {
-            unpaidCount++;
-            totalOutstandingBalance += displayBalance;
-        }
-
-        let dateFormatted = '-';
-        if (rec.date) {
-            try { dateFormatted = new Date(rec.date).toLocaleDateString(); } catch(e) { dateFormatted = '-'; }
-        }
-
-        return [
-            index + 1,
-            dateFormatted,
-            rec.customer || 'N/A',
-            rec.demand || 0,
-            `${CURRENCY_SYMBOL}${(bill).toFixed(2)}`,
-            `${CURRENCY_SYMBOL}${(displayBalance).toFixed(2)}`,
-            st.toUpperCase()
-        ];
-    });
-
-    // Header
-    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
-
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
-    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 12;
-
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text("Worker Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
-
-    // Worker Details Section
-    doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-    doc.text("Worker Details:", 14, yPos); yPos += 6;
-
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`Name: ${worker ? worker.name || 'N/A' : 'N/A'}`, 14, yPos);
-
-    // Period Covered (Tareekh ki maloomat PDF par display karna)
-    let periodStr = "All Time";
-    if (dateRange && (dateRange.from || dateRange.to)) {
-        const fStr = dateRange.from ? new Date(dateRange.from).toLocaleDateString() : 'Start';
-        const tStr = dateRange.to ? new Date(dateRange.to).toLocaleDateString() : 'End';
-        periodStr = `${fStr} to ${tStr}`;
-    }
-
-    doc.text(`Period Covered: ${periodStr}`, 120, yPos); yPos += 5;
-    doc.text(`Address: ${worker ? worker.address || 'N/A' : 'N/A'}`, 14, yPos);
-    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
-
-    // Summary Box (Only for selected dates)
-    const summaryTableData = [
-        ['Total Purchased Value:', `${CURRENCY_SYMBOL} ${totalBillValue.toFixed(2)}`],
-        ['Total Items Bought:', totalItemsBought.toString()],
-        ['Paid Clients / Demands:', paidCount.toString()],
-        ['Unpaid Clients / Demands:', unpaidCount.toString()],
-        ['Total Outstanding Balance:', `${CURRENCY_SYMBOL} ${totalOutstandingBalance.toFixed(2)}`]
-    ];
-
-    doc.autoTable({
-        startY: yPos,
-        body: summaryTableData,
-        theme: 'grid',
-        styles: { fontSize: 10, cellPadding: 3 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
-    });
-
-    yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 12 : yPos + 45;
-
-    doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-    doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 6;
-
-    if (clientRows.length === 0) {
-        clientRows.push(['-', '-', 'No detailed records found', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
-    }
-
-    // AutoTable Output
-    doc.autoTable({
-        startY: yPos,
-        head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
-        body: clientRows,
-        theme: 'striped',
-        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center' },
-        bodyStyles: { fontSize: 8.5, cellPadding: 2.5, halign: 'center' },
-        columnStyles: {
-            0: { cellWidth: 12 },
-            1: { cellWidth: 25 },
-            2: { halign: 'left', cellWidth: 68 },
-            3: { cellWidth: 15 },
-            4: { cellWidth: 28 },
-            5: { cellWidth: 28 },
-            6: { cellWidth: 22 }
-        },
-        margin: { left: 14, right: 14 }
-    });
-
-    const fileName = worker ? (worker.name || 'Worker').replace(/\s+/g, '_') : 'Worker';
-    doc.save(`Worker_Report_${fileName}_${new Date().toISOString().split('T')[0]}.pdf`);
-}
-
 
 // Client/Demand Record ko Edit form mein load karne ke liye
 
@@ -14456,7 +14466,7 @@ function renderDemandList(filter) {
         });
     }
 
-    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
+filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 50).forEach(rec => {
         const recordStatus = getRecordStatus(rec);
         const statusHTML = recordStatus === 'paid' ? 
             '<span style="color:#10b981; font-weight:bold;">✅ PAID</span>' : 
@@ -14703,7 +14713,7 @@ function renderMaalPurchaseTable() {
         return;
     }
 
-    [...records].reverse().forEach(item => {
+    [...records].reverse().slice(0, 50).forEach(item => {
         const dateStr = item.date ? new Date(item.date).toLocaleDateString() : '-';
         const bagsVal = item.bags !== undefined ? item.bags : 0;
         const weightVal = item.weight !== undefined ? item.weight : 0;
@@ -15837,16 +15847,13 @@ async function submitDemandRecord() {
     record.processed = true;
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
-   try {
-        // 1. Memory mein calculation run karein
+    try {
+        // 1. Customer ke tamam historical balances ko aapas mein chain aur recalculate karein
         if (typeof recalculateCustomerDemandLedgers === 'function') {
-            recalculateCustomerDemandLedgers();
+            await recalculateCustomerDemandLedgers();
         }
 
-        // 2. Local memory update karein (Fast UI response)
-        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
-
-        // 3. Firestore ko background mein update karein
+        // 2. Firebase Cloud Firestore mein updated payload save karein
         const userId = 'FJM_MASTER_DB';
         if (typeof db !== 'undefined' && db.collection) {
             await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
@@ -15898,6 +15905,7 @@ async function submitDemandRecord() {
 function renderDemandRecordTable() {
     const tbody = document.getElementById('dr-table-body');
     if (!tbody) return;
+    tbody.innerHTML = '';
 
     const searchQuery = (document.getElementById('dr-search')?.value || '').trim().toLowerCase();
     const fromDateVal = document.getElementById('dr-filter-from')?.value;
@@ -15927,18 +15935,12 @@ function renderDemandRecordTable() {
         totalSaleEl.textContent = `${CURRENCY_SYMBOL}${totalSale.toFixed(2)}`;
     }
 
-    // Fast Batch HTML generation
-    let rowsHtml = '';
-    const sorted = [...filtered].sort((a, b) => safeParseDate(b.date) - safeParseDate(a.date));
-
-    // Limit to latest 100 entries for ultra-fast rendering (agar search na ho)
-    const recordsToRender = searchQuery ? sorted : sorted.slice(0, 100);
-
-    recordsToRender.forEach(rec => {
+    filtered.sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(rec => {
         const dateStr = rec.date ? new Date(rec.date).toLocaleDateString() : '-';
-        const displayRate = rec.rate || rec.price || 0;
+        // FIX: rec.rate na milne par rec.price uthaye ga
+        const displayRate = rec.rate || rec.price || 0; 
 
-        rowsHtml += `
+        tbody.innerHTML += `
             <tr>
                 <td>${dateStr}</td>
                 <td><strong>${rec.customer}</strong></td>
@@ -15961,8 +15963,6 @@ function renderDemandRecordTable() {
             </tr>
         `;
     });
-
-    tbody.innerHTML = rowsHtml || '<tr><td colspan="11" style="text-align:center;">Koi record nahi mila.</td></tr>';
 }
 
 // 6. ID ke mutabiq invoice reprint karne ka helper function
@@ -18975,21 +18975,26 @@ async function savePayBillPayment() {
     }
 }
 
-function recalculateCustomerDemandLedgers() {
+async function recalculateCustomerDemandLedgers() {
     if (!Array.isArray(demandRecords) || demandRecords.length === 0) return;
 
+    // 1. Customer wise group karein
     const customerGroups = {};
 
     demandRecords.forEach(rec => {
         if (!rec || !rec.customer) return;
         const cName = rec.customer.trim().toLowerCase();
-        if (!customerGroups[cName]) customerGroups[cName] = [];
+        if (!customerGroups[cName]) {
+            customerGroups[cName] = [];
+        }
         customerGroups[cName].push(rec);
     });
 
+    // 2. Har customer ke purane aur naye records ko tareekh ke mutabiq chain karein
     for (const cName in customerGroups) {
         const list = customerGroups[cName];
         
+        // Firefox compatibility ke sath safe sorting (Purana pehle, Naya baad mein)
         list.sort((a, b) => {
             const dateA = safeParseDate(a.date);
             const dateB = safeParseDate(b.date);
@@ -19000,17 +19005,43 @@ function recalculateCustomerDemandLedgers() {
         let runningBalance = 0;
 
         list.forEach((rec, index) => {
-            rec.oldBalance = (index === 0) ? (Number(rec.oldBalance) || 0) : runningBalance;
+            // Pehle record ka old balance 0 rahega, uske baad pichla net balance agle ka oldBalance banega
+            if (index === 0) {
+                rec.oldBalance = Number(rec.oldBalance) || 0;
+            } else {
+                rec.oldBalance = runningBalance;
+            }
+
             const qty = Number(rec.demand) || 0;
             const rate = Number(rec.rate || rec.price) || 0;
-            rec.bill = qty * rate;
+            const bill = qty * rate;
+            rec.bill = bill;
             rec.rate = rate;
             rec.price = rate;
+            
             const recovery = Number(rec.recovery) || 0;
-            rec.netBalance = (rec.bill + rec.oldBalance) - recovery;
+            
+            // Formula: Bill + Old Balance - Recovery
+            rec.netBalance = (bill + rec.oldBalance) - recovery;
+
+            // Agle record ke liye running balance update karein
             runningBalance = rec.netBalance;
             rec.status = rec.netBalance <= 0.01 ? 'paid' : 'unpaid';
         });
+    }
+
+    // 3. Updated Chain Ko Cloud Firestore aur Local Memory mein Sync Karein
+    try {
+        const userId = 'FJM_MASTER_DB';
+        if (typeof db !== 'undefined' && db.collection) {
+            await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+                payload: JSON.stringify(demandRecords)
+            });
+        }
+        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
+        console.log("Tamam Customer Ledgers Auto-Calculated aur Chain Ho Gaye Hain!");
+    } catch (e) {
+        console.error("Ledger Recalculation Error:", e);
     }
 }
 
@@ -19355,6 +19386,186 @@ function generateCustomerMonthlyRecoveryPDF() {
     doc.save(`Monthly_Recovery_${custName.replace(/\s+/g, '_')}_${monthVal}.pdf`);
 }
 
+function generateRecoveryReportPDF(reportType) {
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF('p', 'mm', 'a4'); // A4 page width = 210mm
+    let yPos = 18;
+
+    const fromDateVal = document.getElementById('general-recovery-from-date')?.value;
+    const toDateVal = document.getElementById('general-recovery-to-date')?.value;
+
+    const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
+    
+    // 1. Filter Processed Demands
+    let reportData = (demandRecords || []).filter(r => r.bill > 0 || r.processed === true);
+
+    // 2. Date Range Filter
+    if (fromDateVal) {
+        const fromDate = new Date(fromDateVal + 'T00:00:00');
+        reportData = reportData.filter(rec => rec.date && new Date(rec.date) >= fromDate);
+    }
+    if (toDateVal) {
+        const toDate = new Date(toDateVal + 'T23:59:59');
+        reportData = reportData.filter(rec => rec.date && new Date(rec.date) <= toDate);
+    }
+
+    // 3. Status Filter (Paid / Unpaid / All)
+    let title = "All Customers Recovery Report";
+    if (reportType === 'paid') {
+        reportData = reportData.filter(r => getStatus(r) === 'paid');
+        title = "Paid Customers Recovery Report";
+    } else if (reportType === 'unpaid') {
+        reportData = reportData.filter(r => getStatus(r) === 'unpaid');
+        title = "Unpaid Customers Recovery Report";
+    }
+
+    if (reportData.length === 0) {
+        const dateMsg = (fromDateVal || toDateVal) ? " is selected date range mein" : "";
+        alert(`Is waqt kisi ${reportType} customer ka record${dateMsg} nahi mila.`);
+        return;
+    }
+
+    // Sort chronologically by date
+    reportData.sort((a, b) => safeParseDate(a.date) - safeParseDate(b.date));
+
+    // ==========================================
+    // 1. ALL HEADERS STRICTLY CENTERED (X = 105)
+    // ==========================================
+    doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 7;
+
+    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 9;
+
+    doc.setFontSize(15); doc.setFont('helvetica', 'bold');
+    doc.text(title.toUpperCase(), 105, yPos, { align: 'center' }); yPos += 7;
+
+    // Period & Generated Date (Centered)
+    let periodStr = "All Time";
+    if (fromDateVal || toDateVal) {
+        const fStr = fromDateVal ? new Date(fromDateVal).toLocaleDateString() : 'Start';
+        const tStr = toDateVal ? new Date(toDateVal).toLocaleDateString() : 'End';
+        periodStr = `${fStr} to ${tStr}`;
+    }
+
+    doc.setFontSize(9.5); doc.setFont('helvetica', 'normal');
+    doc.text(`Period Covered: ${periodStr}   |   Generated On: ${new Date().toLocaleDateString()}`, 105, yPos, { align: 'center' }); 
+    yPos += 8;
+
+    // ==========================================
+    // 2. TABLE ROWS DATA
+    // ==========================================
+    const rows = reportData.map((rec, index) => {
+        let bill = Number(rec.bill) || 0;
+        let oldBal = Number(rec.oldBalance) || 0;
+        let recovery = Number(rec.recovery) || 0;
+        let calcBalance = (bill + oldBal) - recovery;
+        
+        let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance)) 
+            ? Number(rec.netBalance) 
+            : calcBalance;
+
+        return [
+            index + 1,
+            rec.date ? new Date(rec.date).toLocaleDateString() : '-',
+            rec.customer || 'N/A',
+            rec.demand || 0,
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${recovery.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`,
+            getStatus(rec).toUpperCase()
+        ];
+    });
+
+    // ==========================================
+    // 3. MAIN TABLE (Exact 182mm Fit - No Overlap)
+    // ==========================================
+    doc.autoTable({
+        startY: yPos,
+        head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Recovery', 'Balance', 'Status']],
+        body: rows,
+        theme: 'grid',
+        headStyles: { 
+            fillColor: reportType === 'paid' ? [16, 185, 129] : (reportType === 'unpaid' ? [239, 68, 68] : [20, 184, 166]), 
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            halign: 'center',
+            fontSize: 8.5
+        },
+        bodyStyles: { 
+            fontSize: 8, 
+            cellPadding: 2.5, 
+            halign: 'center',
+            valign: 'middle'
+        },
+        // Columns Sum: 10 + 22 + 46 + 14 + 23 + 23 + 24 + 20 = 182mm (Fits 100% on A4 Page)
+        columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 22, halign: 'center' },
+            2: { cellWidth: 46, halign: 'left' },
+            3: { cellWidth: 14, halign: 'center' },
+            4: { cellWidth: 23, halign: 'right' },
+            5: { cellWidth: 23, halign: 'right' },
+            6: { cellWidth: 24, halign: 'right' },
+            7: { cellWidth: 20, halign: 'center', fontStyle: 'bold' }
+        },
+        margin: { left: 14, right: 14 }
+    });
+
+    // ==========================================
+    // 4. SUMMARY TOTALS (Placed Exactly in Center)
+    // ==========================================
+    const finalY = doc.previousAutoTable.finalY + 8;
+    const totalBill = reportData.reduce((s, r) => s + (Number(r.bill) || 0), 0);
+    const totalRec = reportData.reduce((s, r) => s + (Number(r.recovery) || 0), 0);
+    const totalBal = reportData.reduce((s, r) => {
+        let b = Number(r.bill) || 0;
+        let ob = Number(r.oldBalance) || 0;
+        let rec = Number(r.recovery) || 0;
+        let bal = (r.netBalance !== undefined && r.netBalance !== null) ? Number(r.netBalance) : (b + ob - rec);
+        return s + bal;
+    }, 0);
+
+    const summaryTableData = [
+        ['Total Bill Generated:', `${CURRENCY_SYMBOL} ${totalBill.toFixed(2)}`],
+        ['Total Recovery Received:', `${CURRENCY_SYMBOL} ${totalRec.toFixed(2)}`],
+        ['Total Outstanding Balance:', `${CURRENCY_SYMBOL} ${totalBal.toFixed(2)}`]
+    ];
+
+    // Centered Summary Box: (Page 210mm - Width 130mm) / 2 = Left Margin 40mm
+    doc.autoTable({
+        startY: finalY,
+        body: summaryTableData,
+        theme: 'grid',
+        styles: { fontSize: 9.5, cellPadding: 3, halign: 'center' },
+        tableWidth: 130,
+        margin: { left: 40, right: 40 },
+        columnStyles: { 
+            0: { fontStyle: 'bold', halign: 'left', cellWidth: 75 },
+            1: { fontStyle: 'bold', halign: 'right', cellWidth: 55 }
+        },
+        didParseCell: function(data) {
+            if (data.row.index === 0) {
+                data.cell.styles.textColor = [15, 23, 42];
+            }
+            if (data.row.index === 1) {
+                data.cell.styles.textColor = [16, 185, 129]; // Green
+            }
+            if (data.row.index === 2) {
+                data.cell.styles.textColor = [216, 69, 62]; // Red
+            }
+        }
+    });
+
+    const dateSuffix = fromDateVal || toDateVal ? `_${fromDateVal || 'start'}_to_${toDateVal || 'end'}` : `_all_time`;
+    doc.save(`Recovery_Report_${reportType}${dateSuffix}.pdf`);
+}
 
 </script>
 <!-- EDIT CASH TRANSACTION MODAL -->
