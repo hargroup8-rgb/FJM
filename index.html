@@ -4260,6 +4260,14 @@ function generateSelectedWorkerReport() {
 // WORKER PERFORMANCE REPORT (PHONE COLUMN COMPLETELY REMOVED)
 // =========================================================
 
+// =====================================================================
+// WORKER PERFORMANCE REPORT (WITH PREVIOUS BALANCE & RECEIVED DETAILS)
+// =====================================================================
+
+// =====================================================================
+// WORKER PERFORMANCE REPORT (WITH TOTAL AMOUNT & REMOVED STATUS)
+// =====================================================================
+
 function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     if (!window.jspdf || !window.jspdf.jsPDF) {
         alert("PDF Library load nahi hui. Meharbani karke page refresh karein.");
@@ -4267,7 +4275,7 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
+    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait A4 Page (210mm Width)
     let yPos = 20;
 
     const getStatus = (r) => (typeof getRecordStatus === 'function') ? getRecordStatus(r) : 'unpaid';
@@ -4280,25 +4288,39 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     let paidCount = 0;
     let unpaidCount = 0;
     let totalCurrentBalance = 0;
+    let totalRecovery = 0;
 
-    // Table Rows
+    // Table Rows Data Generation
     const clientRows = safeDemands.map((rec, index) => {
         let bill = Number(rec.bill) || 0;
-        let oldBal = Number(rec.oldBalance) || 0;
-        let recovery = Number(rec.recovery) || 0;
-        let calcBalance = (bill + oldBal) - recovery;
+        let recovery = (Number(rec.recovery) || 0) + (Number(rec.onlineRec) || 0);
 
+        // Previous Balance Automatic Fallback Calculation
+        let oldBal = Number(rec.oldBalance) || 0;
+        if (oldBal === 0 && rec.netBalance !== undefined && rec.netBalance !== null) {
+            let impliedOldBal = Number(rec.netBalance) + recovery - bill;
+            if (impliedOldBal > 0) {
+                oldBal = impliedOldBal;
+            }
+        }
+
+        // NAYA CALCULATION: Total Amount = Bill + Previous Balance
+        let totalRowAmount = bill + oldBal;
+
+        let calcBalance = (bill + oldBal) - recovery;
         let displayBalance = (rec.netBalance !== undefined && rec.netBalance !== null && !isNaN(rec.netBalance))
             ? Number(rec.netBalance)
             : calcBalance;
 
         let st = getStatus(rec);
         let qty = Number(rec.demand) || 0;
+        let receivedByVal = (rec.receivedBy && rec.receivedBy !== 'N/A') ? rec.receivedBy : '-';
 
-        // Sum calculations
+        // Sum Calculations
         totalCurrentBill += bill;
         totalPreviousBalance += oldBal;
         totalItems += qty;
+        totalRecovery += recovery;
         totalCurrentBalance += displayBalance;
 
         if (st === 'paid') {
@@ -4317,17 +4339,21 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
             dateFormatted,
             rec.customer || 'N/A',
             qty,
-            `${CURRENCY_SYMBOL}${(bill).toFixed(2)}`,
-            `${CURRENCY_SYMBOL}${(displayBalance).toFixed(2)}`,
-            st.toUpperCase()
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,
+            `${CURRENCY_SYMBOL}${oldBal.toFixed(2)}`,             // Prev Bal
+            `${CURRENCY_SYMBOL}${totalRowAmount.toFixed(2)}`,      // NAYA FIELD: Total Amount (Bill + Prev Bal)
+            `${CURRENCY_SYMBOL}${recovery.toFixed(2)}`,           // Received Amount
+            receivedByVal,                                        // Received By
+            `${CURRENCY_SYMBOL}${displayBalance.toFixed(2)}`      // Net Balance
+            // (Status field yahan se remove kar diya gaya hai)
         ];
     });
 
     const totalBillCombined = totalCurrentBill + totalPreviousBalance;
 
-    // 1. Report Header
+    // 1. Report Header (Centered)
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM ERP", 105, yPos, { align: 'center' }); yPos += 8;
+    doc.text(appSettings.restaurantName || "FJM Social Media", 105, yPos, { align: 'center' }); yPos += 8;
 
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
     doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
@@ -4336,7 +4362,7 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     doc.setFontSize(16); doc.setFont('helvetica', 'bold');
     doc.text("Worker Performance Report", 105, yPos, { align: 'center' }); yPos += 10;
 
-    // 2. Worker Details Section (Overlapping Fix Kiya Gaya Hai)
+    // 2. Worker Details Section
     doc.setFontSize(11); doc.setFont('helvetica', 'bold');
     doc.text("Worker Details:", 14, yPos); yPos += 6;
 
@@ -4352,7 +4378,6 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
 
     doc.text(`Period Covered: ${periodStr}`, 120, yPos); yPos += 6;
 
-    // Address text wrap handling taake overlap na ho
     const addressStr = `Address: ${worker ? worker.address || 'N/A' : 'N/A'}`;
     const splitAddress = doc.splitTextToSize(addressStr, 100);
     doc.text(splitAddress, 14, yPos);
@@ -4360,11 +4385,12 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
     
     yPos += Math.max(splitAddress.length * 5, 6) + 6;
 
-    // 3. Updated Summary Box (Aapke Mutabiq Exact 7 Fields)
+    // 3. Summary Box (Totals)
     const summaryTableData = [
         ['Current Bill:', `${CURRENCY_SYMBOL} ${totalCurrentBill.toFixed(2)}`],
         ['Previous Balance:', `${CURRENCY_SYMBOL} ${totalPreviousBalance.toFixed(2)}`],
         ['Total Bill:', `${CURRENCY_SYMBOL} ${totalBillCombined.toFixed(2)}`],
+        ['Total Received / Recovery:', `${CURRENCY_SYMBOL} ${totalRecovery.toFixed(2)}`],
         ['Current Balance:', `${CURRENCY_SYMBOL} ${totalCurrentBalance.toFixed(2)}`],
         ['Total Items:', totalItems.toString()],
         ['Paid Clients / Demands:', paidCount.toString()],
@@ -4378,46 +4404,51 @@ function generateWorkerReportPDF(worker, demands, dateRange = {}) {
         styles: { fontSize: 10, cellPadding: 3 },
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
         didParseCell: function(data) {
-            // Total Bill Bold
             if (data.row.index === 2) {
                 data.cell.styles.fontStyle = 'bold';
             }
-            // Current Balance Bold & Red
             if (data.row.index === 3) {
                 data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.textColor = [216, 69, 62];
+                data.cell.styles.textColor = [16, 185, 129]; // Green for received
+            }
+            if (data.row.index === 4) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [216, 69, 62]; // Red for balance
             }
         }
     });
 
-    yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 12 : yPos + 45;
+    yPos = (doc.previousAutoTable && doc.previousAutoTable.finalY) ? doc.previousAutoTable.finalY + 10 : yPos + 45;
 
     // 4. Demands Table Heading
     doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-    doc.text("Detailed Demands & Clients List:", 14, yPos); yPos += 6;
+    doc.text("Detailed Demands & Clients List:", 10, yPos); yPos += 6;
 
     if (clientRows.length === 0) {
-        clientRows.push(['-', '-', 'No detailed records found', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-']);
+        clientRows.push(['-', '-', 'No detailed records found', '0', `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, `${CURRENCY_SYMBOL}0.00`, '-', `${CURRENCY_SYMBOL}0.00`]);
     }
 
-    // 5. Demands Table
+    // 5. Demands Table (Total 10 Columns Exact 190mm Fit for A4 Page)
     doc.autoTable({
         startY: yPos,
-        head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Net Balance', 'Status']],
+        head: [['S.No', 'Date', 'Customer Name', 'Qty', 'Bill Amount', 'Prev Bal', 'Total Amount', 'Received', 'Received By', 'Net Balance']],
         body: clientRows,
-        theme: 'striped',
-        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center' },
-        bodyStyles: { fontSize: 8.5, cellPadding: 2.5, halign: 'center' },
+        theme: 'grid',
+        headStyles: { fillColor: [20, 184, 166], textColor: 255, fontStyle: 'bold', halign: 'center', fontSize: 7.8 },
+        bodyStyles: { fontSize: 7.4, cellPadding: 2.2, halign: 'center', valign: 'middle' },
         columnStyles: {
-            0: { cellWidth: 12 },
-            1: { cellWidth: 25 },
-            2: { halign: 'left', cellWidth: 68 },
-            3: { cellWidth: 15 },
-            4: { cellWidth: 28 },
-            5: { cellWidth: 28 },
-            6: { cellWidth: 22 }
+            0: { cellWidth: 8, halign: 'center' },
+            1: { cellWidth: 18, halign: 'center' },
+            2: { halign: 'left', cellWidth: 36 },
+            3: { cellWidth: 10, halign: 'center' },
+            4: { cellWidth: 18, halign: 'right' },                                // Bill Amount
+            5: { cellWidth: 18, halign: 'right', textColor: [100, 116, 139] },    // Prev Bal
+            6: { cellWidth: 20, halign: 'right', fontStyle: 'bold' },             // NAYA: Total Amount (Bill + Prev Bal)
+            7: { cellWidth: 18, halign: 'right', textColor: [16, 185, 129], fontStyle: 'bold' }, // Received (Green)
+            8: { halign: 'left', cellWidth: 22 },                                 // Received By Name
+            9: { cellWidth: 22, halign: 'right', textColor: [216, 69, 62], fontStyle: 'bold' }   // Net Balance (Red)
         },
-        margin: { left: 14, right: 14 }
+        margin: { left: 10, right: 10 }
     });
 
     const fileName = worker ? (worker.name || 'Worker').replace(/\s+/g, '_') : 'Worker';
@@ -19222,6 +19253,10 @@ function filterRSCustSelect() {
     }
 }
 
+// =========================================================
+// CUSTOMER MONTHLY RECOVERY SHEET (UPDATED WITH ALL FIELDS)
+// =========================================================
+
 function generateCustomerMonthlyRecoveryPDF() {
     const custName = document.getElementById('rs-cust-name').value;
     const custPhone = document.getElementById('rs-cust-phone').value;
@@ -19245,7 +19280,7 @@ function generateCustomerMonthlyRecoveryPDF() {
         return matchesName && matchesMonth;
     });
 
-    // Tareekh (Date) ke hisaab se seedha sort karein
+    // Tareekh (Date) ke hisaab se sort karein
     monthRecords.sort((a, b) => safeParseDate(a.date) - safeParseDate(b.date));
 
     if (monthRecords.length === 0) {
@@ -19255,7 +19290,7 @@ function generateCustomerMonthlyRecoveryPDF() {
 
     // Worker ka naam dhoondna (Assigned Worker ke liye)
     let assignedWorker = 'N/A';
-    const matchedCust = savedCustomersList.find(c => c.name.toLowerCase().trim() === cleanName);
+    const matchedCust = (savedCustomersList || []).find(c => c.name && c.name.toLowerCase().trim() === cleanName);
     if (matchedCust && matchedCust.worker && matchedCust.worker.name) {
         assignedWorker = matchedCust.worker.name;
     } else if (monthRecords[0].worker && monthRecords[0].worker.name) {
@@ -19263,122 +19298,157 @@ function generateCustomerMonthlyRecoveryPDF() {
     }
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF('p', 'mm', 'a4');
-    let yPos = 20;
+    const doc = new jsPDF('p', 'mm', 'a4'); // Portrait A4 Page (Width: 210mm)
+    let yPos = 18;
 
     // ==========================================
-    // 1. HEADER (Tasveer ke mutabiq)
+    // 1. HEADER BANNER (Centered)
     // ==========================================
     doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-    doc.text(appSettings.restaurantName || "FJM Social Media", 105, yPos, { align: 'center' }); yPos += 8;
+    doc.text(appSettings.restaurantName || "FJM Social Media", 105, yPos, { align: 'center' }); yPos += 7;
     
     doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(appSettings.restaurantAddress || "123 Main Street, Your City", 105, yPos, { align: 'center' }); yPos += 5;
-    doc.text(`Phone: ${appSettings.restaurantPhone || "+92 123 4567890"}`, 105, yPos, { align: 'center' }); yPos += 15;
+    doc.text(appSettings.restaurantAddress || "", 105, yPos, { align: 'center' }); yPos += 5;
+    doc.text(`Phone: ${appSettings.restaurantPhone || ""}`, 105, yPos, { align: 'center' }); yPos += 10;
 
-    doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-    doc.text("Customer Monthly Recovery Statement", 105, yPos, { align: 'center' }); yPos += 12;
+    doc.setFontSize(15); doc.setFont('helvetica', 'bold');
+    doc.text("CUSTOMER MONTHLY RECOVERY STATEMENT", 105, yPos, { align: 'center' }); yPos += 10;
 
     // ==========================================
-    // 2. BILL TO SECTION (Tasveer Jaisa)
+    // 2. CUSTOMER & REPORT DETAILS BOX
     // ==========================================
     doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-    doc.text("Bill To:", 14, yPos); yPos += 6;
+    doc.text("Bill To:", 10, yPos); yPos += 6;
     
-    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-    doc.text(`Customer Name: ${custName}`, 14, yPos);
-    doc.text(`Month / Year: ${monthVal}`, 120, yPos); yPos += 6;
+    doc.setFontSize(9.5); doc.setFont('helvetica', 'normal');
+    doc.text(`Customer Name: ${custName}`, 10, yPos);
+    doc.text(`Month / Year: ${monthVal}`, 120, yPos); yPos += 5;
     
-    doc.text(`Mobile Number: ${custPhone !== 'N/A' ? custPhone : '-'}`, 14, yPos);
-    doc.text(`Assigned Worker: ${assignedWorker}`, 120, yPos); yPos += 6;
+    doc.text(`Mobile Number: ${custPhone !== 'N/A' && custPhone ? custPhone : '-'}`, 10, yPos);
+    doc.text(`Assigned Worker: ${assignedWorker}`, 120, yPos); yPos += 5;
     
-    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 12;
+    doc.text(`Generated On: ${new Date().toLocaleDateString()}`, 120, yPos); yPos += 8;
 
     let currentMonthBill = 0;
     let totalRecovery = 0;
 
     // ==========================================
-    // 3. MAIN TABLE (Item, Qty, Rate, Bill, Rcvd)
+    // 3. TABLE ROWS GENERATION (All 11 Fields)
     // ==========================================
     const tableRows = monthRecords.map((r) => {
         let bill = Number(r.bill) || 0;
         let recov = Number(r.recovery) || 0;
-        let bal = Number(r.netBalance) || 0;
-        let rate = Number(r.rate || r.price || 0);
+        let oldBal = Number(r.oldBalance) || 0;
         let qty = Number(r.demand || 0);
+
+        // Naya Calculation: Total Amount = Bill + Previous Balance
+        let totalRowAmount = bill + oldBal;
+
+        let bal = (r.netBalance !== undefined && r.netBalance !== null && !isNaN(r.netBalance))
+            ? Number(r.netBalance)
+            : (totalRowAmount - recov);
 
         currentMonthBill += bill;
         totalRecovery += recov;
 
         let dateStr = r.date ? new Date(r.date).toLocaleDateString() : '-';
-        let rcvdBy = r.receivedBy && r.receivedBy !== 'N/A' ? r.receivedBy : '-';
+        let rcvdBy = (r.receivedBy && r.receivedBy !== 'N/A') ? r.receivedBy : '-';
 
         return [
-            dateStr,
-            r.serialNo || '-',
-            r.itemName || 'Alo',
-            qty,
-            rate.toFixed(2),
-            bill.toFixed(2),
-            recov.toFixed(2),
-            bal.toFixed(2),
-            rcvdBy
+            dateStr,                                          // 1. Date
+            r.serialNo || '-',                                // 2. Invoice Number
+            r.customer || custName,                           // 3. Customer Name
+            r.itemName || 'Alo',                              // 4. Item Name
+            qty,                                              // 5. Quantity / Demand
+            `${CURRENCY_SYMBOL}${bill.toFixed(2)}`,           // 6. Bill Amount
+            `${CURRENCY_SYMBOL}${oldBal.toFixed(2)}`,         // 7. Previous Balance
+            `${CURRENCY_SYMBOL}${totalRowAmount.toFixed(2)}`, // 8. Total Amount (Bill + Prev Bal)
+            `${CURRENCY_SYMBOL}${recov.toFixed(2)}`,          // 9. Received
+            rcvdBy,                                           // 10. Received By
+            `${CURRENCY_SYMBOL}${bal.toFixed(2)}`             // 11. Net Balance
         ];
     });
 
+    // ==========================================
+    // 4. MAIN TABLE (Exact 190mm Width Fit on A4)
+    // ==========================================
     doc.autoTable({
         startY: yPos,
-        head: [['Date', 'Inv #', 'Item Description', 'Demand (Qty)', 'Unit Rate', 'Bill', 'Received', 'Balance', 'Rcvd By']],
+        head: [['Date', 'Inv #', 'Customer Name', 'Item', 'Qty', 'Bill Amt', 'Prev Bal', 'Total Amt', 'Received', 'Received By', 'Net Balance']],
         body: tableRows,
         theme: 'grid',
-        headStyles: { fillColor: [20, 184, 166], textColor: 255, halign: 'center' }, // Teal Color
-        bodyStyles: { halign: 'center', fontSize: 9 },
+        headStyles: { 
+            fillColor: [20, 184, 166], 
+            textColor: [255, 255, 255], 
+            fontStyle: 'bold', 
+            halign: 'center', 
+            fontSize: 7.2 
+        },
+        bodyStyles: { 
+            fontSize: 7, 
+            cellPadding: 2, 
+            halign: 'center', 
+            valign: 'middle' 
+        },
+        // Column Widths: 16+9+26+14+8+17+17+18+17+22+26 = 190mm
         columnStyles: {
-            0: { cellWidth: 20 },
-            2: { halign: 'left' } // Item description left align
-        }
+            0: { cellWidth: 16, halign: 'center' },                               // Date
+            1: { cellWidth: 9, halign: 'center' },                                // Inv #
+            2: { cellWidth: 26, halign: 'left' },                                 // Customer Name
+            3: { cellWidth: 14, halign: 'center' },                               // Item Name
+            4: { cellWidth: 8, halign: 'center' },                                // Quantity / Demand
+            5: { cellWidth: 17, halign: 'right' },                                // Bill Amount
+            6: { cellWidth: 17, halign: 'right', textColor: [100, 116, 139] },    // Prev Bal
+            7: { cellWidth: 18, halign: 'right', fontStyle: 'bold' },             // Total Amount
+            8: { cellWidth: 17, halign: 'right', textColor: [16, 185, 129], fontStyle: 'bold' }, // Received
+            9: { cellWidth: 22, halign: 'left' },                                 // Received By
+            10: { cellWidth: 26, halign: 'right', textColor: [216, 69, 62], fontStyle: 'bold' }  // Net Balance
+        },
+        margin: { left: 10, right: 10 }
     });
 
-    yPos = doc.previousAutoTable.finalY + 12;
+    yPos = doc.previousAutoTable.finalY + 8;
 
     // ==========================================
-    // 4. SUMMARY BOX (Bilkul Tasveer Ke Mutabiq)
+    // 5. MONTHLY SUMMARY TOTALS BOX
     // ==========================================
     const firstRec = monthRecords[0];
     const lastRec = monthRecords[monthRecords.length - 1];
     
-    // Mahine ka shuruwati (Opening) balance
     const openingBalance = Number(firstRec.oldBalance) || 0;
-    
-    // Total Bill = Pichla Baqaya + Is mahine ka naya bill
     const totalBillWithPrev = openingBalance + currentMonthBill;
-    
-    // Mahine ka aakhri balance
     const closingBalance = Number(lastRec.netBalance) || 0;
 
     const summaryTableData = [
-        ['Current Bill:', `Rs. ${currentMonthBill.toFixed(2)}`],
-        ['Previous Balance:', `Rs. ${openingBalance.toFixed(2)}`],
-        ['Total Bill:', `Rs. ${totalBillWithPrev.toFixed(2)}`],
-        ['Total Received:', `Rs. ${totalRecovery.toFixed(2)}`],
-        ['Current Balance:', `Rs. ${closingBalance.toFixed(2)}`]
+        ['Current Month Bill:', `${CURRENCY_SYMBOL} ${currentMonthBill.toFixed(2)}`],
+        ['Previous Balance (Opening):', `${CURRENCY_SYMBOL} ${openingBalance.toFixed(2)}`],
+        ['Total Bill:', `${CURRENCY_SYMBOL} ${totalBillWithPrev.toFixed(2)}`],
+        ['Total Received / Recovery:', `${CURRENCY_SYMBOL} ${totalRecovery.toFixed(2)}`],
+        ['Current Balance (Closing):', `${CURRENCY_SYMBOL} ${closingBalance.toFixed(2)}`]
     ];
 
     doc.autoTable({
         startY: yPos,
         body: summaryTableData,
         theme: 'grid',
-        styles: { fontSize: 11, cellPadding: 3 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+        styles: { fontSize: 9.5, cellPadding: 2.8 },
+        tableWidth: 130,
+        margin: { left: 40, right: 40 }, // Centered Summary Box
+        columnStyles: { 
+            0: { fontStyle: 'bold', halign: 'left', cellWidth: 75 },
+            1: { fontStyle: 'bold', halign: 'right', cellWidth: 55 }
+        },
         didParseCell: function(data) {
-            // "Total Bill:" ko bold karne ke liye (Row 3)
             if (data.row.index === 2) {
                 data.cell.styles.fontStyle = 'bold';
             }
-            // "Current Balance:" ko bold aur Red karne ke liye (Row 5)
+            if (data.row.index === 3) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.textColor = [16, 185, 129]; // Green
+            }
             if (data.row.index === 4) {
                 data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.textColor = [216, 69, 62]; // Lal Rang
+                data.cell.styles.textColor = [216, 69, 62]; // Red
             }
         }
     });
