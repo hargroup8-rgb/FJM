@@ -5254,6 +5254,9 @@ async function submitNewDemand() {
     const demandQtyEl = document.getElementById('d-demand');
     const workerEl = document.getElementById('d-worker');
     const itemEl = document.getElementById('d-item-name'); 
+    
+    // Save button dhoondein taake usay double click se lock kiya ja sake
+    const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
 
     const selectedDateVal = dateEl && dateEl.value ? dateEl.value : new Date().toISOString().split('T')[0];
     const customer = customerEl ? customerEl.value.trim() : '';
@@ -5261,9 +5264,52 @@ async function submitNewDemand() {
     const workerId = workerEl ? workerEl.value : '';
     const itemName = itemEl ? itemEl.value : 'Alo';
 
+    // 1. Khali inputs check
     if (!customer || !demandQty) { 
         alert("Customer Name aur Demand Qty lazmi likhein!"); 
         return; 
+    }
+
+    const custNameClean = customer.trim().toLowerCase();
+
+    // =========================================================
+    // 2. DUPLICATE & LOCK CHECK (Double Entry Rokne Ka Code)
+    // =========================================================
+    if (Array.isArray(demandRecords)) {
+        // (A) Check: Kya is customer ki isi tareekh (Date) par pehle se demand mojood hai?
+        const alreadyExistsOnDate = demandRecords.some(r => {
+            if (!r || !r.customer) return false;
+            const rDate = r.date ? r.date.split('T')[0] : '';
+            return r.customer.trim().toLowerCase() === custNameClean && rDate === selectedDateVal;
+        });
+
+        if (alreadyExistsOnDate) {
+            alert(`⚠️ Yeh Demand pehle se darj hai!\n\nCustomer "${customer}" ki ${selectedDateVal} ki demand pehle se system mein mojood hai. Agar koi tabdeeli karni hai to neechay Recent History se 'Edit' karein.`);
+            return;
+        }
+
+        // (B) Check: Kya is customer ki koi purani demand abhi tak "In warehouse" (Pending) hai?
+        const pendingDemand = demandRecords.find(r => {
+            if (!r || !r.customer) return false;
+            return r.customer.trim().toLowerCase() === custNameClean && 
+                   (!r.materialStatus || r.materialStatus === 'In warehouse') && 
+                   r.processed !== true;
+        });
+
+        if (pendingDemand) {
+            const confirmAdd = confirm(`⚠️ Warning: "${customer}" ki ek purani demand (S.No #${pendingDemand.serialNo || '-'}) abhi tak Warehouse mein pending hai.\n\nKya aap phir bhi nayi demand add karna chahte hain?`);
+            if (!confirmAdd) {
+                return;
+            }
+        }
+    }
+
+    // =========================================================
+    // 3. BUTTON LOCK (Taake user ghalti se 2 baar click na kare)
+    // =========================================================
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = "⏳ Saving & Locking...";
     }
 
     let custPrice = 0;
@@ -5277,7 +5323,7 @@ async function submitNewDemand() {
     }
 
     if (typeof savedCustomersList !== 'undefined' && Array.isArray(savedCustomersList)) {
-        const matchedCust = savedCustomersList.find(c => c.name && c.name.trim().toLowerCase() === customer.toLowerCase());
+        const matchedCust = savedCustomersList.find(c => c.name && c.name.trim().toLowerCase() === custNameClean);
         if (matchedCust) {
             custPrice = parseFloat(matchedCust.price) || 0;
             custCode = matchedCust.code || 'CUST-000';
@@ -5293,9 +5339,8 @@ async function submitNewDemand() {
     const calculatedBill = demandAmount * custPrice;
     const recordDateISO = new Date(selectedDateVal + 'T12:00:00.000Z').toISOString();
 
-    // --- Pichle Unpaid Balance (Old Balance) Ko safeParseDate Se Dhoondhein ---
+    // Pichla Unpaid Balance dhoondna
     let previousUnpaidBalance = 0;
-    const custNameClean = customer.trim().toLowerCase();
     const customerRecords = (demandRecords || []).filter(r => 
         r.customer && r.customer.trim().toLowerCase() === custNameClean
     );
@@ -5335,7 +5380,8 @@ async function submitNewDemand() {
 
     try {
         if (!loggedInUser || (!loggedInUser.id && !loggedInUser.uid)) {
-            alert("Aapka session expire ho gaya hai. Barae meharbani page refresh kar ke dobara login karein.");
+            alert("Aapka session expire ho gaya hai. Dobara login karein.");
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = "Save Demand"; }
             return;
         }
         
@@ -5343,27 +5389,36 @@ async function submitNewDemand() {
         appSettings.nextSerialNo = currentSerial + 1;
         await saveSettings(); 
 
-       // submitNewDemand() ke aakhri try block ko is se badlein:
         if (!Array.isArray(demandRecords)) demandRecords = [];
         demandRecords.push(recordData);
 
-        // Instant UI update (Pehle screen update hogi)
+        // Firebase Cloud par save karein
+        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        });
+
+        // Instant UI updates
         if (typeof clearDemandForm === 'function') clearDemandForm();
         if (typeof renderRecentDemands === 'function') renderRecentDemands();
+        if (typeof renderDemandRecord === 'function') renderDemandRecord(); 
         if (typeof populateCustomerNamesDatalist === 'function') populateCustomerNamesDatalist();
 
-        // Background calculations aur Cloud save (Background worker)
-        recalculateCustomerDemandLedgers(customer);
+        // Background calculation
+        if (typeof recalculateCustomerDemandLedgers === 'function') {
+            recalculateCustomerDemandLedgers(customer);
+        }
 
-        alert("Demand kamyabi se save ho gayi!");
-        
-        if (typeof clearDemandForm === 'function') clearDemandForm();
-        if (typeof renderDemandRecord === 'function') renderDemandRecord(); 
-        if (typeof renderRecentDemands === 'function') renderRecentDemands(); 
+        alert("✅ Demand kamyabi se save aur lock ho gayi!");
 
     } catch (e) {
         console.error("Save Error:", e); 
         alert("Ghalti: Data save nahi ho saka. Error: " + e.message);
+    } finally {
+        // Button wapas enable aur reset kar dein
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = "Save Demand";
+        }
     }
 }
 
@@ -5399,6 +5454,7 @@ function clearDemandForm() {
 
     const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
     if (saveBtn) {
+        saveBtn.disabled = false;
         saveBtn.textContent = "Save Demand";
         saveBtn.className = "btn btn-success";
     }
@@ -15850,7 +15906,7 @@ async function submitDemandRecord() {
     // Record Data Update
     const record = demandRecords[recordIndex];
     record.rate = rate;
-    record.price = rate; // Rate aur Price dono sync kar diye gaye hain
+    record.price = rate;
     record.bill = bill;
     record.oldBalance = oldBalance;
     record.recovery = recovery;
@@ -15860,12 +15916,12 @@ async function submitDemandRecord() {
     record.status = netBalance <= 0.01 ? 'paid' : 'unpaid';
 
     try {
-        // 1. Customer ke tamam historical balances ko aapas mein chain aur recalculate karein
+        // 1. Fixed: record.customer pass karein taake 'customer is not defined' error na aaye
         if (typeof recalculateCustomerDemandLedgers === 'function') {
-            await recalculateCustomerDemandLedgers(customer);
+            await recalculateCustomerDemandLedgers(record.customer);
         }
 
-        // 2. Firebase Cloud Firestore mein updated payload save karein
+        // 2. Firebase Cloud Firestore mein update save karein
         const userId = 'FJM_MASTER_DB';
         if (typeof db !== 'undefined' && db.collection) {
             await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
@@ -15876,7 +15932,7 @@ async function submitDemandRecord() {
         // Local Storage Backup
         localStorage.setItem('demand_records', JSON.stringify(demandRecords));
 
-        // 3. Agar Recovery mil chuki hai to Cash Book mein Cash In darj karein
+        // 3. Agar Recovery mili ho to Cash Book update karein
         if (recovery > 0 && typeof addTransactionToCashBook === 'function') {
             addTransactionToCashBook(
                 `Recovery Rcvd (S.No #${record.serialNo}) - ${record.customer} (By: ${record.receivedBy})`, 
