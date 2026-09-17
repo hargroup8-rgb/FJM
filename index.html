@@ -4106,7 +4106,7 @@ let currentStockReportType = 'daily'; // Default filter state
 // DEMAND WORKERS MISSING FUNCTIONS FIX
 // ==========================================
 
-// 1. Updated Worker Save Function (Triggers Used Stock dropdown instantly)
+// 1. Teztareen Worker Save Function (Background Sync)
 async function saveDemandWorker() {
     const name = document.getElementById('worker-name').value.trim();
     const phone = document.getElementById('worker-phone').value.trim();
@@ -4131,19 +4131,23 @@ async function saveDemandWorker() {
 
     try {
         const userId = 'FJM_MASTER_DB';
-        await db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
-            payload: JSON.stringify(demandWorkers)
-        });
         
+        // 1. UI ko FORAN update karein (Bina intezar kiye)
         alert("Worker kamyabi se save ho gaya!");
         clearWorkerForm();
-        renderDemandWorkersTable(); // Table ko update karein
+        renderDemandWorkersTable();
         
-        // Instant dropdown sync triggers (Updates Used Stock/Toolstock)
+        // 2. Dropdowns foran sync karein
         if (typeof populateUsedStockDropdowns === 'function') populateUsedStockDropdowns();
         if (typeof populateCustomerWorkerDropdown === 'function') populateCustomerWorkerDropdown();
         if (typeof populateDemandWorkersDropdown === 'function') populateDemandWorkersDropdown();
         if (typeof populateRecoveryWorkerDropdown === 'function') populateRecoveryWorkerDropdown();
+
+        // 3. Background mein Cloud par save karein (await hata diya gaya hai)
+        db.collection('appData').doc(userId).collection('datasets').doc(getUserSpecificKey('demand_workers')).set({
+            payload: JSON.stringify(demandWorkers)
+        }).catch(e => console.error("Worker background sync error:", e));
+        
     } catch (e) {
         console.error(e);
         alert("Error saving worker: " + e.message);
@@ -5301,6 +5305,7 @@ function runDemandMath() {
     document.getElementById('d-net-balance').value = netTotal.toFixed(2);
 }
 
+// Teztareen Demand Save Function (Background Sync)
 async function submitNewDemand() {
     const dateEl = document.getElementById('d-date');
     const customerEl = document.getElementById('d-customer');
@@ -5308,7 +5313,6 @@ async function submitNewDemand() {
     const workerEl = document.getElementById('d-worker');
     const itemEl = document.getElementById('d-item-name'); 
     
-    // Save button dhoondein taake usay double click se lock kiya ja sake
     const saveBtn = document.querySelector("#DemandForm button[onclick='submitNewDemand()']");
 
     const selectedDateVal = dateEl && dateEl.value ? dateEl.value : new Date().toISOString().split('T')[0];
@@ -5317,7 +5321,6 @@ async function submitNewDemand() {
     const workerId = workerEl ? workerEl.value : '';
     const itemName = itemEl ? itemEl.value : 'fresh fries';
 
-    // 1. Khali inputs check (0 ko allow karein)
     if (!customer || demandQty === '' || demandQty === null || demandQty === undefined) { 
         alert("Customer Name aur Demand Qty lazmi select karein!"); 
         return; 
@@ -5325,11 +5328,7 @@ async function submitNewDemand() {
 
     const custNameClean = customer.trim().toLowerCase();
 
-    // =========================================================
-    // 2. DUPLICATE & LOCK CHECK (Double Entry Rokne Ka Code)
-    // =========================================================
     if (Array.isArray(demandRecords)) {
-        // (A) Check: Kya is customer ki isi tareekh (Date) par pehle se demand mojood hai?
         const alreadyExistsOnDate = demandRecords.some(r => {
             if (!r || !r.customer) return false;
             const rDate = r.date ? r.date.split('T')[0] : '';
@@ -5341,7 +5340,6 @@ async function submitNewDemand() {
             return;
         }
 
-        // (B) Check: Kya is customer ki koi purani demand abhi tak "In warehouse" (Pending) hai?
         const pendingDemand = demandRecords.find(r => {
             if (!r || !r.customer) return false;
             return r.customer.trim().toLowerCase() === custNameClean && 
@@ -5357,12 +5355,9 @@ async function submitNewDemand() {
         }
     }
 
-    // =========================================================
-    // 3. BUTTON LOCK (Taake user ghalti se 2 baar click na kare)
-    // =========================================================
     if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.innerHTML = "⏳ Saving & Locking...";
+        saveBtn.innerHTML = "⏳ Saving...";
     }
 
     let custPrice = 0;
@@ -5392,7 +5387,6 @@ async function submitNewDemand() {
     const calculatedBill = demandAmount * custPrice;
     const recordDateISO = new Date(selectedDateVal + 'T12:00:00.000Z').toISOString();
 
-    // Pichla Unpaid Balance dhoondna
     let previousUnpaidBalance = 0;
     const customerRecords = (demandRecords || []).filter(r => 
         r.customer && r.customer.trim().toLowerCase() === custNameClean
@@ -5440,34 +5434,37 @@ async function submitNewDemand() {
         
         const userId = 'FJM_MASTER_DB';
         appSettings.nextSerialNo = currentSerial + 1;
-        await saveSettings(); 
+        saveSettings(); // NAYA: Await hata diya
 
         if (!Array.isArray(demandRecords)) demandRecords = [];
         demandRecords.push(recordData);
 
-        // Firebase Cloud par save karein
-        await db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
-            payload: JSON.stringify(demandRecords)
-        });
+        // 1. Local Storage Backup Foran Update Karein
+        localStorage.setItem('demand_records', JSON.stringify(demandRecords));
 
-        // Instant UI updates
+        // 2. UI aur Form ko FORAN update karein
         if (typeof clearDemandForm === 'function') clearDemandForm();
         if (typeof renderRecentDemands === 'function') renderRecentDemands();
         if (typeof renderDemandRecord === 'function') renderDemandRecord(); 
         if (typeof populateCustomerNamesDatalist === 'function') populateCustomerNamesDatalist();
+
+        // 3. User ko foran Message Dikhayein
+        alert("✅ Demand kamyabi se save aur lock ho gayi!");
+
+        // 4. Background mein Cloud par save hone dein (Await hata diya)
+        db.collection('appData').doc(userId).collection('datasets').doc('demand_records').set({
+            payload: JSON.stringify(demandRecords)
+        }).catch(e => console.error("Firebase Demand Save Error:", e));
 
         // Background calculation
         if (typeof recalculateCustomerDemandLedgers === 'function') {
             recalculateCustomerDemandLedgers(customer);
         }
 
-        alert("✅ Demand kamyabi se save aur lock ho gayi!");
-
     } catch (e) {
         console.error("Save Error:", e); 
         alert("Ghalti: Data save nahi ho saka. Error: " + e.message);
     } finally {
-        // Button wapas enable aur reset kar dein
         if (saveBtn) {
             saveBtn.disabled = false;
             saveBtn.innerHTML = "Save Demand";
@@ -13302,14 +13299,22 @@ if (actualModuleName === 'DemandRecord') {
     }
 
     try {
-        // --- LAZY LOADING ACCORDING TO SELECTED TAB ---
+       // --- LAZY LOADING ACCORDING TO SELECTED TAB ---
         if (actualModuleName === 'Dashboard') {
-            await dbFetchInvoices();
-            await dbFetchExpenses();
-            await dbFetchPurchaseLog();
-            await dbFetchProducts();
-            await dbFetchPurchasers();
+            // 1. Foran local data se Dashboard dikhayein taake screen na ruke
             renderDashboard();
+            
+            // 2. Background mein naya data ek sath (Parallel) mangwayein
+            Promise.all([
+                dbFetchInvoices(),
+                dbFetchExpenses(),
+                dbFetchPurchaseLog(),
+                dbFetchProducts(),
+                dbFetchPurchasers()
+            ]).then(() => {
+                // Jab cloud se naya data aa jaye toh background mein cards aur graph update kar dein
+                renderDashboard();
+            }).catch(e => console.error("Dashboard data sync error:", e));
         }
 
         // AddCustomer lazy loading block (with proper closing brackets)
@@ -16764,7 +16769,7 @@ function populateCustomerWorkerDropdown() {
     }
 }
 
-// Customer ko save ya update karne ka automatic function
+// Teztareen Customer Save Function (Background Sync)
 async function saveNewCustomer() {
     const workerId = document.getElementById('cust-worker').value;
     const item = document.getElementById('cust-item').value.trim();
@@ -16778,12 +16783,10 @@ async function saveNewCustomer() {
         return;
     }
 
-    // Selected worker ki details nikalna
     const selectedWorker = (typeof demandWorkers !== 'undefined') ? demandWorkers.find(w => w.id === workerId) : null;
     const workerDetail = selectedWorker ? { name: selectedWorker.name, phone: selectedWorker.phone } : null;
 
     if (editingCustomerId) {
-        // Editing Mode
         const index = savedCustomersList.findIndex(c => c.id === editingCustomerId);
         if (index !== -1) {
             savedCustomersList[index].item = item;
@@ -16791,10 +16794,9 @@ async function saveNewCustomer() {
             savedCustomersList[index].phone = phone;
             savedCustomersList[index].address = address;
             savedCustomersList[index].price = price;
-            savedCustomersList[index].worker = workerDetail; // Worker update ho gaya
+            savedCustomersList[index].worker = workerDetail;
         }
     } else {
-        // New Registration Mode (Auto Code Generation)
         if (!appSettings.nextCustomerCode) {
             appSettings.nextCustomerCode = 1001;
         }
@@ -16808,23 +16810,31 @@ async function saveNewCustomer() {
             phone: phone,
             address: address || 'N/A',
             price: price,
-            worker: workerDetail, // Worker details save ho gayi hain
+            worker: workerDetail,
             date: new Date().toISOString()
         };
         savedCustomersList.push(newCust);
 
-        // Counter barhayein aur settings save karein
         appSettings.nextCustomerCode++;
-        await saveSettings();
+        saveSettings(); // Await hata diya
     }
 
     try {
-        // Aapke system ke native helper 'saveData' ka istemal (Yahan se error mukammal khatam ho jayega)
-        await saveData(getUserSpecificKey('customers_list'), savedCustomersList);
+        // 1. Local Storage Backup
+        localStorage.setItem(getUserSpecificKey('customers_list'), JSON.stringify(savedCustomersList));
         
-        alert("Customer data kamyabi se Cloud database mein save ho gaya!");
+        // 2. UI Foran Update Karein
+        alert("Customer data kamyabi se save ho gaya!");
         clearCustomerForm();
         renderCustomerTable();
+        
+        if (typeof populateCustomerNamesDatalist === 'function') {
+            populateCustomerNamesDatalist();
+        }
+
+        // 3. Cloud Database par background mein save karein (await nahi hai)
+        saveData(getUserSpecificKey('customers_list'), savedCustomersList);
+        
     } catch (e) {
         alert("Save karne mein error aaya: " + e.message);
     }
